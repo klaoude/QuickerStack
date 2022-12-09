@@ -105,9 +105,8 @@ namespace QuickerStack
             bool flag = QuickerStackPlugin.CoalesceTrophies && list2.Count != 0;
             int num = 0;
             foreach (ItemDrop.ItemData itemData in list)
-            {
-                if (!itemData.IsEquipable() && 
-                    itemData.m_shared.m_maxStackSize != 1 && 
+            {                
+                if  (itemData.m_shared.m_maxStackSize != 1 && 
                     (!QuickerStackPlugin.IgnoreAmmo || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Ammo) && 
                     (!QuickerStackPlugin.IgnoreConsumable || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Consumable) && 
                     !playerConfig.IsMarked(itemData.m_gridPos) && 
@@ -166,7 +165,6 @@ namespace QuickerStack
 
         private static void StackToMany(Player player, List<Container> containers)
         {
-            var watch = System.Diagnostics.Stopwatch.StartNew();
             Inventory inventory = player.GetInventory();
             int num = 0;
             foreach (Container container in containers)
@@ -185,25 +183,19 @@ namespace QuickerStack
                 }
             }
             QuickerStackPlugin.reportResult(player, num);
-            watch.Stop();
-            var elapsedMs = watch.ElapsedMilliseconds;
-            Debug.Log(String.Format("DoQuickStack() in {0}ms.", elapsedMs));
         }
 
         public static void DoQuickStack(Player player)
         {
-            Debug.Log("DoQuickStack()");
+            Debug.Log("DoQuickStack");
             if (player.IsTeleporting())
                 return;
 
-            var watch = System.Diagnostics.Stopwatch.StartNew();
             List<Container> list = QuickerStackPlugin.FindNearbyContainers(player.transform.position);
-            watch.Stop();
-            var elapsedMs = watch.ElapsedMilliseconds;
-            Debug.Log(String.Format("Found nearby containers in {0}ms.", elapsedMs));
             if (list.Count != 0)
             {
                 player.Message(MessageHud.MessageType.Center, String.Format("found {0} containers in range", list.Count));
+                //StackToMany(player, list);
                 Thread stackThread = new Thread(() => QuickerStackPlugin.StackToMany(player, list));
                 stackThread.Start();
             }
