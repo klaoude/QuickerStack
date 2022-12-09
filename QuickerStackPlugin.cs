@@ -16,7 +16,7 @@ namespace QuickerStack
     [BepInPlugin("org.bepinex.plugins.valheim.quicker_stack", "Quicker Stack", VERSION)]
     public class QuickerStackPlugin : BaseUnityPlugin
     {
-        private const string VERSION = "0.0.2";
+        private const string VERSION = "0.0.3";
 
         public void Awake()
         {
