@@ -16,7 +16,7 @@ namespace QuickerStack
     [BepInPlugin("org.bepinex.plugins.valheim.quicker_stack", "Quicker Stack", VERSION)]
     public class QuickerStackPlugin : BaseUnityPlugin
     {
-        private const string VERSION = "0.0.3";
+        private const string VERSION = "0.0.4";
 
         public void Awake()
         {
@@ -70,6 +70,7 @@ namespace QuickerStack
             QuickerStackPlugin.IgnoreConsumable = this.BindParameter<bool>(QuickerStackPlugin.IgnoreConsumable, "IgnoreConsumable", "Whether to completely exclude consumables from quick stacking (food, potions).");
             QuickerStackPlugin.IgnoreAmmo = this.BindParameter<bool>(QuickerStackPlugin.IgnoreAmmo, "IgnoreAmmo", "Whether to completely exclude ammo from quick stacking (arrows)");
             QuickerStackPlugin.CoalesceTrophies = this.BindParameter<bool>(QuickerStackPlugin.CoalesceTrophies, "CoalesceTrophies", "Whether to put all types of trophies in the container if any trophy is found in that container."); 
+            QuickerStackPlugin.UseThreading = this.BindParameter<bool>(QuickerStackPlugin.UseThreading, "UseThreading", "Whether to enable threading when stacking."); 
         }
 
         private void OnSettingChanged(object sender, SettingChangedEventArgs e)
@@ -195,21 +196,29 @@ namespace QuickerStack
             if (list.Count != 0)
             {
                 player.Message(MessageHud.MessageType.Center, String.Format("found {0} containers in range", list.Count));
-                //StackToMany(player, list);
-                Thread stackThread = new Thread(() => QuickerStackPlugin.StackToMany(player, list));
-                stackThread.Start();
+                if(UseThreading)
+                {
+                    Debug.Log("Using thread !");
+                    Thread stackThread = new Thread(() => QuickerStackPlugin.StackToMany(player, list));
+                    stackThread.Start();
+                }
+                else 
+                {
+                    Debug.Log("Not using thread");
+                    StackToMany(player, list);
+                }
             }
         }
 
         public static List<Container> AllContainers = new List<Container>();
         private readonly string ConfigPath = Path.Combine(Paths.ConfigPath, "QuickerStack.cfg");
         private static ConfigFile configFile = null;
-        public event EventHandler<SettingChangedEventArgs> SettingChanged;
         public static bool IgnoreAmmo = true;
         public static bool IgnoreConsumable = true;
         internal static float NearbyRange = 15f;
         public static KeyCode QuickStackKey = KeyCode.P;
         public static bool CoalesceTrophies = true;
+        public static bool UseThreading = true;
         private static Dictionary<long, UserConfig> playerConfigs = new Dictionary<long, UserConfig>();
     }
 }

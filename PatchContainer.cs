@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using System;
+using UnityEngine;
 
 namespace QuickerStack
 {
@@ -19,6 +20,8 @@ namespace QuickerStack
         [HarmonyPostfix]
         internal static void OnDestroyed(Container __instance)
         {
+            Debug.Log("Destoying container instance");
+            Debug.Log(__instance.transform.position);
             QuickerStackPlugin.AllContainers.Remove(__instance);
         }
     }
