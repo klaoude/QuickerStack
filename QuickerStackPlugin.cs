@@ -98,6 +98,7 @@ namespace QuickerStack
 
         internal static int StackItems(Player player, Inventory fromInventory, Inventory toInventory)
         {
+            lock(fromInventory) { lock(fromInventory) {
             UserConfig playerConfig = QuickerStackPlugin.GetPlayerConfig(player.GetPlayerID());
             List<ItemDrop.ItemData> fromItems = new List<ItemDrop.ItemData>(fromInventory.GetAllItems());
             List<ItemDrop.ItemData> trophies = new List<ItemDrop.ItemData>();
@@ -169,6 +170,7 @@ namespace QuickerStack
             toInventory.Changed();
             fromInventory.Changed();
             return numStacked;
+            } }
         }
 
         public static void reportResult(Player player, int movedCount)
@@ -233,7 +235,7 @@ namespace QuickerStack
         internal static float NearbyRange = 15f;
         public static KeyCode QuickStackKey = KeyCode.P;
         public static bool CoalesceTrophies = true;
-        public static bool UseThreading = true;
+        public static bool UseThreading = false;
         private static Dictionary<long, UserConfig> playerConfigs = new Dictionary<long, UserConfig>();
     }
 }
