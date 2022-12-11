@@ -1,16 +1,12 @@
 ﻿using HarmonyLib;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace QuickerStack
 {
     [HarmonyPatch(typeof(ItemDrop.ItemData))]
     internal static class PatchItemData
     {
-        // Token: 0x0600001A RID: 26 RVA: 0x00002878 File Offset: 0x00000A78
         [HarmonyPatch("GetTooltip", new Type[]
         {
             typeof(ItemDrop.ItemData),
@@ -24,12 +20,15 @@ namespace QuickerStack
             {
                 return;
             }
+
             StringBuilder stringBuilder = new StringBuilder(256);
             stringBuilder.Append(__result);
+
             if (QuickerStackPlugin.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()).IsMarked(item.m_shared))
             {
                 stringBuilder.Append("\n<color=magenta>Will not be quick stacked</color>");
             }
+
             __result = stringBuilder.ToString();
         }
     }
