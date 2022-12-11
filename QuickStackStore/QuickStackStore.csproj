@@ -62,6 +62,10 @@
       <HintPath>$(GameDir)\unstripped_corlib\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>D:\Steam\steamapps\common\Valheim\unstripped_corlib\UnityEngine.ImageConversionModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
       <HintPath>$(GameDir)\unstripped_corlib\UnityEngine.InputLegacyModule.dll</HintPath>
       <Private>False</Private>
@@ -88,11 +92,15 @@
     <Compile Include="Source\PatchContainer.cs" />
     <Compile Include="Source\PatchInventoryGrid.cs" />
     <Compile Include="Source\PatchItemData.cs" />
+    <Compile Include="Source\PatchTweaks.cs" />
     <Compile Include="Source\ReversePatches.cs" />
     <Compile Include="Source\UserConfig.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="GameDir.targets" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="border.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -74,7 +74,7 @@ namespace QuickStackStore
             return result;
         }
 
-        public bool IsMarked(Vector2i position)
+        public bool IsSlotMarked(Vector2i position)
         {
             Tuple<int, int> item = new Tuple<int, int>(position.x, position.y);
 
@@ -89,7 +89,7 @@ namespace QuickStackStore
             return result;
         }
 
-        public bool IsMarked(ItemDrop.ItemData.SharedData item)
+        public bool IsItemMarked(ItemDrop.ItemData.SharedData item)
         {
             return this._markedCategories.Contains(item.m_name);
         }

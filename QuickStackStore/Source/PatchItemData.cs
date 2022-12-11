@@ -24,7 +24,7 @@ namespace QuickStackStore
             StringBuilder stringBuilder = new StringBuilder(256);
             stringBuilder.Append(__result);
 
-            if (QuickStackStorePlugin.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()).IsMarked(item.m_shared))
+            if (QuickStackStorePlugin.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()).IsItemMarked(item.m_shared))
             {
                 stringBuilder.Append("\n<color=magenta>Will not be quick stacked</color>");
             }

@@ -15,6 +15,7 @@ namespace QuickStackStore
     public class QuickStackStorePlugin : BaseUnityPlugin
     {
         private const string VERSION = "0.0.5";
+        public static Sprite border;
 
         public void Awake()
         {
@@ -31,9 +32,27 @@ namespace QuickStackStore
                 this.LoadConfig();
             }
 
+            border = LoadSprite("QuickStackStore.border.png", new Rect(0, 0, 1024, 1024), new Vector2(512, 512));
+
             Config.SettingChanged += OnSettingChanged;
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
+        }
+
+        public static Sprite LoadSprite(string path, Rect size, Vector2 pivot, int units = 100)
+        {
+            Assembly asm = Assembly.GetExecutingAssembly();
+            Stream img = asm.GetManifestResourceStream(path);
+
+            Texture2D tex = new Texture2D((int)size.width, (int)size.height, TextureFormat.RGBA32, false, true);
+
+            using (MemoryStream mStream = new MemoryStream())
+            {
+                img.CopyTo(mStream);
+                tex.LoadImage(mStream.ToArray());
+                tex.Apply();
+                return Sprite.Create(tex, size, pivot, units);
+            }
         }
 
         public void Update()
@@ -135,7 +154,7 @@ namespace QuickStackStore
             var weight = playerInventory.Find("Weight");
 
             Transform obj = Instantiate(__instance.m_takeAllButton.transform, weight.parent);
-            obj.localPosition = weight.localPosition + new Vector3(0f, -52f, 0f);
+            obj.localPosition = weight.localPosition + new Vector3(0f, -56f, 0f);
             obj.name = name;
 
             ((Component)obj).transform.SetAsFirstSibling();
@@ -230,6 +249,8 @@ namespace QuickStackStore
             return QuickStackStorePlugin.FindContainersInRange(point, QuickStackStorePlugin.NearbyRange);
         }
 
+        // deterministic order of storing
+
         internal static int StoreItems(Player player)
         {
             Inventory fromInventory = player.GetInventory();
@@ -241,7 +262,8 @@ namespace QuickStackStore
 
             foreach (ItemDrop.ItemData itemData in list)
             {
-                if (!playerConfig.IsMarked(itemData.m_gridPos) && !playerConfig.IsMarked(itemData.m_shared))
+                // TODO unequip equipped items
+                if (!itemData.m_equiped && !playerConfig.IsSlotMarked(itemData.m_gridPos) && !playerConfig.IsItemMarked(itemData.m_shared))
                 {
                     if (toInventory.AddItem(itemData))
                     {
@@ -272,7 +294,7 @@ namespace QuickStackStore
                 if (itemData.m_shared.m_maxStackSize != 1 &&
                     (!QuickStackStorePlugin.IgnoreAmmo || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Ammo) &&
                     (!QuickStackStorePlugin.IgnoreConsumable || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Consumable) &&
-                    !playerConfig.IsMarked(itemData.m_gridPos) && !playerConfig.IsMarked(itemData.m_shared))
+                    !playerConfig.IsSlotMarked(itemData.m_gridPos) && !playerConfig.IsItemMarked(itemData.m_shared))
                 {
                     if (itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophie && QuickStackStorePlugin.CoalesceTrophies && list2.Count > 0)
                     {
