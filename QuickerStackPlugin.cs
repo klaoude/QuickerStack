@@ -66,11 +66,13 @@ namespace QuickerStack
             {
                 base.Logger.LogError("Failed to parse QuickStackKey, using default");
             }
-            QuickerStackPlugin.NearbyRange = this.BindParameter<float>(QuickerStackPlugin.NearbyRange, "NearbyRange", "How far from you is nearby, greater value = greater range");
-            QuickerStackPlugin.IgnoreConsumable = this.BindParameter<bool>(QuickerStackPlugin.IgnoreConsumable, "IgnoreConsumable", "Whether to completely exclude consumables from quick stacking (food, potions).");
-            QuickerStackPlugin.IgnoreAmmo = this.BindParameter<bool>(QuickerStackPlugin.IgnoreAmmo, "IgnoreAmmo", "Whether to completely exclude ammo from quick stacking (arrows)");
-            QuickerStackPlugin.CoalesceTrophies = this.BindParameter<bool>(QuickerStackPlugin.CoalesceTrophies, "CoalesceTrophies", "Whether to put all types of trophies in the container if any trophy is found in that container."); 
-            QuickerStackPlugin.UseThreading = this.BindParameter<bool>(QuickerStackPlugin.UseThreading, "UseThreading", "Whether to enable threading when stacking."); 
+            QuickerStackPlugin.NearbyRange = this.BindParameter<float>(QuickerStackPlugin.NearbyRange, nameof(QuickerStackPlugin.NearbyRange), "How far from you is nearby, greater value = greater range.");
+            QuickerStackPlugin.StackToCurrentContainer = this.BindParameter<bool>(QuickerStackPlugin.StackToCurrentContainer, nameof(QuickerStackPlugin.StackToCurrentContainer), "Whether to ignore the container that you are currently using or not.");
+            QuickerStackPlugin.StackOnlyToCurrentContainer = this.BindParameter<bool>(QuickerStackPlugin.StackOnlyToCurrentContainer, nameof(QuickerStackPlugin.StackOnlyToCurrentContainer), "Whether to only stack to the currently open container (like QuickStack did), or also look at all nearby containers afterwards.");
+            QuickerStackPlugin.IgnoreConsumable = this.BindParameter<bool>(QuickerStackPlugin.IgnoreConsumable, nameof(QuickerStackPlugin.IgnoreConsumable), "Whether to completely exclude consumables from quick stacking (food, potions).");
+            QuickerStackPlugin.IgnoreAmmo = this.BindParameter<bool>(QuickerStackPlugin.IgnoreAmmo, nameof(QuickerStackPlugin.IgnoreAmmo), "Whether to completely exclude ammo from quick stacking (arrows).");
+            QuickerStackPlugin.CoalesceTrophies = this.BindParameter<bool>(QuickerStackPlugin.CoalesceTrophies, nameof(QuickerStackPlugin.CoalesceTrophies), "Whether to put all types of trophies in the container if any trophy is found in that container.");
+            QuickerStackPlugin.UseThreading = this.BindParameter<bool>(QuickerStackPlugin.UseThreading, nameof(QuickerStackPlugin.UseThreading), "Whether to enable threading when stacking.");
         }
 
         private void OnSettingChanged(object sender, SettingChangedEventArgs e)
@@ -154,20 +156,20 @@ namespace QuickerStack
             return num;
         }
 
-        public static void reportResult(Player player, int movedCount)
+        public static void ReportResult(Player player, int movedCount)
         {
             player.Message(
                 MessageHud.MessageType.Center,
-                (movedCount > 0) ? string.Format("Stacked {0} item{1}", movedCount, (movedCount % 10 == 1) ? "" : "s") : "Nothing to stack",
+                (movedCount > 0) ? string.Format("Stacked {0} item{1}", movedCount, (movedCount == 1) ? "" : "s") : "Nothing to stack",
                 0,
                 null
            );
         }
 
-        private static void StackToMany(Player player, List<Container> containers)
+        private static void StackToMany(Player player, List<Container> containers, int initialReportCount = 0)
         {
             Inventory inventory = player.GetInventory();
-            int num = 0;
+            int num = initialReportCount;
             foreach (Container container in containers)
             {
                 if ((!container.m_checkGuardStone || 
@@ -183,7 +185,7 @@ namespace QuickerStack
                     container.SetInUse(false);
                 }
             }
-            QuickerStackPlugin.reportResult(player, num);
+            QuickerStackPlugin.ReportResult(player, num);
         }
 
         public static void DoQuickStack(Player player)
@@ -192,6 +194,19 @@ namespace QuickerStack
             if (player.IsTeleporting())
                 return;
 
+            int movedCount = 0;
+            Container container = Extensions.GetCurrentContainer(InventoryGui.instance);
+            if (StackToCurrentContainer && container != null)
+            {
+                movedCount = StackItems(player, player.GetInventory(), container.GetInventory());
+
+                if (StackOnlyToCurrentContainer)
+                {
+                    ReportResult(player, movedCount);
+                    return;
+                }
+            }
+
             List<Container> list = QuickerStackPlugin.FindNearbyContainers(player.transform.position);
             if (list.Count != 0)
             {
@@ -199,13 +214,13 @@ namespace QuickerStack
                 if(UseThreading)
                 {
                     Debug.Log("Using thread !");
-                    Thread stackThread = new Thread(() => QuickerStackPlugin.StackToMany(player, list));
+                    Thread stackThread = new Thread(() => QuickerStackPlugin.StackToMany(player, list, movedCount));
                     stackThread.Start();
                 }
                 else 
                 {
                     Debug.Log("Not using thread");
-                    StackToMany(player, list);
+                    StackToMany(player, list, movedCount);
                 }
             }
         }
@@ -215,6 +230,8 @@ namespace QuickerStack
         private static ConfigFile configFile = null;
         public static bool IgnoreAmmo = true;
         public static bool IgnoreConsumable = true;
+        public static bool StackToCurrentContainer = true;
+        public static bool StackOnlyToCurrentContainer = false;
         internal static float NearbyRange = 15f;
         public static KeyCode QuickStackKey = KeyCode.P;
         public static bool CoalesceTrophies = true;
