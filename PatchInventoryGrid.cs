@@ -43,7 +43,7 @@ namespace QuickerStack
             {
                 return true;
             }
-            if (!Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
+            if (!Input.GetKey(QuickerStackPlugin.ExclusionKey) && !Input.GetKey(QuickerStackPlugin.ExclusionKey2))
             {
                 return true;
             }

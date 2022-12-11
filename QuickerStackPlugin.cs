@@ -57,7 +57,7 @@ namespace QuickerStack
 
         private void LoadConfig()
         {
-            string value = this.BindParameter<string>(QuickStackKey.ToString(), "QuickStackKey", "Get key codes here: https://docs.unity3d.com/ScriptReference/KeyCode.html");
+            string value = this.BindParameter<string>(QuickStackKey.ToString(), nameof(QuickStackKey), "Get key codes here: https://docs.unity3d.com/ScriptReference/KeyCode.html");
             try
             {
                 QuickStackKey = (KeyCode)Enum.Parse(typeof(KeyCode), value, true);
@@ -66,13 +66,34 @@ namespace QuickerStack
             {
                 base.Logger.LogError("Failed to parse QuickStackKey, using default");
             }
+
+            value = this.BindParameter<string>(ExclusionKey.ToString(), nameof(ExclusionKey), "Key to press when clicking an item to exclude from sort. Get key codes here: https://docs.unity3d.com/ScriptReference/KeyCode.html");
+            try
+            {
+                ExclusionKey = (KeyCode)Enum.Parse(typeof(KeyCode), value, true);
+            }
+            catch (Exception)
+            {
+                base.Logger.LogError("Failed to parse ExclusionKey, using default");
+            }
+
+            value = this.BindParameter<string>(ExclusionKey2.ToString(), nameof(ExclusionKey2), "Key to press when clicking an item to exclude from sort. Get key codes here: https://docs.unity3d.com/ScriptReference/KeyCode.html");
+            try
+            {
+                ExclusionKey2 = (KeyCode)Enum.Parse(typeof(KeyCode), value, true);
+            }
+            catch (Exception)
+            {
+                base.Logger.LogError("Failed to parse ExclusionKey2, using default");
+            }
+
             NearbyRange = this.BindParameter<float>(NearbyRange, nameof(NearbyRange), "How far from you is nearby, greater value = greater range");
             IgnoreConsumable = this.BindParameter<bool>(IgnoreConsumable, nameof(IgnoreConsumable), "Whether to completely exclude consumables from quick stacking (food, potions).");
             IgnoreAmmo = this.BindParameter<bool>(IgnoreAmmo, nameof(IgnoreAmmo), "Whether to completely exclude ammo from quick stacking (arrows)");
-            CoalesceTrophies = this.BindParameter<bool>(CoalesceTrophies, nameof(CoalesceTrophies), "Whether to put all types of trophies in the container if any trophy is found in that container."); 
-            UseThreading = this.BindParameter<bool>(UseThreading, nameof(UseThreading), "Whether to enable threading when stacking. (/!\\ Warning: Unstable)");
+            CoalesceTrophies = this.BindParameter<bool>(CoalesceTrophies, nameof(CoalesceTrophies), "Whether to put all types of trophies in the container if any trophy is found in that container.");            
             StackToCurrentContainer = this.BindParameter<bool>(StackToCurrentContainer, nameof(StackToCurrentContainer), "Whether to ignore the container that you are currently using or not.");
             StackOnlyToCurrentContainer = this.BindParameter<bool>(StackOnlyToCurrentContainer, nameof(StackOnlyToCurrentContainer), "Whether to only stack to the currently open container (like QuickStack did), or also look at all nearby containers afterwards.");
+            UseThreading = this.BindParameter<bool>(UseThreading, nameof(UseThreading), "Whether to enable threading when stacking. (/!\\ Warning: Unstable)");
         }
 
         private void OnSettingChanged(object sender, SettingChangedEventArgs e)
@@ -235,6 +256,8 @@ namespace QuickerStack
         public static bool UseThreading = false;
         public static bool StackToCurrentContainer = true;
         public static bool StackOnlyToCurrentContainer = false;
+        public static KeyCode ExclusionKey = KeyCode.LeftAlt;
+        public static KeyCode ExclusionKey2 = KeyCode.RightAlt;
         private static Dictionary<long, UserConfig> playerConfigs = new Dictionary<long, UserConfig>();
     }
 }
