@@ -10,7 +10,6 @@ namespace QuickerStack
     [HarmonyPatch(typeof(ItemDrop.ItemData))]
     internal static class PatchItemData
     {
-        // Token: 0x0600001A RID: 26 RVA: 0x00002878 File Offset: 0x00000A78
         [HarmonyPatch("GetTooltip", new Type[]
         {
             typeof(ItemDrop.ItemData),

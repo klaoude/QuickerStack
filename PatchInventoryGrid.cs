@@ -11,7 +11,6 @@ namespace QuickerStack
     [HarmonyPatch(typeof(InventoryGrid))]
     internal static class PatchInventoryGrid
     {
-        // Token: 0x0600001B RID: 27 RVA: 0x000028D0 File Offset: 0x00000AD0
         [HarmonyPatch("UpdateGui")]
         [HarmonyPostfix]
         internal static void UpdateGui(InventoryGrid __instance, Player player, ItemDrop.ItemData dragItem, Inventory ___m_inventory, List<Element> ___m_elements)
@@ -31,8 +30,6 @@ namespace QuickerStack
                 }
             }
         }
-
-        // Token: 0x0600001C RID: 28 RVA: 0x00002980 File Offset: 0x00000B80
         [HarmonyPatch("OnRightClick")]
         [HarmonyPrefix]
         internal static bool OnRightClick(InventoryGrid __instance, UIInputHandler element)
@@ -56,8 +53,6 @@ namespace QuickerStack
             QuickerStackPlugin.GetPlayerConfig(localPlayer.GetPlayerID()).Toggle(itemAt.m_shared);
             return false;
         }
-
-        // Token: 0x0600001D RID: 29 RVA: 0x00002A0C File Offset: 0x00000C0C
         [HarmonyPatch("OnLeftClick")]
         [HarmonyPrefix]
         internal static bool OnLeftClick(InventoryGrid __instance, UIInputHandler clickHandler)
