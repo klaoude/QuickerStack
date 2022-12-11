@@ -99,59 +99,76 @@ namespace QuickerStack
         internal static int StackItems(Player player, Inventory fromInventory, Inventory toInventory)
         {
             UserConfig playerConfig = QuickerStackPlugin.GetPlayerConfig(player.GetPlayerID());
-            List<ItemDrop.ItemData> list = new List<ItemDrop.ItemData>(fromInventory.GetAllItems());
-            List<ItemDrop.ItemData> list2 = new List<ItemDrop.ItemData>();
-            List<ItemDrop.ItemData> list3 = new List<ItemDrop.ItemData>();
-            toInventory.GetAllItems(ItemDrop.ItemData.ItemType.Trophie, list2);
-            bool flag = QuickerStackPlugin.CoalesceTrophies && list2.Count != 0;
-            int num = 0;
-            foreach (ItemDrop.ItemData itemData in list)
-            {                
-                if  (itemData.m_shared.m_maxStackSize != 1 && 
-                    (!QuickerStackPlugin.IgnoreAmmo || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Ammo) && 
-                    (!QuickerStackPlugin.IgnoreConsumable || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Consumable) && 
-                    !playerConfig.IsMarked(itemData.m_gridPos) && 
-                    !playerConfig.IsMarked(itemData.m_shared))
-                {
-                    if (itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophie && flag)
-                    {
-                        if (toInventory.AddItem(itemData))
-                        {
-                            fromInventory.RemoveItem(itemData);
-                            num++;
-                        }
-                        else
-                        {
-                            list3.Add(itemData);
-                        }
-                    }
-                    else if (toInventory.HaveItem(itemData.m_shared.m_name))
-                    {
-                        if (toInventory.AddItem(itemData))
-                        {
-                            player.Message(MessageHud.MessageType.Center, String.Format("Storing {0} in container", itemData.m_shared.m_name));
-                            fromInventory.RemoveItem(itemData);
-                            num++;
-                        }
-                        else
-                        {
-                            list3.Add(itemData);
-                        }
-                    }
-                }
-            }
-            foreach (ItemDrop.ItemData itemData2 in list3)
+            List<ItemDrop.ItemData> fromItems = new List<ItemDrop.ItemData>(fromInventory.GetAllItems());
+            List<ItemDrop.ItemData> trophies = new List<ItemDrop.ItemData>();
+            List<ItemDrop.ItemData> remainingItems = new List<ItemDrop.ItemData>();
+            toInventory.GetAllItems(ItemDrop.ItemData.ItemType.Trophie, trophies);
+            bool coalesceTrophies = QuickerStackPlugin.CoalesceTrophies && trophies.Count != 0;
+            int numStacked = 0;
+
+            // Create a dictionary to store the items in the "from" inventory, with the item names as the keys
+            Dictionary<string, ItemDrop.ItemData> fromItemDict = new Dictionary<string, ItemDrop.ItemData>();
+            foreach (ItemDrop.ItemData itemData in fromItems)
             {
-                if (toInventory.AddItem(itemData2))
+                fromItemDict[itemData.m_shared.m_name] = itemData;
+            }
+
+            // Loop through the items in the "to" inventory and search for items with names that match the keys in the dictionary
+            foreach (ItemDrop.ItemData toItemData in toInventory.GetAllItems())
+            {
+                if (fromItemDict.ContainsKey(toItemData.m_shared.m_name))
                 {
-                    player.Message(MessageHud.MessageType.Center, String.Format("Storing {0} in container", itemData2.m_shared.m_name));
-                    num++;
-                    fromInventory.RemoveItem(itemData2);
+                    ItemDrop.ItemData fromItemData = fromItemDict[toItemData.m_shared.m_name];
+
+                    if (fromItemData.m_shared.m_maxStackSize != 1 && 
+                        !QuickerStackPlugin.IgnoreAmmo || fromItemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Ammo && 
+                        !QuickerStackPlugin.IgnoreConsumable || fromItemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Consumable && 
+                        !playerConfig.IsMarked(fromItemData.m_gridPos) && 
+                        !playerConfig.IsMarked(fromItemData.m_shared))
+                    {
+                        if (fromItemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophie && coalesceTrophies)
+                        {
+                            if (toInventory.AddItem(fromItemData))
+                            {
+                                fromInventory.RemoveItem(fromItemData);
+                                numStacked++;
+                            }
+                            else
+                            {
+                                remainingItems.Add(fromItemData);
+                            }
+                        }
+                        else if (toInventory.HaveItem(fromItemData.m_shared.m_name))
+                        {
+                            if (toInventory.AddItem(fromItemData))
+                            {
+                                Debug.Log(String.Format("Storing {0} in container", fromItemData.m_shared.m_name));
+                                fromInventory.RemoveItem(fromItemData);
+                                numStacked++;
+                            }
+                            else
+                            {
+                                remainingItems.Add(fromItemData);
+                            }
+                        }
+                    }
                 }
             }
+
+            // Try to add the remaining items to the "to" inventory
+            foreach (ItemDrop.ItemData itemData in remainingItems)
+            {
+                if (toInventory.AddItem(itemData))
+                {
+                    Debug.Log(String.Format("Storing {0} in container", itemData.m_shared.m_name));
+                    numStacked++;
+                    fromInventory.RemoveItem(itemData);
+                }
+            }
+
             toInventory.Changed();
             fromInventory.Changed();
-            return num;
+            return numStacked;
         }
 
         public static void reportResult(Player player, int movedCount)
@@ -188,25 +205,23 @@ namespace QuickerStack
 
         public static void DoQuickStack(Player player)
         {
-            Debug.Log("DoQuickStack");
             if (player.IsTeleporting())
                 return;
 
-            List<Container> list = QuickerStackPlugin.FindNearbyContainers(player.transform.position);
-            if (list.Count != 0)
+            List<Container> containers = QuickerStackPlugin.FindNearbyContainers(player.transform.position);
+            if (containers.Count == 0)
+                return;
+
+            player.Message(MessageHud.MessageType.Center, String.Format("found {0} containers in range", containers.Count));
+
+            if (UseThreading)
             {
-                player.Message(MessageHud.MessageType.Center, String.Format("found {0} containers in range", list.Count));
-                if(UseThreading)
-                {
-                    Debug.Log("Using thread !");
-                    Thread stackThread = new Thread(() => QuickerStackPlugin.StackToMany(player, list));
-                    stackThread.Start();
-                }
-                else 
-                {
-                    Debug.Log("Not using thread");
-                    StackToMany(player, list);
-                }
+                Thread stackThread = new Thread(() => QuickerStackPlugin.StackToMany(player, containers));
+                stackThread.Start();
+            }
+            else
+            {
+                QuickerStackPlugin.StackToMany(player, containers);
             }
         }
 
