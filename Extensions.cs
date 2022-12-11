@@ -34,6 +34,11 @@ namespace QuickerStack
             return Extensions._m_nview.Invoke(instance);
         }
 
+        public unsafe static Container GetCurrentContainer(this InventoryGui instance)
+        {
+            return Extensions._m_currentContainer.Invoke(instance);
+        }
+
         // Token: 0x0600002A RID: 42 RVA: 0x00002B31 File Offset: 0x00000D31
         public static bool XAdd<T>(this List<T> instance, T item)
         {
@@ -54,5 +59,7 @@ namespace QuickerStack
 
         // Token: 0x0400001E RID: 30
         internal static readonly AccessTools.FieldRef<Container, ZNetView> _m_nview = AccessTools.FieldRefAccess<Container, ZNetView>("m_nview");
+
+        internal static readonly AccessTools.FieldRef<InventoryGui, Container> _m_currentContainer = AccessTools.FieldRefAccess<InventoryGui, Container>("m_currentContainer");
     }
 }
