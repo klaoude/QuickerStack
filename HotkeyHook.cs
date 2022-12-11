@@ -13,7 +13,7 @@ namespace QuickerStack
             {
                 return;
             }
-            if (Chat.instance.m_input.isFocused || Minimap.InTextInput() || TextInput.instance.IsVisible())
+            if (Chat.instance.m_input.isFocused || Minimap.InTextInput() || TextInput.instance.IsVisible() || Console.instance.IsFocused())
             {
                 return;
             }

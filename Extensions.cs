@@ -25,10 +25,19 @@ namespace QuickerStack
         {
             return Extensions._m_nview.Invoke(instance);
         }
+        public unsafe static Container GetCurrentContainer(this InventoryGui instance)
+        {
+            return Extensions._m_currentContainer.Invoke(instance);
+        }
 
         public unsafe static bool IsVisible(this TextInput instance)
         {
             return instance && Extensions._m_visibleFrame.Invoke(instance);
+        }
+
+        public unsafe static bool IsFocused(this Terminal instance)
+        {
+            return instance && Extensions._m_focused.Invoke(instance);
         }
 
         public static bool XAdd<T>(this List<T> instance, T item)
@@ -47,5 +56,7 @@ namespace QuickerStack
         internal static readonly AccessTools.FieldRef<Container, ZNetView> _m_nview = AccessTools.FieldRefAccess<Container, ZNetView>("m_nview");
 
         internal static readonly AccessTools.FieldRef<TextInput, bool> _m_visibleFrame = AccessTools.FieldRefAccess<TextInput, bool>("m_visibleFrame");
+        internal static readonly AccessTools.FieldRef<InventoryGui, Container> _m_currentContainer = AccessTools.FieldRefAccess<InventoryGui, Container>("m_currentContainer");
+        internal static readonly AccessTools.FieldRef<Terminal, bool> _m_focused = AccessTools.FieldRefAccess<Terminal, bool>("m_focused");
     }
 }

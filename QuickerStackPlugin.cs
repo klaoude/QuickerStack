@@ -57,20 +57,22 @@ namespace QuickerStack
 
         private void LoadConfig()
         {
-            string value = this.BindParameter<string>(QuickerStackPlugin.QuickStackKey.ToString(), "QuickStackKey", "Get key codes here: https://docs.unity3d.com/ScriptReference/KeyCode.html");
+            string value = this.BindParameter<string>(QuickStackKey.ToString(), "QuickStackKey", "Get key codes here: https://docs.unity3d.com/ScriptReference/KeyCode.html");
             try
             {
-                QuickerStackPlugin.QuickStackKey = (KeyCode)Enum.Parse(typeof(KeyCode), value, true);
+                QuickStackKey = (KeyCode)Enum.Parse(typeof(KeyCode), value, true);
             }
             catch (Exception)
             {
                 base.Logger.LogError("Failed to parse QuickStackKey, using default");
             }
-            QuickerStackPlugin.NearbyRange = this.BindParameter<float>(QuickerStackPlugin.NearbyRange, "NearbyRange", "How far from you is nearby, greater value = greater range");
-            QuickerStackPlugin.IgnoreConsumable = this.BindParameter<bool>(QuickerStackPlugin.IgnoreConsumable, "IgnoreConsumable", "Whether to completely exclude consumables from quick stacking (food, potions).");
-            QuickerStackPlugin.IgnoreAmmo = this.BindParameter<bool>(QuickerStackPlugin.IgnoreAmmo, "IgnoreAmmo", "Whether to completely exclude ammo from quick stacking (arrows)");
-            QuickerStackPlugin.CoalesceTrophies = this.BindParameter<bool>(QuickerStackPlugin.CoalesceTrophies, "CoalesceTrophies", "Whether to put all types of trophies in the container if any trophy is found in that container."); 
-            QuickerStackPlugin.UseThreading = this.BindParameter<bool>(QuickerStackPlugin.UseThreading, "UseThreading", "Whether to enable threading when stacking."); 
+            NearbyRange = this.BindParameter<float>(NearbyRange, nameof(NearbyRange), "How far from you is nearby, greater value = greater range");
+            IgnoreConsumable = this.BindParameter<bool>(IgnoreConsumable, nameof(IgnoreConsumable), "Whether to completely exclude consumables from quick stacking (food, potions).");
+            IgnoreAmmo = this.BindParameter<bool>(IgnoreAmmo, nameof(IgnoreAmmo), "Whether to completely exclude ammo from quick stacking (arrows)");
+            CoalesceTrophies = this.BindParameter<bool>(CoalesceTrophies, nameof(CoalesceTrophies), "Whether to put all types of trophies in the container if any trophy is found in that container."); 
+            UseThreading = this.BindParameter<bool>(UseThreading, nameof(UseThreading), "Whether to enable threading when stacking. (/!\\ Warning: Unstable)");
+            StackToCurrentContainer = this.BindParameter<bool>(StackToCurrentContainer, nameof(StackToCurrentContainer), "Whether to ignore the container that you are currently using or not.");
+            StackOnlyToCurrentContainer = this.BindParameter<bool>(StackOnlyToCurrentContainer, nameof(StackOnlyToCurrentContainer), "Whether to only stack to the currently open container (like QuickStack did), or also look at all nearby containers afterwards.");
         }
 
         private void OnSettingChanged(object sender, SettingChangedEventArgs e)
@@ -98,95 +100,76 @@ namespace QuickerStack
 
         internal static int StackItems(Player player, Inventory fromInventory, Inventory toInventory)
         {
-            lock(fromInventory) { lock(fromInventory) {
             UserConfig playerConfig = QuickerStackPlugin.GetPlayerConfig(player.GetPlayerID());
-            List<ItemDrop.ItemData> fromItems = new List<ItemDrop.ItemData>(fromInventory.GetAllItems());
-            List<ItemDrop.ItemData> trophies = new List<ItemDrop.ItemData>();
-            List<ItemDrop.ItemData> remainingItems = new List<ItemDrop.ItemData>();
-            toInventory.GetAllItems(ItemDrop.ItemData.ItemType.Trophie, trophies);
-            bool coalesceTrophies = QuickerStackPlugin.CoalesceTrophies && trophies.Count != 0;
-            int numStacked = 0;
-
-            // Create a dictionary to store the items in the "from" inventory, with the item names as the keys
-            Dictionary<string, ItemDrop.ItemData> fromItemDict = new Dictionary<string, ItemDrop.ItemData>();
-            foreach (ItemDrop.ItemData itemData in fromItems)
+            List<ItemDrop.ItemData> list = new List<ItemDrop.ItemData>(fromInventory.GetAllItems());
+            List<ItemDrop.ItemData> list2 = new List<ItemDrop.ItemData>();
+            List<ItemDrop.ItemData> list3 = new List<ItemDrop.ItemData>();
+            toInventory.GetAllItems(ItemDrop.ItemData.ItemType.Trophie, list2);
+            bool flag = QuickerStackPlugin.CoalesceTrophies && list2.Count != 0;
+            int num = 0;
+            foreach (ItemDrop.ItemData itemData in list)
             {
-                fromItemDict[itemData.m_shared.m_name] = itemData;
-            }
-
-            // Loop through the items in the "to" inventory and search for items with names that match the keys in the dictionary
-            foreach (ItemDrop.ItemData toItemData in toInventory.GetAllItems())
-            {
-                if (fromItemDict.ContainsKey(toItemData.m_shared.m_name))
+                if (itemData.m_shared.m_maxStackSize != 1 &&
+                    (!QuickerStackPlugin.IgnoreAmmo || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Ammo) &&
+                    (!QuickerStackPlugin.IgnoreConsumable || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Consumable) &&
+                    !playerConfig.IsMarked(itemData.m_gridPos) &&
+                    !playerConfig.IsMarked(itemData.m_shared))
                 {
-                    ItemDrop.ItemData fromItemData = fromItemDict[toItemData.m_shared.m_name];
-
-                    if (fromItemData.m_shared.m_maxStackSize != 1 && 
-                        !QuickerStackPlugin.IgnoreAmmo || fromItemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Ammo && 
-                        !QuickerStackPlugin.IgnoreConsumable || fromItemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Consumable && 
-                        !playerConfig.IsMarked(fromItemData.m_gridPos) && 
-                        !playerConfig.IsMarked(fromItemData.m_shared))
+                    if (itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophie && flag)
                     {
-                        if (fromItemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophie && coalesceTrophies)
+                        if (toInventory.AddItem(itemData))
                         {
-                            if (toInventory.AddItem(fromItemData))
-                            {
-                                fromInventory.RemoveItem(fromItemData);
-                                numStacked++;
-                            }
-                            else
-                            {
-                                remainingItems.Add(fromItemData);
-                            }
+                            fromInventory.RemoveItem(itemData);
+                            num++;
                         }
-                        else if (toInventory.HaveItem(fromItemData.m_shared.m_name))
+                        else
                         {
-                            if (toInventory.AddItem(fromItemData))
-                            {
-                                Debug.Log(String.Format("Storing {0} in container", fromItemData.m_shared.m_name));
-                                fromInventory.RemoveItem(fromItemData);
-                                numStacked++;
-                            }
-                            else
-                            {
-                                remainingItems.Add(fromItemData);
-                            }
+                            list3.Add(itemData);
+                        }
+                    }
+                    else if (toInventory.HaveItem(itemData.m_shared.m_name))
+                    {
+                        if (toInventory.AddItem(itemData))
+                        {
+                            player.Message(MessageHud.MessageType.Center, String.Format("Storing {0} in container", itemData.m_shared.m_name));
+                            fromInventory.RemoveItem(itemData);
+                            num++;
+                        }
+                        else
+                        {
+                            list3.Add(itemData);
                         }
                     }
                 }
             }
-
-            // Try to add the remaining items to the "to" inventory
-            foreach (ItemDrop.ItemData itemData in remainingItems)
+            foreach (ItemDrop.ItemData itemData2 in list3)
             {
-                if (toInventory.AddItem(itemData))
+                if (toInventory.AddItem(itemData2))
                 {
-                    Debug.Log(String.Format("Storing {0} in container", itemData.m_shared.m_name));
-                    numStacked++;
-                    fromInventory.RemoveItem(itemData);
+                    player.Message(MessageHud.MessageType.Center, String.Format("Storing {0} in container", itemData2.m_shared.m_name));
+                    num++;
+                    fromInventory.RemoveItem(itemData2);
                 }
             }
-
             toInventory.Changed();
             fromInventory.Changed();
-            return numStacked;
-            } }
+            return num;
         }
 
-        public static void reportResult(Player player, int movedCount)
+        public static void ReportResult(Player player, int movedCount)
         {
             player.Message(
                 MessageHud.MessageType.Center,
-                (movedCount > 0) ? string.Format("Stacked {0} item{1}", movedCount, (movedCount % 10 == 1) ? "" : "s") : "Nothing to stack",
+                (movedCount > 0) ? string.Format("Stacked {0} item{1}", movedCount, (movedCount == 1) ? "" : "s") : "Nothing to stack",
                 0,
                 null
            );
         }
 
-        private static void StackToMany(Player player, List<Container> containers)
+        private static void StackToMany(Player player, List<Container> containers, int initialReportCount = 0)
         {
             Inventory inventory = player.GetInventory();
-            int num = 0;
+            int num = initialReportCount;
             foreach (Container container in containers)
             {
                 if ((!container.m_checkGuardStone || 
@@ -202,7 +185,7 @@ namespace QuickerStack
                     container.SetInUse(false);
                 }
             }
-            QuickerStackPlugin.reportResult(player, num);
+            QuickerStackPlugin.ReportResult(player, num);
         }
 
         public static void DoQuickStack(Player player)
@@ -210,20 +193,34 @@ namespace QuickerStack
             if (player.IsTeleporting())
                 return;
 
+            int movedCount = 0;
+            Container container = InventoryGui.instance.GetCurrentContainer();
+            if (StackToCurrentContainer && container != null)
+            {
+                movedCount = StackItems(player, player.GetInventory(), container.GetInventory());
+
+                if (StackOnlyToCurrentContainer)
+                {
+                    ReportResult(player, movedCount);
+                    return;
+                }
+            }
+
             List<Container> containers = QuickerStackPlugin.FindNearbyContainers(player.transform.position);
             if (containers.Count == 0)
                 return;
 
-            player.Message(MessageHud.MessageType.Center, String.Format("found {0} containers in range", containers.Count));
+            Debug.Log(String.Format("found {0} containers in range", containers.Count));
 
             if (UseThreading)
             {
-                Thread stackThread = new Thread(() => QuickerStackPlugin.StackToMany(player, containers));
+                Debug.Log("Use thread as your own risk !");
+                Thread stackThread = new Thread(() => QuickerStackPlugin.StackToMany(player, containers, movedCount));
                 stackThread.Start();
             }
             else
             {
-                QuickerStackPlugin.StackToMany(player, containers);
+                QuickerStackPlugin.StackToMany(player, containers, movedCount);
             }
         }
 
@@ -236,6 +233,8 @@ namespace QuickerStack
         public static KeyCode QuickStackKey = KeyCode.P;
         public static bool CoalesceTrophies = true;
         public static bool UseThreading = false;
+        public static bool StackToCurrentContainer = true;
+        public static bool StackOnlyToCurrentContainer = false;
         private static Dictionary<long, UserConfig> playerConfigs = new Dictionary<long, UserConfig>();
     }
 }
