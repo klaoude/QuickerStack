@@ -240,14 +240,27 @@ namespace QuickStackStore
         {
             LoadConfig();
 
-            if (InventoryGui.instance?.m_takeAllButton?.transform != null)
+            // reminder to never use ?. on monobehaviors
+
+            if (InventoryGui.instance != null && InventoryGui.instance.m_takeAllButton != null)
             {
                 InventoryGui.instance.m_takeAllButton.transform.localPosition = origButtonPosition;
             }
 
-            Destroy(depositAllButton.gameObject);
-            Destroy(quickStackAreaButton.gameObject);
-            Destroy(quickStackToChestButton.gameObject);
+            if (depositAllButton != null)
+            {
+                Destroy(depositAllButton.gameObject);
+            }
+
+            if (quickStackAreaButton != null)
+            {
+                Destroy(quickStackAreaButton.gameObject);
+            }
+
+            if (quickStackToChestButton != null)
+            {
+                Destroy(quickStackToChestButton.gameObject);
+            }
         }
 
         public static List<Container> FindContainersInRange(Vector3 point, float range)
@@ -256,7 +269,7 @@ namespace QuickStackStore
 
             foreach (Container container in QuickStackStorePlugin.AllContainers)
             {
-                if (container?.transform != null && Vector3.Distance(point, container.transform.position) < range)
+                if (container != null && container.transform != null && Vector3.Distance(point, container.transform.position) < range)
                 {
                     list.Add(container);
                 }
