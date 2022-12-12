@@ -37,8 +37,8 @@ namespace QuickStackStore
                         img = CreateBorderImage(___m_elements[index].m_queued);
                     }
 
-                    img.color = QuickStackStorePlugin.FavoriteSlotColor;
-                    img.enabled = playerConfig.IsSlotMarked(new Vector2i(x, y));
+                    img.color = QuickStackStorePlugin.BorderColorFavoriteSlot;
+                    img.enabled = playerConfig.IsSlotFavorited(new Vector2i(x, y));
                 }
             }
 
@@ -57,27 +57,27 @@ namespace QuickStackStore
                     img = CreateBorderImage(___m_elements[index].m_queued);
                 }
 
-                if (playerConfig.IsItemMarked(itemData.m_shared))
+                if (playerConfig.IsItemFavorited(itemData.m_shared))
                 {
                     if (img.enabled)
                     {
                         if (QuickStackStorePlugin.MixColorsInsteadOfUsingFavoriteBothColor)
                         {
-                            img.color = Extensions.GetMixedColor(QuickStackStorePlugin.FavoriteItemColor, QuickStackStorePlugin.FavoriteSlotColor);
+                            img.color = Extensions.GetMixedColor(QuickStackStorePlugin.BorderColorFavoriteItem, QuickStackStorePlugin.BorderColorFavoriteSlot);
                         }
                         else
                         {
-                            img.color = QuickStackStorePlugin.FavoriteBothColor;
+                            img.color = QuickStackStorePlugin.BorderColorFavoriteBoth;
                         }
                     }
                     else
                     {
-                        img.color = QuickStackStorePlugin.FavoriteItemColor;
+                        img.color = QuickStackStorePlugin.BorderColorFavoriteItem;
                     }
                 }
 
-                // do this after the isitemmarked if statement, so we can use img.enabled to deduce the slot marking
-                img.enabled |= playerConfig.IsItemMarked(itemData.m_shared);
+                // do this after the IsItemFavorited if statement, so we can use img.enabled to deduce the slot favoriting
+                img.enabled |= playerConfig.IsItemFavorited(itemData.m_shared);
             }
         }
 
@@ -91,6 +91,11 @@ namespace QuickStackStore
             obj.sprite = QuickStackStorePlugin.border;
 
             return obj;
+        }
+
+        private static bool IsPressingFavoriteKey()
+        {
+            return Input.GetKey(QuickStackStorePlugin.FavoriteModifierKey1) || Input.GetKey(QuickStackStorePlugin.FavoriteModifierKey2);
         }
 
         [HarmonyPatch("OnRightClick")]
@@ -108,7 +113,7 @@ namespace QuickStackStore
                 return true;
             }
 
-            if (!Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
+            if (!IsPressingFavoriteKey())
             {
                 return true;
             }
@@ -142,7 +147,7 @@ namespace QuickStackStore
                 return true;
             }
 
-            if (!Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
+            if (!IsPressingFavoriteKey())
             {
                 return true;
             }

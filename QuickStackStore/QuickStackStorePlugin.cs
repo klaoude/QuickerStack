@@ -11,13 +11,14 @@ using UnityEngine.UI;
 
 namespace QuickStackStore
 {
+    // QuickStackSortStoreTakeTrash (QSSSTT)
     [BepInPlugin("org.bepinex.plugins.valheim.quick_stack_store", "Quick Stack and Store", VERSION)]
     public class QuickStackStorePlugin : BaseUnityPlugin
     {
         private const string VERSION = "0.9";
 
         // TODO maybe add a sort button (using this as the base, even if it's currently quite broken https://github.com/aedenthorn/ValheimMods/blob/master/SimpleSort/BepInExPlugin.cs )
-
+        // TODO controller support
         public void Awake()
         {
             Logger.LogInfo(String.Format("Initializing Quick Stack and Store {0}.", VERSION));
@@ -213,7 +214,7 @@ namespace QuickStackStore
         {
             string sectionName = "1 - Quick Stacking";
 
-            QuickStackKey = this.BindConfig(sectionName, QuickStackKey, nameof(QuickStackKey), "Get key codes here: https://docs.unity3d.com/ScriptReference/KeyCode.html");
+            QuickStackKey = this.BindConfig(sectionName, QuickStackKey, nameof(QuickStackKey), "The hotkey to immediately start quick stacking to nearby chests.");
             NearbyRange = this.BindConfig(sectionName, NearbyRange, nameof(NearbyRange), "How far from you is nearby, greater value = greater range.");
             HotkeyStacksToCurrentContainer = this.BindConfig(sectionName, HotkeyStacksToCurrentContainer, nameof(HotkeyStacksToCurrentContainer), "Whether to ignore the container that you are currently using or not.");
             HotkeyOnlyStacksToCurrentContainerIfOpen = this.BindConfig(sectionName, HotkeyOnlyStacksToCurrentContainerIfOpen, nameof(HotkeyOnlyStacksToCurrentContainerIfOpen), "Whether to only stack to the currently open container (like QuickStack did), or also look at all nearby containers afterwards.");
@@ -230,9 +231,11 @@ namespace QuickStackStore
 
             sectionName = "3 - Favoriting";
 
-            FavoriteItemColor = this.BindConfig(sectionName, FavoriteItemColor, nameof(FavoriteItemColor), "Color of the border for slots containing favorited items.");
-            FavoriteSlotColor = this.BindConfig(sectionName, FavoriteSlotColor, nameof(FavoriteSlotColor), "Color of the border for favorited slots.");
-            FavoriteBothColor = this.BindConfig(sectionName, FavoriteBothColor, nameof(FavoriteBothColor), "If not disabled, color of the border of a favorited slots that also contains a favorited item.");
+            FavoriteModifierKey1 = this.BindConfig(sectionName, FavoriteModifierKey1, nameof(FavoriteModifierKey1), $"While holding this, left clicking on slots or right clicking on items favorites them. Identical to {nameof(FavoriteModifierKey2)}.");
+            FavoriteModifierKey2 = this.BindConfig(sectionName, FavoriteModifierKey2, nameof(FavoriteModifierKey2), $"While holding this, left clicking on slots or right clicking on items favorites them. Identical to {nameof(FavoriteModifierKey1)}.");
+            BorderColorFavoriteItem = this.BindConfig(sectionName, BorderColorFavoriteItem, nameof(BorderColorFavoriteItem), "Color of the border for slots containing favorited items.");
+            BorderColorFavoriteSlot = this.BindConfig(sectionName, BorderColorFavoriteSlot, nameof(BorderColorFavoriteSlot), "Color of the border for favorited slots.");
+            BorderColorFavoriteBoth = this.BindConfig(sectionName, BorderColorFavoriteBoth, nameof(BorderColorFavoriteBoth), "If not disabled, color of the border of a favorited slots that also contains a favorited item.");
             MixColorsInsteadOfUsingFavoriteBothColor = this.BindConfig(sectionName, MixColorsInsteadOfUsingFavoriteBothColor, nameof(MixColorsInsteadOfUsingFavoriteBothColor), "Whether to mix the item and slot color to produce the 'FavoriteBoth' color or use the config color.");
         }
 
@@ -318,7 +321,7 @@ namespace QuickStackStore
 
             foreach (ItemDrop.ItemData itemData in list)
             {
-                if (takeAllOverride || ((StoreIgnoresEquipped || !itemData.m_equiped) && !playerConfig.IsSlotMarked(itemData.m_gridPos) && !playerConfig.IsItemMarked(itemData.m_shared)))
+                if (takeAllOverride || ((StoreIgnoresEquipped || !itemData.m_equiped) && !playerConfig.IsSlotFavorited(itemData.m_gridPos) && !playerConfig.IsItemFavorited(itemData.m_shared)))
                 {
                     if (toInventory.AddItem(itemData))
                     {
@@ -363,7 +366,7 @@ namespace QuickStackStore
                 if (itemData.m_shared.m_maxStackSize != 1 &&
                     (!QuickStackStorePlugin.StackIgnoresAmmo || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Ammo) &&
                     (!QuickStackStorePlugin.StackIgnoresConsumable || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Consumable) &&
-                    !playerConfig.IsSlotMarked(itemData.m_gridPos) && !playerConfig.IsItemMarked(itemData.m_shared))
+                    !playerConfig.IsSlotFavorited(itemData.m_gridPos) && !playerConfig.IsItemFavorited(itemData.m_shared))
                 {
                     if (itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophie && QuickStackStorePlugin.PutTrophiesTogether && list2.Count > 0)
                     {
@@ -500,9 +503,11 @@ namespace QuickStackStore
         public static bool DisplayStoreButtonAndMoveTakeButton = true;
         public static bool ChestsUseImprovedTakeAllLogic = true;
 
-        public static Color FavoriteItemColor = new Color(1f, 0.8482759f, 0f); // valheim yellow/ orange-ish
-        public static Color FavoriteSlotColor = new Color(0f, 0.5f, 1); // light-ish blue
-        public static Color FavoriteBothColor = Color.green;
+        public static KeyCode FavoriteModifierKey1 = KeyCode.LeftAlt;
+        public static KeyCode FavoriteModifierKey2 = KeyCode.RightAlt;
+        public static Color BorderColorFavoriteItem = new Color(1f, 0.8482759f, 0f); // valheim yellow/ orange-ish
+        public static Color BorderColorFavoriteSlot = new Color(0f, 0.5f, 1); // light-ish blue
+        public static Color BorderColorFavoriteBoth = Color.green;
         public static bool MixColorsInsteadOfUsingFavoriteBothColor = true;
     }
 }

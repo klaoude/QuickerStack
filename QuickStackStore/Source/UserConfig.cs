@@ -20,8 +20,8 @@ namespace QuickStackStore
         {
             using (Stream stream = File.Open(this._configPath, FileMode.Create))
             {
-                UserConfig._bf.Serialize(stream, this._markedItems);
-                UserConfig._bf.Serialize(stream, this._markedCategories);
+                UserConfig._bf.Serialize(stream, this.favoritedSlots);
+                UserConfig._bf.Serialize(stream, this.favoritedItems);
             }
         }
 
@@ -60,43 +60,43 @@ namespace QuickStackStore
             using (Stream stream = File.Open(this._configPath, FileMode.OpenOrCreate))
             {
                 stream.Seek(0L, SeekOrigin.Begin);
-                UserConfig.LoadProperty<List<Tuple<int, int>>>(stream, out this._markedItems);
-                UserConfig.LoadProperty<List<string>>(stream, out this._markedCategories);
+                UserConfig.LoadProperty<List<Tuple<int, int>>>(stream, out this.favoritedSlots);
+                UserConfig.LoadProperty<List<string>>(stream, out this.favoritedItems);
             }
         }
 
         public bool Toggle(Vector2i position)
         {
             Tuple<int, int> item = new Tuple<int, int>(position.x, position.y);
-            bool result = this._markedItems.XAdd(item);
+            bool result = this.favoritedSlots.XAdd(item);
             this.Save();
 
             return result;
         }
 
-        public bool IsSlotMarked(Vector2i position)
+        public bool IsSlotFavorited(Vector2i position)
         {
             Tuple<int, int> item = new Tuple<int, int>(position.x, position.y);
 
-            return this._markedItems.Contains(item);
+            return this.favoritedSlots.Contains(item);
         }
 
         public bool Toggle(ItemDrop.ItemData.SharedData item)
         {
-            bool result = this._markedCategories.XAdd(item.m_name);
+            bool result = this.favoritedItems.XAdd(item.m_name);
             this.Save();
 
             return result;
         }
 
-        public bool IsItemMarked(ItemDrop.ItemData.SharedData item)
+        public bool IsItemFavorited(ItemDrop.ItemData.SharedData item)
         {
-            return this._markedCategories.Contains(item.m_name);
+            return this.favoritedItems.Contains(item.m_name);
         }
 
         private string _configPath = string.Empty;
-        private List<Tuple<int, int>> _markedItems;
-        private List<string> _markedCategories;
+        private List<Tuple<int, int>> favoritedSlots;
+        private List<string> favoritedItems;
         private long _uid;
         private static BinaryFormatter _bf = new BinaryFormatter();
     }

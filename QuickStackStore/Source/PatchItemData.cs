@@ -25,9 +25,9 @@ namespace QuickStackStore
             StringBuilder stringBuilder = new StringBuilder(256);
             stringBuilder.Append(__result);
 
-            if (QuickStackStorePlugin.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()).IsItemMarked(item.m_shared))
+            if (QuickStackStorePlugin.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()).IsItemFavorited(item.m_shared))
             {
-                var color = ColorUtility.ToHtmlStringRGB(QuickStackStorePlugin.FavoriteItemColor);
+                var color = ColorUtility.ToHtmlStringRGB(QuickStackStorePlugin.BorderColorFavoriteItem);
 
                 stringBuilder.Append($"\n<color=#{color}>Will not be quick stacked</color>");
             }
