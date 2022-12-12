@@ -11,7 +11,7 @@ namespace QuickStackStore
     {
         public UserConfig(long uid)
         {
-            this._configPath = Path.Combine(Paths.ConfigPath, string.Format($"{QuickStackStorePlugin.configKey}_player_{0}.dat", uid));
+            this._configPath = Path.Combine(Paths.ConfigPath, string.Format($"QuickStackStore_player_{0}.dat", uid));
             this._uid = uid;
             this.Load();
         }

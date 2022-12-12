@@ -1,29 +1,23 @@
-﻿using HarmonyLib;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace QuickStackStore
 {
     public static class Extensions
     {
-        public static unsafe InventoryGrid GetPlayerGrid(this InventoryGui instance)
+        public static int GetIndexFromItemData(this ItemDrop.ItemData item, int width)
         {
-            return Extensions._playerGrid.Invoke(instance);
+            return item.m_gridPos.y * width + item.m_gridPos.x;
         }
 
-        public static unsafe GameObject GetDragGo(this InventoryGui instance)
+        public static Color GetMixedColor(Color color1, Color color2)
         {
-            return Extensions._m_dragGo.Invoke(instance);
-        }
+            float r = (color1.r + color2.r) / 2f;
+            float g = (color1.g + color2.g) / 2f;
+            float b = (color1.b + color2.b) / 2f;
+            float a = (color1.a + color2.a) / 2f;
 
-        public static unsafe ZNetView GetNView(this Container instance)
-        {
-            return Extensions._m_nview.Invoke(instance);
-        }
-
-        public static unsafe Container GetCurrentContainer(this InventoryGui instance)
-        {
-            return Extensions._m_currentContainer.Invoke(instance);
+            return new Color(r, g, b, a);
         }
 
         public static bool XAdd<T>(this List<T> instance, T item)
@@ -37,10 +31,5 @@ namespace QuickStackStore
             instance.Add(item);
             return true;
         }
-
-        internal static readonly AccessTools.FieldRef<InventoryGui, InventoryGrid> _playerGrid = AccessTools.FieldRefAccess<InventoryGui, InventoryGrid>("m_playerGrid");
-        internal static readonly AccessTools.FieldRef<InventoryGui, GameObject> _m_dragGo = AccessTools.FieldRefAccess<InventoryGui, GameObject>("m_dragGo");
-        internal static readonly AccessTools.FieldRef<Container, ZNetView> _m_nview = AccessTools.FieldRefAccess<Container, ZNetView>("m_nview");
-        internal static readonly AccessTools.FieldRef<InventoryGui, Container> _m_currentContainer = AccessTools.FieldRefAccess<InventoryGui, Container>("m_currentContainer");
     }
 }

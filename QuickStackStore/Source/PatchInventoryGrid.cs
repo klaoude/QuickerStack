@@ -10,7 +10,7 @@ namespace QuickStackStore
     {
         [HarmonyPatch("UpdateGui")]
         [HarmonyPostfix]
-        internal static void UpdateGui(InventoryGrid __instance, Player player, ItemDrop.ItemData dragItem, Inventory ___m_inventory, List<Element> ___m_elements)
+        internal static void UpdateGui(Player player, Inventory ___m_inventory, List<Element> ___m_elements)
         {
             if (player == null || player.GetInventory() != ___m_inventory)
             {
@@ -26,48 +26,71 @@ namespace QuickStackStore
                 {
                     int index = y * width + x;
 
+                    Image img;
+
                     if (___m_elements[index].m_queued.transform.childCount > 0)
                     {
-                        var child = ___m_elements[index].m_queued.transform.GetChild(0).GetComponent<Image>();
-                        child.enabled = playerConfig.IsSlotMarked(new Vector2i(x, y));
+                        img = ___m_elements[index].m_queued.transform.GetChild(0).GetComponent<Image>();
                     }
                     else
                     {
-                        // set m_queued parent as parent first, so the position is correct
-                        var obj = GameObject.Instantiate<Image>(___m_elements[index].m_queued, ___m_elements[index].m_queued.transform.parent);
-                        // change the parent to the m_queued image so we can access the new image without a loop
-                        obj.transform.SetParent(___m_elements[index].m_queued.transform);
-                        // set the new border image
-                        obj.sprite = QuickStackStorePlugin.border;
-                        // activate it if needed
-                        obj.enabled = playerConfig.IsSlotMarked(new Vector2i(x, y));
+                        img = CreateBorderImage(___m_elements[index].m_queued);
                     }
+
+                    img.color = QuickStackStorePlugin.FavoriteSlotColor;
+                    img.enabled = playerConfig.IsSlotMarked(new Vector2i(x, y));
                 }
             }
-
-            // TODO add colors to config, change color depending on if both favorites are on
 
             foreach (ItemDrop.ItemData itemData in ___m_inventory.GetAllItems())
             {
-                int index = itemData.m_gridPos.y * width + itemData.m_gridPos.x;
+                int index = itemData.GetIndexFromItemData(width);
+
+                Image img;
 
                 if (___m_elements[index].m_queued.transform.childCount > 0)
                 {
-                    var child = ___m_elements[index].m_queued.transform.GetChild(0).GetComponent<Image>();
-                    child.enabled |= playerConfig.IsItemMarked(itemData.m_shared);
+                    img = ___m_elements[index].m_queued.transform.GetChild(0).GetComponent<Image>();
                 }
                 else
                 {
-                    // set m_queued parent as parent first, so the position is correct
-                    var obj = GameObject.Instantiate<Image>(___m_elements[index].m_queued, ___m_elements[index].m_queued.transform.parent);
-                    // change the parent to the m_queued image so we can access the new image without a loop
-                    obj.transform.SetParent(___m_elements[index].m_queued.transform);
-                    // set the new border image
-                    obj.sprite = QuickStackStorePlugin.border;
-                    // activate it if needed
-                    obj.enabled |= playerConfig.IsItemMarked(itemData.m_shared);
+                    img = CreateBorderImage(___m_elements[index].m_queued);
                 }
+
+                if (playerConfig.IsItemMarked(itemData.m_shared))
+                {
+                    if (img.enabled)
+                    {
+                        if (QuickStackStorePlugin.MixColorsInsteadOfUsingFavoriteBothColor)
+                        {
+                            img.color = Extensions.GetMixedColor(QuickStackStorePlugin.FavoriteItemColor, QuickStackStorePlugin.FavoriteSlotColor);
+                        }
+                        else
+                        {
+                            img.color = QuickStackStorePlugin.FavoriteBothColor;
+                        }
+                    }
+                    else
+                    {
+                        img.color = QuickStackStorePlugin.FavoriteItemColor;
+                    }
+                }
+
+                // do this after the isitemmarked if statement, so we can use img.enabled to deduce the slot marking
+                img.enabled |= playerConfig.IsItemMarked(itemData.m_shared);
             }
+        }
+
+        private static Image CreateBorderImage(Image baseImg)
+        {
+            // set m_queued parent as parent first, so the position is correct
+            var obj = GameObject.Instantiate<Image>(baseImg, baseImg.transform.parent);
+            // change the parent to the m_queued image so we can access the new image without a loop
+            obj.transform.SetParent(baseImg.transform);
+            // set the new border image
+            obj.sprite = QuickStackStorePlugin.border;
+
+            return obj;
         }
 
         [HarmonyPatch("OnRightClick")]
@@ -80,7 +103,7 @@ namespace QuickStackStore
                 return true;
             }
 
-            if (InventoryGui.instance.GetDragGo())
+            if (InventoryGui.instance.m_dragGo)
             {
                 return true;
             }
@@ -102,7 +125,7 @@ namespace QuickStackStore
         [HarmonyPrefix]
         internal static bool OnLeftClick(InventoryGrid __instance, UIInputHandler clickHandler)
         {
-            if (InventoryGui.instance.GetPlayerGrid() != __instance)
+            if (InventoryGui.instance.m_playerGrid != __instance)
             {
                 return true;
             }
@@ -114,7 +137,7 @@ namespace QuickStackStore
                 return true;
             }
 
-            if (InventoryGui.instance.GetDragGo())
+            if (InventoryGui.instance.m_dragGo)
             {
                 return true;
             }

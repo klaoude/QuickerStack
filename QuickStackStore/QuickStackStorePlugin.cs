@@ -14,31 +14,25 @@ namespace QuickStackStore
     [BepInPlugin("org.bepinex.plugins.valheim.quick_stack_store", "Quick Stack and Store", VERSION)]
     public class QuickStackStorePlugin : BaseUnityPlugin
     {
-        private const string VERSION = "0.0.5";
-        public static Sprite border;
+        private const string VERSION = "0.9";
+
+        // TODO maybe add a sort button (using this as the base, even if it's currently quite broken https://github.com/aedenthorn/ValheimMods/blob/master/SimpleSort/BepInExPlugin.cs )
 
         public void Awake()
         {
             Logger.LogInfo(String.Format("Initializing Quick Stack and Store {0}.", VERSION));
 
-            if (File.Exists(this.ConfigPath))
-            {
-                QuickStackStorePlugin.configFile = new ConfigFile(this.ConfigPath, true);
-                this.LoadConfig();
-            }
-            else
-            {
-                QuickStackStorePlugin.configFile = base.Config;
-                this.LoadConfig();
-            }
-
             border = LoadSprite("QuickStackStore.border.png", new Rect(0, 0, 1024, 1024), new Vector2(512, 512));
 
+            this.LoadConfig();
             Config.SettingChanged += OnSettingChanged;
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
         }
 
+        // taken from the 'Trash Items' mod, as allowed in their permission settings on nexus
+        // https://www.nexusmods.com/valheim/mods/441
+        // https://github.com/virtuaCode/valheim-mods/tree/main/TrashItems
         public static Sprite LoadSprite(string path, Rect size, Vector2 pivot, int units = 100)
         {
             Assembly asm = Assembly.GetExecutingAssembly();
@@ -69,6 +63,9 @@ namespace QuickStackStore
             {
                 origButtonLength = buttonRect.sizeDelta.x;
                 origButtonPosition = buttonRect.localPosition;
+
+                buttonRect.GetComponent<Button>().onClick.RemoveAllListeners();
+                buttonRect.GetComponent<Button>().onClick.AddListener(new UnityAction(() => ContextSensitiveTakeAll(InventoryGui.instance)));
             }
 
             if (buttonRect.sizeDelta.x == origButtonLength)
@@ -81,7 +78,7 @@ namespace QuickStackStore
 
             if (buttonRect.localPosition == origButtonPosition)
             {
-                if (!DisplayUIButtons)
+                if (!DisplayStoreButtonAndMoveTakeButton)
                 {
                     // move the button to the left by half of its removed length
                     buttonRect.localPosition -= new Vector3((origButtonLength / 2) * (1 - shrinkFactor), 0);
@@ -96,89 +93,105 @@ namespace QuickStackStore
                 }
             }
 
-            if (!DisplayUIButtons)
+            if (DisplayStoreButtonAndMoveTakeButton)
             {
-                return;
+                if (depositAllButton == null)
+                {
+                    depositAllButton = Instantiate(InventoryGui.instance.m_takeAllButton, buttonRect.parent);
+                    depositAllButton.transform.localPosition = buttonRect.localPosition;
+                    depositAllButton.transform.localPosition -= new Vector3(0, buttonRect.sizeDelta.y + vPadding);
+
+                    //depositAllButton.transform.localPosition = origButtonPosition + new Vector3(buttonLength, 0f, -1f);
+                    //// move the button to the left by 1.5 its removed length (to also compensate for the takeall button movement)
+                    //depositAllButton.transform.localPosition -= new Vector3(buttonLength * 1.5f * (1 - shrinkFactor), 0);
+
+                    depositAllButton.onClick.RemoveAllListeners();
+                    depositAllButton.onClick.AddListener(new UnityAction(() => StoreAllItemsInOrder(Player.m_localPlayer)));
+
+                    depositAllButton.GetComponentInChildren<Text>().text = "Store All";
+                }
             }
 
-            if (quickStackToChestButton == null)
+            if (DisplayStackButtons)
             {
-                quickStackToChestButton = Instantiate(InventoryGui.instance.m_takeAllButton, buttonRect.parent);
-                quickStackToChestButton.transform.localPosition = buttonRect.localPosition;
-                quickStackToChestButton.transform.localPosition += new Vector3(0, buttonRect.sizeDelta.y + vPadding);
+                if (quickStackAreaButton == null)
+                {
+                    quickStackAreaButton = CreateQuickStackAreaButton(InventoryGui.instance, nameof(quickStackAreaButton), "Q");
+                    quickStackAreaButton.onClick.RemoveAllListeners();
+                    quickStackAreaButton.onClick.AddListener(new UnityAction(() => DoQuickStack(Player.m_localPlayer)));
+                }
 
-                // unshrink the quickstack button
-                //quickStackToChestButton.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, buttonLength * (1 / shrinkFactor));
-                //quickStackToChestButton.transform.localPosition = origButtonPosition + new Vector3(440f, 0f, -1f);
-                // move the button to the right by half of its removed length
-                //quickStackToChestButton.transform.localPosition += new Vector3((buttonLength / 2) * (1 - shrinkFactor), 0);
+                if (quickStackToChestButton == null)
+                {
+                    quickStackToChestButton = Instantiate(InventoryGui.instance.m_takeAllButton, buttonRect.parent);
 
-                quickStackToChestButton.onClick.RemoveAllListeners();
-                quickStackToChestButton.onClick.AddListener(new UnityAction(() => DoQuickStack(Player.m_localPlayer, true, true)));
+                    if (DisplayStoreButtonAndMoveTakeButton)
+                    {
+                        quickStackToChestButton.transform.localPosition = buttonRect.localPosition;
+                        quickStackToChestButton.transform.localPosition += new Vector3(0, buttonRect.sizeDelta.y + vPadding);
+                    }
+                    else
+                    {
+                        quickStackToChestButton.transform.localPosition = origButtonPosition + new Vector3(440f, 0f, -1f);
+                        //move the button to the right by half of its removed length
+                        quickStackToChestButton.transform.localPosition += new Vector3((origButtonLength / 2) * (1 - shrinkFactor), 0);
+                    }
 
-                quickStackToChestButton.GetComponentInChildren<Text>().text = "Quick Stack";
+                    quickStackToChestButton.onClick.RemoveAllListeners();
+                    quickStackToChestButton.onClick.AddListener(new UnityAction(() => DoQuickStack(Player.m_localPlayer, true, true)));
 
-                Debug.Log("Spawned quickstack button");
-            }
-
-            if (depositAllButton == null)
-            {
-                depositAllButton = Instantiate(InventoryGui.instance.m_takeAllButton, buttonRect.parent);
-                depositAllButton.transform.localPosition = buttonRect.localPosition;
-                depositAllButton.transform.localPosition -= new Vector3(0, buttonRect.sizeDelta.y + vPadding);
-
-                //depositAllButton.transform.localPosition = origButtonPosition + new Vector3(buttonLength, 0f, -1f);
-                //// move the button to the left by 1.5 its removed length (to also compensate for the takeall button movement)
-                //depositAllButton.transform.localPosition -= new Vector3(buttonLength * 1.5f * (1 - shrinkFactor), 0);
-
-                depositAllButton.onClick.RemoveAllListeners();
-                depositAllButton.onClick.AddListener(new UnityAction(() => StoreItems(Player.m_localPlayer)));
-
-                depositAllButton.GetComponentInChildren<Text>().text = "Store All";
-
-                Debug.Log("Spawned depositall button");
-            }
-
-            if (quickStackAreaButton == null)
-            {
-                quickStackAreaButton = CreateQuickStackAreaButton(InventoryGui.instance, nameof(quickStackAreaButton), "Q");
-                quickStackAreaButton.onClick.RemoveAllListeners();
-                quickStackAreaButton.onClick.AddListener(new UnityAction(() => DoQuickStack(Player.m_localPlayer)));
+                    quickStackToChestButton.GetComponentInChildren<Text>().text = "Quick Stack";
+                }
             }
         }
 
-        private Button CreateQuickStackAreaButton(InventoryGui __instance, string name, string buttonText)
+        public void ContextSensitiveTakeAll(InventoryGui instance)
+        {
+            if (instance.m_currentContainer)
+            {
+                if (!ChestsUseImprovedTakeAllLogic || instance.m_currentContainer.GetComponent<TombStone>())
+                {
+                    instance.OnTakeAll();
+                }
+                else
+                {
+                    TakeAllItemsInOrder(Player.m_localPlayer);
+                }
+            }
+        }
+
+        private Button CreateQuickStackAreaButton(InventoryGui instance, string name, string buttonText)
         {
             var playerInventory = InventoryGui.instance.m_player.transform;
 
             var weight = playerInventory.Find("Weight");
 
-            Transform obj = Instantiate(__instance.m_takeAllButton.transform, weight.parent);
+            Transform obj = Instantiate(instance.m_takeAllButton.transform, weight.parent);
             obj.localPosition = weight.localPosition + new Vector3(0f, -56f, 0f);
             obj.name = name;
 
-            ((Component)obj).transform.SetAsFirstSibling();
+            obj.transform.SetAsFirstSibling();
 
             int size = 38;
 
-            var rect = (RectTransform)((Component)obj).transform;
+            var rect = (RectTransform)obj.transform;
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size);
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size);
 
-            RectTransform rect2 = (RectTransform)((Component)rect).transform.Find("Text");
+            var rect2 = (RectTransform)rect.transform.Find("Text");
             rect2.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size - 8);
             rect2.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size - 4);
 
-            Text text = ((Component)rect2).GetComponent<Text>();
+            Text text = rect2.GetComponent<Text>();
             text.text = buttonText;
-            text.resizeTextForBestFit = (true);
+            text.resizeTextForBestFit = true;
 
             return rect.GetComponent<Button>();
         }
 
-        private T BindParameter<T>(T param, string key, string description)
+        private T BindConfig<T>(string section, T param, string key, string description)
         {
-            return QuickStackStorePlugin.configFile.Bind<T>(configKey, key, param, description).Value;
+            return Config.Bind<T>(section, key, param, description).Value;
         }
 
         public static UserConfig GetPlayerConfig(long playerID)
@@ -187,32 +200,40 @@ namespace QuickStackStore
             {
                 return userConfig;
             }
+            else
+            {
+                userConfig = new UserConfig(playerID);
+                QuickStackStorePlugin.playerConfigs[playerID] = userConfig;
 
-            userConfig = new UserConfig(playerID);
-            QuickStackStorePlugin.playerConfigs[playerID] = userConfig;
-            return userConfig;
+                return userConfig;
+            }
         }
 
         private void LoadConfig()
         {
-            string value = this.BindParameter<string>(QuickStackStorePlugin.QuickStackKey.ToString(), "QuickStackKey", "Get key codes here: https://docs.unity3d.com/ScriptReference/KeyCode.html");
+            string sectionName = "1 - Quick Stacking";
 
-            try
-            {
-                QuickStackStorePlugin.QuickStackKey = (KeyCode)Enum.Parse(typeof(KeyCode), value, true);
-            }
-            catch (Exception)
-            {
-                base.Logger.LogError("Failed to parse QuickStackKey, using default");
-            }
+            QuickStackKey = this.BindConfig(sectionName, QuickStackKey, nameof(QuickStackKey), "Get key codes here: https://docs.unity3d.com/ScriptReference/KeyCode.html");
+            NearbyRange = this.BindConfig(sectionName, NearbyRange, nameof(NearbyRange), "How far from you is nearby, greater value = greater range.");
+            HotkeyStacksToCurrentContainer = this.BindConfig(sectionName, HotkeyStacksToCurrentContainer, nameof(HotkeyStacksToCurrentContainer), "Whether to ignore the container that you are currently using or not.");
+            HotkeyOnlyStacksToCurrentContainerIfOpen = this.BindConfig(sectionName, HotkeyOnlyStacksToCurrentContainerIfOpen, nameof(HotkeyOnlyStacksToCurrentContainerIfOpen), "Whether to only stack to the currently open container (like QuickStack did), or also look at all nearby containers afterwards.");
+            StackIgnoresConsumable = this.BindConfig(sectionName, StackIgnoresConsumable, nameof(StackIgnoresConsumable), "Whether to completely exclude consumables from quick stacking (food, potions).");
+            StackIgnoresAmmo = this.BindConfig(sectionName, StackIgnoresAmmo, nameof(StackIgnoresAmmo), "Whether to completely exclude ammo from quick stacking (arrows).");
+            PutTrophiesTogether = this.BindConfig(sectionName, PutTrophiesTogether, nameof(PutTrophiesTogether), "Whether to put all types of trophies in the container if any trophy is found in that container.");
+            DisplayStackButtons = this.BindConfig(sectionName, DisplayStackButtons, nameof(DisplayStackButtons), "Whether to display the two quick stack buttons. Hotkeys work independently.");
 
-            QuickStackStorePlugin.NearbyRange = this.BindParameter<float>(QuickStackStorePlugin.NearbyRange, nameof(QuickStackStorePlugin.NearbyRange), "How far from you is nearby, greater value = greater range.");
-            QuickStackStorePlugin.StackToCurrentContainer = this.BindParameter<bool>(QuickStackStorePlugin.StackToCurrentContainer, nameof(QuickStackStorePlugin.StackToCurrentContainer), "Whether to ignore the container that you are currently using or not.");
-            QuickStackStorePlugin.StackOnlyToCurrentContainer = this.BindParameter<bool>(QuickStackStorePlugin.StackOnlyToCurrentContainer, nameof(QuickStackStorePlugin.StackOnlyToCurrentContainer), "Whether to only stack to the currently open container (like QuickStack did), or also look at all nearby containers afterwards.");
-            QuickStackStorePlugin.IgnoreConsumable = this.BindParameter<bool>(QuickStackStorePlugin.IgnoreConsumable, nameof(QuickStackStorePlugin.IgnoreConsumable), "Whether to completely exclude consumables from quick stacking (food, potions).");
-            QuickStackStorePlugin.IgnoreAmmo = this.BindParameter<bool>(QuickStackStorePlugin.IgnoreAmmo, nameof(QuickStackStorePlugin.IgnoreAmmo), "Whether to completely exclude ammo from quick stacking (arrows).");
-            QuickStackStorePlugin.CoalesceTrophies = this.BindParameter<bool>(QuickStackStorePlugin.CoalesceTrophies, nameof(QuickStackStorePlugin.CoalesceTrophies), "Whether to put all types of trophies in the container if any trophy is found in that container.");
-            QuickStackStorePlugin.DisplayUIButtons = this.BindParameter<bool>(QuickStackStorePlugin.DisplayUIButtons, nameof(QuickStackStorePlugin.DisplayUIButtons), "Whether to display the three new buttons or not. Hotkeys work independently.");
+            sectionName = "2 - Store and Take All";
+
+            DisplayStoreButtonAndMoveTakeButton = this.BindConfig(sectionName, DisplayStoreButtonAndMoveTakeButton, nameof(DisplayStoreButtonAndMoveTakeButton), "Whether to add the 'store all' button and move the 'take all' button.");
+            StoreIgnoresEquipped = this.BindConfig(sectionName, StoreIgnoresEquipped, nameof(StoreIgnoresEquipped), "Whether 'Store All' should exclude or also unequip and store equipped items.");
+            ChestsUseImprovedTakeAllLogic = this.BindConfig(sectionName, ChestsUseImprovedTakeAllLogic, nameof(ChestsUseImprovedTakeAllLogic), "Whether to use the improved logic for 'Take All' for non tomb stones. Disable if needed for compatibility.");
+
+            sectionName = "3 - Favoriting";
+
+            FavoriteItemColor = this.BindConfig(sectionName, FavoriteItemColor, nameof(FavoriteItemColor), "Color of the border for slots containing favorited items.");
+            FavoriteSlotColor = this.BindConfig(sectionName, FavoriteSlotColor, nameof(FavoriteSlotColor), "Color of the border for favorited slots.");
+            FavoriteBothColor = this.BindConfig(sectionName, FavoriteBothColor, nameof(FavoriteBothColor), "If not disabled, color of the border of a favorited slots that also contains a favorited item.");
+            MixColorsInsteadOfUsingFavoriteBothColor = this.BindConfig(sectionName, MixColorsInsteadOfUsingFavoriteBothColor, nameof(MixColorsInsteadOfUsingFavoriteBothColor), "Whether to mix the item and slot color to produce the 'FavoriteBoth' color or use the config color.");
         }
 
         private void OnSettingChanged(object sender, SettingChangedEventArgs e)
@@ -249,35 +270,70 @@ namespace QuickStackStore
             return QuickStackStorePlugin.FindContainersInRange(point, QuickStackStorePlugin.NearbyRange);
         }
 
-        // deterministic order of storing
+        private void TakeAllItemsInOrder(Player player)
+        {
+            Inventory fromInventory = InventoryGui.instance.m_currentContainer.GetInventory();
+            Inventory toInventory = player.GetInventory();
 
-        internal static int StoreItems(Player player)
+            MoveAllItemsInOrder(player, fromInventory, toInventory, true);
+        }
+
+        private void StoreAllItemsInOrder(Player player)
         {
             Inventory fromInventory = player.GetInventory();
-            Inventory toInventory = Extensions.GetCurrentContainer(InventoryGui.instance).GetInventory();
+            Inventory toInventory = InventoryGui.instance.m_currentContainer.GetInventory();
+
+            MoveAllItemsInOrder(player, fromInventory, toInventory);
+        }
+
+        private void MoveAllItemsInOrder(Player player, Inventory fromInventory, Inventory toInventory, bool takeAllOverride = false)
+        {
+            if (player.IsTeleporting() || !InventoryGui.instance.m_container)
+            {
+                return;
+            }
+
+            InventoryGui.instance.SetupDragItem(null, null, 1);
 
             UserConfig playerConfig = QuickStackStorePlugin.GetPlayerConfig(player.GetPlayerID());
             List<ItemDrop.ItemData> list = new List<ItemDrop.ItemData>(fromInventory.GetAllItems());
+
+            var width = fromInventory.GetWidth();
+            list.Sort((a, b) => CompareSlotOrder(a.m_gridPos, b.m_gridPos));
+
             int num = 0;
 
             foreach (ItemDrop.ItemData itemData in list)
             {
-                // TODO unequip equipped items
-                if (!itemData.m_equiped && !playerConfig.IsSlotMarked(itemData.m_gridPos) && !playerConfig.IsItemMarked(itemData.m_shared))
+                if (takeAllOverride || ((StoreIgnoresEquipped || !itemData.m_equiped) && !playerConfig.IsSlotMarked(itemData.m_gridPos) && !playerConfig.IsItemMarked(itemData.m_shared)))
                 {
                     if (toInventory.AddItem(itemData))
                     {
-                        Debug.Log($"Storing {itemData.m_shared.m_name} in container");
                         fromInventory.RemoveItem(itemData);
                         num++;
+
+                        if (itemData.m_equiped)
+                        {
+                            Player.m_localPlayer.UnequipItem(itemData, false);
+                        }
                     }
                 }
             }
 
+            Debug.Log($"Moved {num} item/s to container");
+
             toInventory.Changed();
             fromInventory.Changed();
+        }
 
-            return num;
+        /// <summary>
+        /// Bottom left to top right
+        /// </summary>
+        private int CompareSlotOrder(Vector2i a, Vector2i b)
+        {
+            var yPos = -a.y.CompareTo(b.y);
+
+            return yPos != 0 ? yPos : a.x.CompareTo(b.x);
         }
 
         internal static int StackItems(Player player, Inventory fromInventory, Inventory toInventory)
@@ -292,11 +348,11 @@ namespace QuickStackStore
             foreach (ItemDrop.ItemData itemData in list)
             {
                 if (itemData.m_shared.m_maxStackSize != 1 &&
-                    (!QuickStackStorePlugin.IgnoreAmmo || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Ammo) &&
-                    (!QuickStackStorePlugin.IgnoreConsumable || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Consumable) &&
+                    (!QuickStackStorePlugin.StackIgnoresAmmo || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Ammo) &&
+                    (!QuickStackStorePlugin.StackIgnoresConsumable || itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Consumable) &&
                     !playerConfig.IsSlotMarked(itemData.m_gridPos) && !playerConfig.IsItemMarked(itemData.m_shared))
                 {
-                    if (itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophie && QuickStackStorePlugin.CoalesceTrophies && list2.Count > 0)
+                    if (itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophie && QuickStackStorePlugin.PutTrophiesTogether && list2.Count > 0)
                     {
                         if (toInventory.AddItem(itemData))
                         {
@@ -312,7 +368,7 @@ namespace QuickStackStore
                     {
                         if (toInventory.AddItem(itemData))
                         {
-                            Debug.Log($"Storing {itemData.m_shared.m_name} in container");
+                            //Debug.Log($"Storing {itemData.m_shared.m_name} in container");
                             fromInventory.RemoveItem(itemData);
                             num++;
                         }
@@ -328,7 +384,7 @@ namespace QuickStackStore
             {
                 if (toInventory.AddItem(itemData2))
                 {
-                    Debug.Log($"Storing {itemData2.m_shared.m_name} in container");
+                    //Debug.Log($"Storing {itemData2.m_shared.m_name} in container");
                     fromInventory.RemoveItem(itemData2);
                     num++;
                 }
@@ -362,7 +418,7 @@ namespace QuickStackStore
                     container.CheckAccess(player.GetPlayerID()) &&
                     !container.IsInUse())
                 {
-                    ZNetView nview = container.GetNView();
+                    ZNetView nview = container.m_nview;
                     nview.ClaimOwnership();
                     ZDOMan.instance.ForceSendZDO(ZNet.instance.GetUID(), nview.GetZDO().m_uid);
                     container.SetInUse(true);
@@ -375,19 +431,21 @@ namespace QuickStackStore
 
         public static void DoQuickStack(Player player, bool StackToCurrentContainerOverride = false, bool StackOnlyToCurrentContainerOverride = false)
         {
-            if (player.IsTeleporting())
+            if (player.IsTeleporting() || !InventoryGui.instance.m_container)
             {
                 return;
             }
 
-            int movedCount = 0;
-            Container container = Extensions.GetCurrentContainer(InventoryGui.instance);
+            InventoryGui.instance.SetupDragItem(null, null, 1);
 
-            if ((StackToCurrentContainer || StackToCurrentContainerOverride) && container != null)
+            int movedCount = 0;
+            Container container = InventoryGui.instance.m_currentContainer;
+
+            if ((HotkeyStacksToCurrentContainer || StackToCurrentContainerOverride) && container != null)
             {
                 movedCount = StackItems(player, player.GetInventory(), container.GetInventory());
 
-                if (StackOnlyToCurrentContainer || StackOnlyToCurrentContainerOverride)
+                if (HotkeyOnlyStacksToCurrentContainerIfOpen || StackOnlyToCurrentContainerOverride)
                 {
                     ReportResult(player, movedCount);
                     return;
@@ -405,21 +463,33 @@ namespace QuickStackStore
 
         private float origButtonLength = -1;
         private Vector3 origButtonPosition;
+
+        private Button quickStackToChestButton;
         private Button quickStackAreaButton;
         private Button depositAllButton;
-        private Button quickStackToChestButton;
-        public const string configKey = "QuickStackStore";
+
+        public static Sprite border;
         public static List<Container> AllContainers = new List<Container>();
-        private readonly string ConfigPath = Path.Combine(Paths.ConfigPath, $"{configKey}.cfg");
-        private static ConfigFile configFile = null;
-        public static bool IgnoreAmmo = false;
-        public static bool IgnoreConsumable = false;
-        public static bool StackToCurrentContainer = true;
-        public static bool StackOnlyToCurrentContainer = false;
-        public static bool DisplayUIButtons = true;
-        internal static float NearbyRange = 10f;
-        public static KeyCode QuickStackKey = KeyCode.P;
-        public static bool CoalesceTrophies = false;
+
         private static readonly Dictionary<long, UserConfig> playerConfigs = new Dictionary<long, UserConfig>();
+
+        public static float NearbyRange = 10f;
+        public static KeyCode QuickStackKey = KeyCode.P;
+        public static bool PutTrophiesTogether = false;
+
+        public static bool StackIgnoresAmmo = false;
+        public static bool StackIgnoresConsumable = false;
+        public static bool HotkeyStacksToCurrentContainer = true;
+        public static bool HotkeyOnlyStacksToCurrentContainerIfOpen = false;
+        public static bool DisplayStackButtons = true;
+
+        public static bool StoreIgnoresEquipped = false;
+        public static bool DisplayStoreButtonAndMoveTakeButton = true;
+        public static bool ChestsUseImprovedTakeAllLogic = true;
+
+        public static Color FavoriteItemColor = new Color(1f, 0.8482759f, 0f); // valheim yellow/ orange-ish
+        public static Color FavoriteSlotColor = new Color(0f, 0.5f, 1); // light-ish blue
+        public static Color FavoriteBothColor = Color.green;
+        public static bool MixColorsInsteadOfUsingFavoriteBothColor = true;
     }
 }
