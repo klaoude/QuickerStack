@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using UnityEngine;
 
 namespace QuickStackStore
@@ -18,6 +20,25 @@ namespace QuickStackStore
             float a = (color1.a + color2.a) / 2f;
 
             return new Color(r, g, b, a);
+        }
+
+        // taken from the 'Trash Items' mod, as allowed in their permission settings on nexus
+        // https://www.nexusmods.com/valheim/mods/441
+        // https://github.com/virtuaCode/valheim-mods/tree/main/TrashItems
+        public static Sprite LoadSprite(string path, Rect size, Vector2 pivot, int units = 100)
+        {
+            Assembly asm = Assembly.GetExecutingAssembly();
+            Stream img = asm.GetManifestResourceStream(path);
+
+            Texture2D tex = new Texture2D((int)size.width, (int)size.height, TextureFormat.RGBA32, false, true);
+
+            using (MemoryStream mStream = new MemoryStream())
+            {
+                img.CopyTo(mStream);
+                tex.LoadImage(mStream.ToArray());
+                tex.Apply();
+                return Sprite.Create(tex, size, pivot, units);
+            }
         }
 
         public static bool XAdd<T>(this List<T> instance, T item)

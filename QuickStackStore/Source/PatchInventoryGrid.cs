@@ -8,9 +8,9 @@ namespace QuickStackStore
     [HarmonyPatch(typeof(InventoryGrid))]
     internal static class PatchInventoryGrid
     {
-        [HarmonyPatch("UpdateGui")]
+        [HarmonyPatch(nameof(InventoryGrid.UpdateGui))]
         [HarmonyPostfix]
-        internal static void UpdateGui(Player player, Inventory ___m_inventory, List<Element> ___m_elements)
+        internal static void UpdateGui(Player player, Inventory ___m_inventory, List<InventoryGrid.Element> ___m_elements)
         {
             if (player == null || player.GetInventory() != ___m_inventory)
             {
@@ -57,18 +57,11 @@ namespace QuickStackStore
                     img = CreateBorderImage(___m_elements[index].m_queued);
                 }
 
-                if (playerConfig.IsItemFavorited(itemData.m_shared))
+                if (playerConfig.IsItemNameFavorited(itemData.m_shared))
                 {
                     if (img.enabled)
                     {
-                        if (QuickStackStorePlugin.MixColorsInsteadOfUsingFavoriteBothColor)
-                        {
-                            img.color = Extensions.GetMixedColor(QuickStackStorePlugin.BorderColorFavoriteItem, QuickStackStorePlugin.BorderColorFavoriteSlot);
-                        }
-                        else
-                        {
-                            img.color = QuickStackStorePlugin.BorderColorFavoriteBoth;
-                        }
+                        img.color = QuickStackStorePlugin.BorderColorFavoriteBoth;
                     }
                     else
                     {
@@ -77,7 +70,7 @@ namespace QuickStackStore
                 }
 
                 // do this after the IsItemFavorited if statement, so we can use img.enabled to deduce the slot favoriting
-                img.enabled |= playerConfig.IsItemFavorited(itemData.m_shared);
+                img.enabled |= playerConfig.IsItemNameFavorited(itemData.m_shared);
             }
         }
 
@@ -98,7 +91,7 @@ namespace QuickStackStore
             return Input.GetKey(QuickStackStorePlugin.FavoriteModifierKey1) || Input.GetKey(QuickStackStorePlugin.FavoriteModifierKey2);
         }
 
-        [HarmonyPatch("OnRightClick")]
+        [HarmonyPatch(nameof(InventoryGrid.OnRightClick))]
         [HarmonyPrefix]
         internal static bool OnRightClick(InventoryGrid __instance, UIInputHandler element)
         {
@@ -126,7 +119,7 @@ namespace QuickStackStore
             return false;
         }
 
-        [HarmonyPatch("OnLeftClick")]
+        [HarmonyPatch(nameof(InventoryGrid.OnLeftClick))]
         [HarmonyPrefix]
         internal static bool OnLeftClick(InventoryGrid __instance, UIInputHandler clickHandler)
         {

@@ -6,14 +6,14 @@ namespace QuickStackStore
     [HarmonyPatch(typeof(Container))]
     internal static class PatchContainer
     {
-        [HarmonyPatch("Awake")]
+        [HarmonyPatch(nameof(Container.Awake))]
         [HarmonyPostfix]
         internal static void Awake(Container __instance, ZNetView ___m_nview)
         {
             QuickStackStorePlugin.AllContainers.Add(__instance);
         }
 
-        [HarmonyPatch("OnDestroyed")]
+        [HarmonyPatch(nameof(Container.OnDestroyed))]
         [HarmonyPostfix]
         internal static void OnDestroyed(Container __instance)
         {

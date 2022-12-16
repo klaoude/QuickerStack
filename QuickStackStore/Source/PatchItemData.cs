@@ -8,7 +8,7 @@ namespace QuickStackStore
     [HarmonyPatch(typeof(ItemDrop.ItemData))]
     internal static class PatchItemData
     {
-        [HarmonyPatch("GetTooltip", new Type[]
+        [HarmonyPatch(nameof(ItemDrop.ItemData.GetTooltip), new Type[]
         {
             typeof(ItemDrop.ItemData),
             typeof(int),
@@ -25,7 +25,7 @@ namespace QuickStackStore
             StringBuilder stringBuilder = new StringBuilder(256);
             stringBuilder.Append(__result);
 
-            if (QuickStackStorePlugin.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()).IsItemFavorited(item.m_shared))
+            if (QuickStackStorePlugin.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()).IsItemNameFavorited(item.m_shared))
             {
                 var color = ColorUtility.ToHtmlStringRGB(QuickStackStorePlugin.BorderColorFavoriteItem);
 

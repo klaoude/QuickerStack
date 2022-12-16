@@ -11,8 +11,8 @@ namespace QuickStackStore
     {
         public UserConfig(long uid)
         {
-            this._configPath = Path.Combine(Paths.ConfigPath, string.Format($"QuickStackStore_player_{0}.dat", uid));
             this._uid = uid;
+            this._configPath = Path.Combine(Paths.ConfigPath, $"QuickStackStore_player_{this._uid}.dat");
             this.Load();
         }
 
@@ -20,8 +20,8 @@ namespace QuickStackStore
         {
             using (Stream stream = File.Open(this._configPath, FileMode.Create))
             {
-                UserConfig._bf.Serialize(stream, this.favoritedSlots);
-                UserConfig._bf.Serialize(stream, this.favoritedItems);
+                _bf.Serialize(stream, this.favoritedSlots);
+                _bf.Serialize(stream, this.favoritedItems);
             }
         }
 
@@ -31,7 +31,7 @@ namespace QuickStackStore
 
             try
             {
-                result = UserConfig._bf.Deserialize(stream);
+                result = _bf.Deserialize(stream);
             }
             catch (SerializationException)
             {
@@ -43,7 +43,7 @@ namespace QuickStackStore
 
         private static void LoadProperty<T>(Stream file, out T property) where T : new()
         {
-            object obj = UserConfig.TryDeserialize(file);
+            object obj = TryDeserialize(file);
 
             if (obj is T)
             {
@@ -60,8 +60,8 @@ namespace QuickStackStore
             using (Stream stream = File.Open(this._configPath, FileMode.OpenOrCreate))
             {
                 stream.Seek(0L, SeekOrigin.Begin);
-                UserConfig.LoadProperty<List<Tuple<int, int>>>(stream, out this.favoritedSlots);
-                UserConfig.LoadProperty<List<string>>(stream, out this.favoritedItems);
+                LoadProperty<List<Tuple<int, int>>>(stream, out this.favoritedSlots);
+                LoadProperty<List<string>>(stream, out this.favoritedItems);
             }
         }
 
@@ -89,15 +89,32 @@ namespace QuickStackStore
             return result;
         }
 
-        public bool IsItemFavorited(ItemDrop.ItemData.SharedData item)
+        public bool IsItemNameFavorited(ItemDrop.ItemData.SharedData item)
         {
             return this.favoritedItems.Contains(item.m_name);
         }
 
-        private string _configPath = string.Empty;
+        public bool IsItemNameOrSlotFavorited(ItemDrop.ItemData item)
+        {
+            return IsItemNameFavorited(item.m_shared) || IsSlotFavorited(item.m_gridPos);
+        }
+
+        public Vector2i[] GetFavoritedSlotsCopy()
+        {
+            var ret = new Vector2i[favoritedSlots.Count];
+
+            for (int i = 0; i < ret.Length; i++)
+            {
+                ret[i] = new Vector2i(favoritedSlots[i].Item1, favoritedSlots[i].Item2);
+            }
+
+            return ret;
+        }
+
+        private readonly string _configPath = string.Empty;
         private List<Tuple<int, int>> favoritedSlots;
         private List<string> favoritedItems;
-        private long _uid;
-        private static BinaryFormatter _bf = new BinaryFormatter();
+        private readonly long _uid;
+        private static readonly BinaryFormatter _bf = new BinaryFormatter();
     }
 }
