@@ -19,7 +19,7 @@ namespace QuickStackStore
         private static Button quickStackToChestButton;
         private static Button depositAllButton;
         private static Button sortChestButton;
-        private static Button restockChestButton;
+        private static Button restockFromChestButton;
 
         private const float shrinkFactor = 0.9f;
         private const int vPadding = 8;
@@ -37,23 +37,21 @@ namespace QuickStackStore
                     return;
                 }
 
-                var buttonRect = __instance.m_takeAllButton.GetComponent<RectTransform>();
+                var takeAllButtonRect = __instance.m_takeAllButton.GetComponent<RectTransform>();
 
                 if (origButtonLength == -1)
                 {
-                    origButtonLength = buttonRect.sizeDelta.x;
-                    origButtonPosition = buttonRect.localPosition;
+                    origButtonLength = takeAllButtonRect.sizeDelta.x;
+                    origButtonPosition = takeAllButtonRect.localPosition;
 
-                    buttonRect.GetComponent<Button>().onClick.RemoveAllListeners();
-                    buttonRect.GetComponent<Button>().onClick.AddListener(new UnityAction(() => StoreTakeAllModule.ContextSensitiveTakeAll(__instance)));
+                    takeAllButtonRect.GetComponent<Button>().onClick.RemoveAllListeners();
+                    takeAllButtonRect.GetComponent<Button>().onClick.AddListener(new UnityAction(() => StoreTakeAllModule.ContextSensitiveTakeAll(__instance)));
                 }
 
-                if (buttonRect.sizeDelta.x == origButtonLength)
+                if (takeAllButtonRect.sizeDelta.x == origButtonLength)
                 {
-                    buttonRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, origButtonLength * shrinkFactor);
+                    takeAllButtonRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, origButtonLength * shrinkFactor);
                 }
-
-                float vOffset = buttonRect.sizeDelta.y + vPadding;
 
                 int extraContainerButtons = 0;
 
@@ -80,17 +78,19 @@ namespace QuickStackStore
                     }
                 }
 
-                if (buttonRect.localPosition == origButtonPosition)
+                float vOffset = takeAllButtonRect.sizeDelta.y + vPadding;
+
+                if (takeAllButtonRect.localPosition == origButtonPosition)
                 {
                     if (extraContainerButtons <= 1)
                     {
                         // move the button to the left by half of its removed length
-                        buttonRect.localPosition -= new Vector3((origButtonLength / 2) * (1 - shrinkFactor), 0);
+                        takeAllButtonRect.localPosition -= new Vector3((origButtonLength / 2) * (1 - shrinkFactor), 0);
                     }
                     else
                     {
-                        buttonRect.localPosition = OppositePositionOfTakeAllButton();
-                        buttonRect.localPosition += new Vector3(origButtonLength, QuickStackConfig.DisplayQuickStackButtons.Value == ShowTwoButtons.OnlyInventoryButton ? 0 : -vOffset);
+                        takeAllButtonRect.localPosition = OppositePositionOfTakeAllButton();
+                        takeAllButtonRect.localPosition += new Vector3(origButtonLength, QuickStackConfig.DisplayQuickStackButtons.Value == ShowTwoButtons.OnlyInventoryButton ? 0 : -vOffset);
                     }
                 }
 
@@ -134,14 +134,16 @@ namespace QuickStackStore
                     }
                 }
 
-                Vector2 startOffset = buttonRect.localPosition;
+                Vector2 startOffset = takeAllButtonRect.localPosition;
                 int buttonsBelowTakeAll = 0;
+
+                __instance.m_takeAllButton.gameObject.SetActive(__instance.m_currentContainer != null);
 
                 if (QuickStackConfig.DisplayQuickStackButtons.Value != ShowTwoButtons.OnlyInventoryButton)
                 {
                     if (quickStackToChestButton == null)
                     {
-                        quickStackToChestButton = Object.Instantiate(__instance.m_takeAllButton, buttonRect.parent);
+                        quickStackToChestButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
 
                         // revert the moment from the take all button
                         MoveButtonToIndex(ref quickStackToChestButton, startOffset, -vOffset, extraContainerButtons, 1);
@@ -151,13 +153,17 @@ namespace QuickStackStore
 
                         quickStackToChestButton.GetComponentInChildren<Text>().text = LocalizationConfig.QuickStackLabel.Value;
                     }
+                    else
+                    {
+                        quickStackToChestButton.gameObject.SetActive(__instance.m_currentContainer != null);
+                    }
                 }
 
                 if (StoreTakeAllConfig.DisplayStoreAllButton.Value)
                 {
                     if (depositAllButton == null)
                     {
-                        depositAllButton = Object.Instantiate(__instance.m_takeAllButton, buttonRect.parent);
+                        depositAllButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
                         MoveButtonToIndex(ref depositAllButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
                         depositAllButton.onClick.RemoveAllListeners();
@@ -165,19 +171,27 @@ namespace QuickStackStore
 
                         depositAllButton.GetComponentInChildren<Text>().text = LocalizationConfig.StoreAllLabel.Value;
                     }
+                    else
+                    {
+                        depositAllButton.gameObject.SetActive(__instance.m_currentContainer != null);
+                    }
                 }
 
                 if (RestockConfig.DisplayRestockButtons.Value != ShowTwoButtons.OnlyInventoryButton)
                 {
-                    if (restockChestButton == null)
+                    if (restockFromChestButton == null)
                     {
-                        restockChestButton = Object.Instantiate(__instance.m_takeAllButton, buttonRect.parent);
-                        MoveButtonToIndex(ref restockChestButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
+                        restockFromChestButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
+                        MoveButtonToIndex(ref restockFromChestButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
-                        restockChestButton.onClick.RemoveAllListeners();
-                        restockChestButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoRestock(Player.m_localPlayer, true)));
+                        restockFromChestButton.onClick.RemoveAllListeners();
+                        restockFromChestButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoRestock(Player.m_localPlayer, true)));
 
-                        restockChestButton.GetComponentInChildren<Text>().text = LocalizationConfig.RestockLabel.Value;
+                        restockFromChestButton.GetComponentInChildren<Text>().text = LocalizationConfig.RestockLabel.Value;
+                    }
+                    else
+                    {
+                        restockFromChestButton.gameObject.SetActive(__instance.m_currentContainer != null);
                     }
                 }
 
@@ -185,7 +199,7 @@ namespace QuickStackStore
                 {
                     if (sortChestButton == null)
                     {
-                        sortChestButton = Object.Instantiate(__instance.m_takeAllButton, buttonRect.parent);
+                        sortChestButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
                         MoveButtonToIndex(ref sortChestButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
                         sortChestButton.onClick.RemoveAllListeners();
@@ -199,6 +213,10 @@ namespace QuickStackStore
                         }
 
                         sortChestButton.GetComponentInChildren<Text>().text = label;
+                    }
+                    else
+                    {
+                        sortChestButton.gameObject.SetActive(__instance.m_currentContainer != null);
                     }
                 }
             }
@@ -309,9 +327,9 @@ namespace QuickStackStore
                 Object.Destroy(sortInventoryButton.gameObject);
             }
 
-            if (restockChestButton != null)
+            if (restockFromChestButton != null)
             {
-                Object.Destroy(restockChestButton.gameObject);
+                Object.Destroy(restockFromChestButton.gameObject);
             }
 
             if (restockAreaButton != null)

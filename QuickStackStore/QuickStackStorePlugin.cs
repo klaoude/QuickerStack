@@ -14,11 +14,7 @@ namespace QuickStackStore
         // TODO chest in use can still get quick stacked to!!!! applied first fix, check if working
 
         // TODO config option to switch left and right click for favoriting?
-        // TODO visual bug when opening inventory without container after opening container beforehand
-        // TODO sort and equals checks should also check quality for non stackables
-        // TODO maybe mark performance hit config values in yellow
-        // TODO make sure quick stack to ships and carts works
-        // TODO make sure hotkeys don't work while typing in chat
+        // TODO maybe sort and equals checks should also check quality for non stackables (the base game doesn't though)
         // TODO controller support
         protected void Awake()
         {
