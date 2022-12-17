@@ -9,6 +9,9 @@ namespace QuickStackStore
 {
     public class UserConfig
     {
+        /// <summary>
+        /// Create a user config for this local save file
+        /// </summary>
         public UserConfig(long uid)
         {
             this._uid = uid;
@@ -22,6 +25,7 @@ namespace QuickStackStore
             {
                 _bf.Serialize(stream, this.favoritedSlots);
                 _bf.Serialize(stream, this.favoritedItems);
+                _bf.Serialize(stream, this.trashFlaggedItems);
             }
         }
 
@@ -62,16 +66,43 @@ namespace QuickStackStore
                 stream.Seek(0L, SeekOrigin.Begin);
                 LoadProperty<List<Tuple<int, int>>>(stream, out this.favoritedSlots);
                 LoadProperty<List<string>>(stream, out this.favoritedItems);
+                LoadProperty<List<string>>(stream, out this.trashFlaggedItems);
             }
         }
 
-        public bool Toggle(Vector2i position)
+        public void ToggleSlotFavoriting(Vector2i position)
         {
             Tuple<int, int> item = new Tuple<int, int>(position.x, position.y);
-            bool result = this.favoritedSlots.XAdd(item);
+            this.favoritedSlots.XAdd(item);
+            this.Save();
+        }
+
+        private bool debug = false;
+
+        public bool ToggleItemNameFavoriting(ItemDrop.ItemData.SharedData item)
+        {
+            if (!debug && this.trashFlaggedItems.Contains(item.m_name))
+            {
+                return false;
+            }
+
+            this.favoritedItems.XAdd(item.m_name);
             this.Save();
 
-            return result;
+            return true;
+        }
+
+        public bool ToggleItemNameTrashFlagging(ItemDrop.ItemData.SharedData item)
+        {
+            if (!debug && this.favoritedItems.Contains(item.m_name))
+            {
+                return false;
+            }
+
+            this.trashFlaggedItems.XAdd(item.m_name);
+            this.Save();
+
+            return true;
         }
 
         public bool IsSlotFavorited(Vector2i position)
@@ -81,17 +112,19 @@ namespace QuickStackStore
             return this.favoritedSlots.Contains(item);
         }
 
-        public bool Toggle(ItemDrop.ItemData.SharedData item)
-        {
-            bool result = this.favoritedItems.XAdd(item.m_name);
-            this.Save();
-
-            return result;
-        }
-
         public bool IsItemNameFavorited(ItemDrop.ItemData.SharedData item)
         {
             return this.favoritedItems.Contains(item.m_name);
+        }
+
+        public bool IsItemNameLiterallyTrashFlagged(ItemDrop.ItemData.SharedData item)
+        {
+            return this.trashFlaggedItems.Contains(item.m_name);
+        }
+
+        public bool IsItemNameConsideredTrashFlagged(ItemDrop.ItemData.SharedData item)
+        {
+            return (TrashItems.AlwaysConsiderTrophiesTrashFlagged && item.m_itemType == ItemDrop.ItemData.ItemType.Trophie) || this.trashFlaggedItems.Contains(item.m_name);
         }
 
         public bool IsItemNameOrSlotFavorited(ItemDrop.ItemData item)
@@ -114,6 +147,7 @@ namespace QuickStackStore
         private readonly string _configPath = string.Empty;
         private List<Tuple<int, int>> favoritedSlots;
         private List<string> favoritedItems;
+        private List<string> trashFlaggedItems;
         private readonly long _uid;
         private static readonly BinaryFormatter _bf = new BinaryFormatter();
     }

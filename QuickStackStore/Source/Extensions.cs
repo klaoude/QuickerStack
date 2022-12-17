@@ -12,6 +12,11 @@ namespace QuickStackStore
             return item.m_gridPos.y * width + item.m_gridPos.x;
         }
 
+        internal static bool IsPressingFavoriteKey()
+        {
+            return Input.GetKey(QuickStackStorePlugin.FavoriteModifierKey1) || Input.GetKey(QuickStackStorePlugin.FavoriteModifierKey2);
+        }
+
         public static Color GetMixedColor(Color color1, Color color2)
         {
             float r = (color1.r + color2.r) / 2f;
@@ -48,9 +53,11 @@ namespace QuickStackStore
                 instance.Remove(item);
                 return false;
             }
-
-            instance.Add(item);
-            return true;
+            else
+            {
+                instance.Add(item);
+                return true;
+            }
         }
     }
 }

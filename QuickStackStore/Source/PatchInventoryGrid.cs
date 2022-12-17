@@ -37,7 +37,7 @@ namespace QuickStackStore
                         img = CreateBorderImage(___m_elements[index].m_queued);
                     }
 
-                    img.color = QuickStackStorePlugin.BorderColorFavoriteSlot;
+                    img.color = QuickStackStorePlugin.BorderColorFavoritedSlot;
                     img.enabled = playerConfig.IsSlotFavorited(new Vector2i(x, y));
                 }
             }
@@ -57,20 +57,40 @@ namespace QuickStackStore
                     img = CreateBorderImage(___m_elements[index].m_queued);
                 }
 
-                if (playerConfig.IsItemNameFavorited(itemData.m_shared))
+                var isItemFavorited = playerConfig.IsItemNameFavorited(itemData.m_shared);
+                if (isItemFavorited)
                 {
                     if (img.enabled)
                     {
-                        img.color = QuickStackStorePlugin.BorderColorFavoriteBoth;
+                        img.color = QuickStackStorePlugin.BorderColorFavoritedItemOnFavoritedSlot;
                     }
                     else
                     {
-                        img.color = QuickStackStorePlugin.BorderColorFavoriteItem;
+                        img.color = QuickStackStorePlugin.BorderColorFavoritedItem;
+                    }
+
+                    // do this at the end of the if statement, so we can use img.enabled to deduce the slot favoriting
+                    img.enabled |= isItemFavorited;
+                }
+                else
+                {
+                    var isItemTrashFlagged = playerConfig.IsItemNameConsideredTrashFlagged(itemData.m_shared);
+
+                    if (isItemTrashFlagged)
+                    {
+                        if (img.enabled)
+                        {
+                            img.color = QuickStackStorePlugin.BorderColorTrashFlaggedItemOnFavoritedSlot;
+                        }
+                        else
+                        {
+                            img.color = QuickStackStorePlugin.BorderColorTrashFlaggedItem;
+                        }
+
+                        // do this at the end of the if statement, so we can use img.enabled to deduce the slot favoriting
+                        img.enabled |= isItemTrashFlagged;
                     }
                 }
-
-                // do this after the IsItemFavorited if statement, so we can use img.enabled to deduce the slot favoriting
-                img.enabled |= playerConfig.IsItemNameFavorited(itemData.m_shared);
             }
         }
 
@@ -86,42 +106,21 @@ namespace QuickStackStore
             return obj;
         }
 
-        private static bool IsPressingFavoriteKey()
-        {
-            return Input.GetKey(QuickStackStorePlugin.FavoriteModifierKey1) || Input.GetKey(QuickStackStorePlugin.FavoriteModifierKey2);
-        }
-
         [HarmonyPatch(nameof(InventoryGrid.OnRightClick))]
         [HarmonyPrefix]
         internal static bool OnRightClick(InventoryGrid __instance, UIInputHandler element)
         {
-            Player localPlayer = Player.m_localPlayer;
-            if (localPlayer.IsTeleporting())
-            {
-                return true;
-            }
-
-            if (InventoryGui.instance.m_dragGo)
-            {
-                return true;
-            }
-
-            if (!IsPressingFavoriteKey())
-            {
-                return true;
-            }
-
-            GameObject gameObject = element.gameObject;
-            Vector2i buttonPos = __instance.GetButtonPos(gameObject);
-            ItemDrop.ItemData itemAt = __instance.GetInventory().GetItemAt(buttonPos.x, buttonPos.y);
-            QuickStackStorePlugin.GetPlayerConfig(localPlayer.GetPlayerID()).Toggle(itemAt.m_shared);
-
-            return false;
+            return HandleClick(__instance, element, false);
         }
 
         [HarmonyPatch(nameof(InventoryGrid.OnLeftClick))]
         [HarmonyPrefix]
         internal static bool OnLeftClick(InventoryGrid __instance, UIInputHandler clickHandler)
+        {
+            return HandleClick(__instance, clickHandler, true);
+        }
+
+        internal static bool HandleClick(InventoryGrid __instance, UIInputHandler clickHandler, bool isLeftClick)
         {
             if (InventoryGui.instance.m_playerGrid != __instance)
             {
@@ -140,14 +139,41 @@ namespace QuickStackStore
                 return true;
             }
 
-            if (!IsPressingFavoriteKey())
+            if (!Extensions.IsPressingFavoriteKey())
             {
                 return true;
             }
 
             GameObject gameObject = clickHandler.gameObject;
             Vector2i buttonPos = __instance.GetButtonPos(gameObject);
-            QuickStackStorePlugin.GetPlayerConfig(localPlayer.GetPlayerID()).Toggle(buttonPos);
+
+            if (buttonPos == new Vector2i(-1, -1))
+            {
+                return true;
+            }
+
+            // TODO conf to switch these?
+            if (!isLeftClick)
+            {
+                QuickStackStorePlugin.GetPlayerConfig(localPlayer.GetPlayerID()).ToggleSlotFavoriting(buttonPos);
+            }
+            else
+            {
+                ItemDrop.ItemData itemAt = __instance.GetInventory().GetItemAt(buttonPos.x, buttonPos.y);
+
+                if (itemAt == null)
+                {
+                    return true;
+                }
+
+                bool wasToggleSuccessful = QuickStackStorePlugin.GetPlayerConfig(localPlayer.GetPlayerID()).ToggleItemNameFavoriting(itemAt.m_shared);
+
+                if (!wasToggleSuccessful)
+                {
+                    // TODO localization
+                    localPlayer.Message(MessageHud.MessageType.Center, "Can't favorite a trash flagged item!", 0, null);
+                }
+            }
 
             return false;
         }

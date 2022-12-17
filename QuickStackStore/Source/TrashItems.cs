@@ -8,23 +8,74 @@ namespace QuickStackStore
 {
     internal class TrashItems
     {
-        public static bool ShowConfirmationDialog = true;
+        public enum ShowConfirmDialogOption
+        {
+            Never,
+            WhenNotTrashFlagged,
+            Always
+        }
+
+        public static bool EnableQuickTrash = true;
+        public static ShowConfirmDialogOption ShowConfirmDialogForNormalItem = ShowConfirmDialogOption.WhenNotTrashFlagged;
+        public static bool ShowConfirmDialogForQuickTrash = true;
         public static KeyCode TrashHotkey = KeyCode.Delete;
         public static Color TrashLabelColor = new Color(1f, 0.8482759f, 0);
         public static string TrashLabel = "Trash";
         public static bool DisplayTrashCanUI = true;
+        public static bool AlwaysConsiderTrophiesTrashFlagged = false;
 
-        // TODO
-        public static bool TrophiesIgnoreConfirmDialog = false;
-
-        private static bool _clickedTrash = false;
-        private static bool _confirmed = false;
+        private static ClickState clickState = 0;
 
         public static Sprite trashSprite;
         public static Sprite bgSprite;
         public static GameObject dialog;
         public static Transform trashRoot;
         public static TrashButton trashButton;
+
+        // TODO confirmation dialog
+        public static void DoQuickTrash()
+        {
+            if (ShowConfirmDialogForQuickTrash)
+            {
+                // TODO localization
+                ShowBaseConfirmDialog(null, "Quick trash?", string.Empty, QuickTrash);
+            }
+            else
+            {
+                QuickTrash();
+            }
+        }
+
+        public static void QuickTrash()
+        {
+            var player = Player.m_localPlayer;
+            UserConfig playerConfig = QuickStackStorePlugin.GetPlayerConfig(player.GetPlayerID());
+
+            int num = 0;
+
+            var list = player.GetInventory().GetAllItems();
+
+            for (int i = list.Count - 1; i >= 0; i--)
+            {
+                var item = list[i];
+
+                if (!playerConfig.IsSlotFavorited(item.m_gridPos) && playerConfig.IsItemNameConsideredTrashFlagged(item.m_shared))
+                {
+                    num++;
+                    player.RemoveEquipAction(item);
+                    player.UnequipItem(item, false);
+                    player.GetInventory().RemoveItem(item);
+                }
+            }
+
+            InventoryGui.instance.SetupDragItem(null, null, 0);
+            InventoryGui.instance.UpdateCraftingPanel(false);
+
+            Debug.Log($"Quick trashed {num} item/s from player inventory");
+            // TODO report?
+
+            player.GetInventory().Changed();
+        }
 
         [HarmonyPatch(typeof(InventoryGui))]
         internal static class TrashItemsPatches
@@ -53,55 +104,94 @@ namespace QuickStackStore
             [HarmonyPostfix]
             public static void Postfix()
             {
-                OnCancel();
+                OnChoice();
             }
 
             [HarmonyPostfix]
             [HarmonyPatch(nameof(InventoryGui.UpdateItemDrag))]
             public static void UpdateItemDrag_Postfix(InventoryGui __instance, ItemDrop.ItemData ___m_dragItem, Inventory ___m_dragInventory, int ___m_dragAmount)
             {
-                if (_clickedTrash && ___m_dragItem != null && ___m_dragInventory.ContainsItem(___m_dragItem))
+                if (dialog != null || clickState == 0)
                 {
-                    var playerConfig = QuickStackStorePlugin.GetPlayerConfig(Player.m_localPlayer.GetPlayerID());
+                    return;
+                }
 
-                    if (playerConfig.IsItemNameOrSlotFavorited(___m_dragItem))
+                if (___m_dragItem == null)
+                {
+                    if (clickState == ClickState.ClickedQuickTrash)
                     {
-                        Player.m_localPlayer.Message(MessageHud.MessageType.Center, "Can't trash favorited item!", 0, null);
-                        _clickedTrash = false;
+                        DoQuickTrash();
+                    }
+
+                    clickState = 0;
+                    return;
+                }
+
+                if (___m_dragInventory == null || !___m_dragInventory.ContainsItem(___m_dragItem))
+                {
+                    clickState = 0;
+                    return;
+                }
+
+                var player = Player.m_localPlayer;
+                var playerConfig = QuickStackStorePlugin.GetPlayerConfig(player.GetPlayerID());
+
+                if (clickState == ClickState.ClickedTrashFlagging)
+                {
+                    var didFlagSuccessfully = playerConfig.ToggleItemNameTrashFlagging(InventoryGui.instance.m_dragItem.m_shared);
+
+                    if (!didFlagSuccessfully)
+                    {
+                        // TODO localization
+                        player.Message(MessageHud.MessageType.Center, "Can't trash flag a favorited item!", 0, null);
+                    }
+
+                    clickState = 0;
+                    return;
+                }
+
+                if (clickState == ClickState.ClickedTrash)
+                {
+                    if ((player.m_inventory == ___m_dragInventory && playerConfig.IsSlotFavorited(___m_dragItem.m_gridPos)) || playerConfig.IsItemNameFavorited(___m_dragItem.m_shared))
+                    {
+                        // TODO localization
+                        player.Message(MessageHud.MessageType.Center, "Can't trash favorited item!", 0, null);
+                        clickState = 0;
                         return;
                     }
 
-                    // TODO add other junk to the exception list
-                    if (ShowConfirmationDialog && (TrophiesIgnoreConfirmDialog || ___m_dragItem.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Trophie))
-                    {
-                        if (_confirmed)
-                        {
-                            _confirmed = false;
-                        }
-                        else
-                        {
-                            ShowConfirmDialog(___m_dragItem, ___m_dragAmount);
-                            _clickedTrash = false;
-                            return;
-                        }
-                    }
+                    var conf = ShowConfirmDialogForNormalItem;
 
-                    if (___m_dragAmount == ___m_dragItem.m_stack)
+                    if (conf == ShowConfirmDialogOption.Always
+                        || (conf == ShowConfirmDialogOption.WhenNotTrashFlagged && !playerConfig.IsItemNameConsideredTrashFlagged(___m_dragItem.m_shared)))
                     {
-                        Player.m_localPlayer.RemoveEquipAction(___m_dragItem);
-                        Player.m_localPlayer.UnequipItem(___m_dragItem, false);
-                        ___m_dragInventory.RemoveItem(___m_dragItem);
+                        ShowConfirmDialog(___m_dragItem, ___m_dragAmount, () => TrashItem(__instance, ___m_dragInventory, ___m_dragItem, ___m_dragAmount));
                     }
                     else
                     {
-                        ___m_dragInventory.RemoveItem(___m_dragItem, ___m_dragAmount);
+                        TrashItem(__instance, ___m_dragInventory, ___m_dragItem, ___m_dragAmount);
                     }
 
-                    __instance.SetupDragItem(null, null, 0);
-                    __instance.UpdateCraftingPanel(false);
+                    clickState = 0;
+                    return;
+                }
+            }
+
+            public static void TrashItem(InventoryGui __instance, Inventory ___m_dragInventory, ItemDrop.ItemData ___m_dragItem, int ___m_dragAmount)
+            {
+                if (___m_dragAmount == ___m_dragItem.m_stack)
+                {
+                    Player.m_localPlayer.RemoveEquipAction(___m_dragItem);
+                    Player.m_localPlayer.UnequipItem(___m_dragItem, false);
+                    ___m_dragInventory.RemoveItem(___m_dragItem);
+                }
+                else
+                {
+                    ___m_dragInventory.RemoveItem(___m_dragItem, ___m_dragAmount);
                 }
 
-                _clickedTrash = false;
+                __instance.SetupDragItem(null, null, 0);
+                __instance.UpdateCraftingPanel(false);
             }
         }
 
@@ -148,7 +238,7 @@ namespace QuickStackStore
 
                 // Add trash ui button
                 Button button = buttonGo.AddComponent<Button>();
-                button.onClick.AddListener(new UnityAction(TrashItem));
+                button.onClick.AddListener(() => TrashOrTrashFlagItem());
                 var image = buttonGo.AddComponent<Image>();
                 image.color = new Color(0, 0, 0, 0);
 
@@ -214,7 +304,15 @@ namespace QuickStackStore
             }
         }
 
-        public static void ShowConfirmDialog(ItemDrop.ItemData item, int itemAmount)
+        public static void ShowConfirmDialog(ItemDrop.ItemData item, int itemAmount, UnityAction onConfirm)
+        {
+            ShowBaseConfirmDialog(item.GetIcon(),
+                Localization.instance.Localize(item.m_shared.m_name),
+                $"{itemAmount}/{item.m_shared.m_maxStackSize}",
+                onConfirm);
+        }
+
+        public static void ShowBaseConfirmDialog(Sprite potentialIcon, string name, string amountText, UnityAction onConfirm)
         {
             if (InventoryGui.instance == null || dialog != null)
             {
@@ -225,45 +323,41 @@ namespace QuickStackStore
 
             var okButton = dialog.transform.Find("win_bkg/Button_ok").GetComponent<Button>();
             okButton.onClick.RemoveAllListeners();
-            okButton.onClick.AddListener(new UnityAction(OnConfirm));
+            okButton.onClick.AddListener(new UnityAction(OnChoice));
+            okButton.onClick.AddListener(onConfirm);
             okButton.GetComponentInChildren<Text>().text = "Trash";
             okButton.GetComponentInChildren<Text>().color = new Color(1, 0.2f, 0.1f);
 
             var cancelButton = dialog.transform.Find("win_bkg/Button_cancel").GetComponent<Button>();
             cancelButton.onClick.RemoveAllListeners();
-            cancelButton.onClick.AddListener(new UnityAction(OnCancel));
+            cancelButton.onClick.AddListener(new UnityAction(OnChoice));
 
             dialog.transform.Find("win_bkg/Slider").gameObject.SetActive(false);
 
             var text = dialog.transform.Find("win_bkg/Text").GetComponent<Text>();
-            text.text = Localization.instance.Localize(item.m_shared.m_name);
+            text.text = name;
 
-            var icon = dialog.transform.Find("win_bkg/Icon_bkg/Icon").GetComponent<Image>();
-            icon.sprite = item.GetIcon();
+            var iconComp = dialog.transform.Find("win_bkg/Icon_bkg/Icon").GetComponent<Image>();
 
-            var amount = dialog.transform.Find("win_bkg/amount").GetComponent<Text>();
+            if (potentialIcon)
+            {
+                iconComp.sprite = potentialIcon;
+            }
+            else
+            {
+                iconComp.sprite = trashSprite;
+            }
 
-            amount.text = itemAmount + "/" + item.m_shared.m_maxStackSize;
+            var amountComp = dialog.transform.Find("win_bkg/amount").GetComponent<Text>();
+
+            amountComp.text = amountText;
 
             dialog.gameObject.SetActive(true);
         }
 
-        public static void OnConfirm()
+        public static void OnChoice()
         {
-            _confirmed = true;
-
-            if (dialog != null)
-            {
-                Object.Destroy(dialog);
-                dialog = null;
-            }
-
-            TrashItem();
-        }
-
-        public static void OnCancel()
-        {
-            _confirmed = false;
+            clickState = 0;
 
             if (dialog != null)
             {
@@ -272,17 +366,42 @@ namespace QuickStackStore
             }
         }
 
-        public static void TrashItem()
+        public static void TrashOrTrashFlagItem(bool usedFromHotkey = false)
         {
-            Debug.Log("Trash Item clicked!");
+            //Debug.Log("Trash Item clicked!");
+
+            if (clickState != ClickState.None || InventoryGui.instance == null)
+            {
+                return;
+            }
 
             // TODO add pointing support
-            if (InventoryGui.instance != null && InventoryGui.instance.m_dragGo != null)
+            if (InventoryGui.instance.m_dragGo != null)
             {
-                _clickedTrash = true;
-
-                InventoryGui.instance.UpdateItemDrag();
+                if (Extensions.IsPressingFavoriteKey())
+                {
+                    clickState = ClickState.ClickedTrashFlagging;
+                }
+                else
+                {
+                    clickState = ClickState.ClickedTrash;
+                }
             }
+            else
+            {
+                if (!usedFromHotkey && EnableQuickTrash && !Extensions.IsPressingFavoriteKey())
+                {
+                    clickState = ClickState.ClickedQuickTrash;
+                }
+            }
+        }
+
+        private enum ClickState
+        {
+            None = 0,
+            ClickedTrash = 1,
+            ClickedTrashFlagging = 2,
+            ClickedQuickTrash = 3
         }
     }
 
@@ -299,7 +418,7 @@ namespace QuickStackStore
         {
             if (ZInput.GetButtonDown("JoyButtonA") && handler.IsActive())
             {
-                TrashItems.TrashItem();
+                TrashItems.TrashOrTrashFlagItem();
                 // Switch back to inventory tab
                 InventoryGui.instance.SetActiveGroup(1);
             }

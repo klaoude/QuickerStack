@@ -25,7 +25,7 @@ namespace QuickStackStore
         // TODO quick restock
         // TODO quick trash
         // TODO button repositioning including quick stack
-        // TODO make sure quick stack to ships and carts work
+        // TODO make sure quick stack to ships and carts works
         // TODO make sure hotkeys don't work while typing in chat
         // TODO controller support
         protected void Awake()
@@ -359,9 +359,11 @@ namespace QuickStackStore
 
             FavoriteModifierKey1 = this.BindConfig(sectionName, FavoriteModifierKey1, nameof(FavoriteModifierKey1), $"While holding this, left clicking on slots or right clicking on items favorites them. Identical to {nameof(FavoriteModifierKey2)}.");
             FavoriteModifierKey2 = this.BindConfig(sectionName, FavoriteModifierKey2, nameof(FavoriteModifierKey2), $"While holding this, left clicking on slots or right clicking on items favorites them. Identical to {nameof(FavoriteModifierKey1)}.");
-            BorderColorFavoriteItem = this.BindConfig(sectionName, BorderColorFavoriteItem, nameof(BorderColorFavoriteItem), "Color of the border for slots containing favorited items.");
-            BorderColorFavoriteSlot = this.BindConfig(sectionName, BorderColorFavoriteSlot, nameof(BorderColorFavoriteSlot), "Color of the border for favorited slots.");
-            BorderColorFavoriteBoth = this.BindConfig(sectionName, BorderColorFavoriteBoth, nameof(BorderColorFavoriteBoth), "If not disabled, color of the border of a favorited slots that also contains a favorited item.");
+            BorderColorFavoritedSlot = this.BindConfig(sectionName, BorderColorFavoritedSlot, nameof(BorderColorFavoritedSlot), "Color of the border for favorited slots.");
+            BorderColorFavoritedItem = this.BindConfig(sectionName, BorderColorFavoritedItem, nameof(BorderColorFavoritedItem), "Color of the border for slots containing favorited items.");
+            BorderColorFavoritedItemOnFavoritedSlot = this.BindConfig(sectionName, BorderColorFavoritedItemOnFavoritedSlot, nameof(BorderColorFavoritedItemOnFavoritedSlot), "If not disabled, color of the border of a favorited slots that also contains a favorited item.");
+            BorderColorTrashFlaggedItem = this.BindConfig(sectionName, BorderColorTrashFlaggedItem, nameof(BorderColorTrashFlaggedItem), "");
+            BorderColorTrashFlaggedItemOnFavoritedSlot = this.BindConfig(sectionName, BorderColorTrashFlaggedItemOnFavoritedSlot, nameof(BorderColorTrashFlaggedItemOnFavoritedSlot), "If not disabled, color of the border of a favorited slots that also contains a favorited item.");
 
             sectionName = "4 - Sorting";
 
@@ -379,9 +381,12 @@ namespace QuickStackStore
             sectionName = "5 - Trashing";
 
             // TODO descriptions
-            TrashItems.ShowConfirmationDialog = this.BindConfig(sectionName, TrashItems.ShowConfirmationDialog, nameof(TrashItems.ShowConfirmationDialog), "");
+
+            TrashItems.EnableQuickTrash = this.BindConfig(sectionName, TrashItems.EnableQuickTrash, nameof(TrashItems.EnableQuickTrash), "");
+            TrashItems.ShowConfirmDialogForNormalItem = this.BindConfig(sectionName, TrashItems.ShowConfirmDialogForNormalItem, nameof(TrashItems.ShowConfirmDialogForNormalItem), "");
+            TrashItems.ShowConfirmDialogForQuickTrash = this.BindConfig(sectionName, TrashItems.ShowConfirmDialogForQuickTrash, nameof(TrashItems.ShowConfirmDialogForQuickTrash), "");
             TrashItems.DisplayTrashCanUI = this.BindConfig(sectionName, TrashItems.DisplayTrashCanUI, nameof(TrashItems.DisplayTrashCanUI), "");
-            TrashItems.TrophiesIgnoreConfirmDialog = this.BindConfig(sectionName, TrashItems.TrophiesIgnoreConfirmDialog, nameof(TrashItems.TrophiesIgnoreConfirmDialog), "");
+            TrashItems.AlwaysConsiderTrophiesTrashFlagged = this.BindConfig(sectionName, TrashItems.AlwaysConsiderTrophiesTrashFlagged, nameof(TrashItems.AlwaysConsiderTrophiesTrashFlagged), "");
             TrashItems.TrashHotkey = this.BindConfig(sectionName, TrashItems.TrashHotkey, nameof(TrashItems.TrashHotkey), "");
             TrashItems.TrashLabelColor = this.BindConfig(sectionName, TrashItems.TrashLabelColor, nameof(TrashItems.TrashLabelColor), "");
 
@@ -514,7 +519,7 @@ namespace QuickStackStore
                 return;
             }
 
-            InventoryGui.instance.SetupDragItem(null, null, 1);
+            InventoryGui.instance.SetupDragItem(null, null, 0);
 
             UserConfig playerConfig = GetPlayerConfig(player.GetPlayerID());
             var list = fromInventory.GetAllItems().Where((item) => ShouldMoveItem(item, playerConfig, takeAllOverride)).ToList();
@@ -695,7 +700,7 @@ namespace QuickStackStore
                 return;
             }
 
-            InventoryGui.instance.SetupDragItem(null, null, 1);
+            InventoryGui.instance.SetupDragItem(null, null, 0);
 
             int movedCount = 0;
             Container container = InventoryGui.instance.m_currentContainer;
@@ -791,9 +796,11 @@ namespace QuickStackStore
 
         public static KeyCode FavoriteModifierKey1 = KeyCode.LeftAlt;
         public static KeyCode FavoriteModifierKey2 = KeyCode.RightAlt;
-        public static Color BorderColorFavoriteItem = new Color(1f, 0.8482759f, 0f); // valheim yellow/ orange-ish
-        public static Color BorderColorFavoriteSlot = new Color(0f, 0.5f, 1); // light-ish blue
-        public static Color BorderColorFavoriteBoth = new Color(0.5f, 0.67413795f, 0.5f);
+        public static Color BorderColorFavoritedItem = new Color(1f, 0.8482759f, 0f); // valheim yellow/ orange-ish
+        public static Color BorderColorFavoritedSlot = new Color(0f, 0.5f, 1f); // light-ish blue
+        public static Color BorderColorFavoritedItemOnFavoritedSlot = new Color(0.5f, 0.67413795f, 0.5f); // dark-ish green
+        public static Color BorderColorTrashFlaggedItem = new Color(0.5f, 0f, 0); // dark-ish red
+        public static Color BorderColorTrashFlaggedItemOnFavoritedSlot = Color.black;
 
         public static string QuickStackLabelCharacter = "Q";
         public static string SortLabelCharacter = "S";

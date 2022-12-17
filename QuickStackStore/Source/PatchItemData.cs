@@ -25,11 +25,20 @@ namespace QuickStackStore
             StringBuilder stringBuilder = new StringBuilder(256);
             stringBuilder.Append(__result);
 
-            if (QuickStackStorePlugin.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()).IsItemNameFavorited(item.m_shared))
+            var conf = QuickStackStorePlugin.GetPlayerConfig(Player.m_localPlayer.GetPlayerID());
+
+            // TODO localization
+            if (conf.IsItemNameFavorited(item.m_shared))
             {
-                var color = ColorUtility.ToHtmlStringRGB(QuickStackStorePlugin.BorderColorFavoriteItem);
+                var color = ColorUtility.ToHtmlStringRGB(QuickStackStorePlugin.BorderColorFavoritedItem);
 
                 stringBuilder.Append($"\n<color=#{color}>Will not be quick stacked</color>");
+            }
+            else if (conf.IsItemNameConsideredTrashFlagged(item.m_shared))
+            {
+                var color = ColorUtility.ToHtmlStringRGB(QuickStackStorePlugin.BorderColorTrashFlaggedItem);
+
+                stringBuilder.Append($"\n<color=#{color}>Can be quick trashed</color>");
             }
 
             __result = stringBuilder.ToString();

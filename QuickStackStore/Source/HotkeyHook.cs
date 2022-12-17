@@ -6,7 +6,7 @@ namespace QuickStackStore
     [HarmonyPatch(typeof(Player), "Update")]
     public static class HotkeyHook
     {
-        private static void Postfix(Player __instance)
+        public static void Postfix(Player __instance)
         {
             if (QuickStackStorePlugin.DisableAllNewKeybinds)
             {
@@ -35,7 +35,7 @@ namespace QuickStackStore
 
             if (Input.GetKeyDown(TrashItems.TrashHotkey))
             {
-                TrashItems.TrashItem();
+                TrashItems.TrashOrTrashFlagItem(true);
             }
         }
     }
