@@ -6,6 +6,62 @@ namespace QuickStackStore
 {
     public static class SortingUtilts
     {
+        // TODO sort by item category?
+        //private static void Test(ItemDrop.ItemData item)
+        //{
+        //    switch (item.m_shared.m_itemType)
+        //    {
+        //        case ItemDrop.ItemData.ItemType.None:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Material:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Consumable:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.OneHandedWeapon:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Bow:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Shield:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Helmet:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Chest:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Ammo:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Customization:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Legs:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Hands:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Trophie:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.TwoHandedWeapon:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Torch:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Misc:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Shoulder:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Utility:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Tool:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Attach_Atgeir:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.Fish:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft:
+        //            break;
+        //        case ItemDrop.ItemData.ItemType.AmmoNonEquipable:
+        //            break;
+        //        default:
+        //            break;
+        //    }
+        //}
+
         // sorting by locale without setting it to english for everyone is dangerous due to desyncs
         public static IComparable SortByGetter(ItemDrop.ItemData item)
         {
@@ -40,14 +96,19 @@ namespace QuickStackStore
         {
             int comp = SortByGetter(a).CompareTo(SortByGetter(b));
 
+            if (!QuickStackStorePlugin.SortInAscendingOrder)
+            {
+                comp *= -1;
+            }
+
             if (comp == 0)
             {
                 comp = a.m_shared.m_name.CompareTo(b.m_shared.m_name);
             }
 
-            if (!QuickStackStorePlugin.SortInAscendingOrder)
+            if (comp == 0)
             {
-                comp *= -1;
+                comp = -a.m_quality.CompareTo(b.m_quality);
             }
 
             if (comp == 0)

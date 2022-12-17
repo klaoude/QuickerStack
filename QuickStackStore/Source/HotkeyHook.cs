@@ -33,6 +33,11 @@ namespace QuickStackStore
                 QuickStackStorePlugin.DoSort(__instance);
             }
 
+            if (Input.GetKeyDown(QuickStackStorePlugin.RestockKey))
+            {
+                QuickStackStorePlugin.DoRestock(__instance);
+            }
+
             if (Input.GetKeyDown(TrashItems.TrashHotkey))
             {
                 TrashItems.TrashOrTrashFlagItem(true);
