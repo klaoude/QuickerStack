@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using static QuickStackStore.QSSConfig;
 
 namespace QuickStackStore
 {
     [HarmonyPatch(typeof(InventoryGrid))]
-    internal static class PatchInventoryGrid
+    internal static class BorderRenderer
     {
+        public static Sprite border;
+
         [HarmonyPatch(nameof(InventoryGrid.UpdateGui))]
         [HarmonyPostfix]
         internal static void UpdateGui(Player player, Inventory ___m_inventory, List<InventoryGrid.Element> ___m_elements)
@@ -18,7 +21,7 @@ namespace QuickStackStore
             }
 
             int width = ___m_inventory.GetWidth();
-            UserConfig playerConfig = QuickStackStorePlugin.GetPlayerConfig(player.GetPlayerID());
+            UserConfig playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
 
             for (int y = 0; y < ___m_inventory.GetHeight(); y++)
             {
@@ -37,7 +40,7 @@ namespace QuickStackStore
                         img = CreateBorderImage(___m_elements[index].m_queued);
                     }
 
-                    img.color = QuickStackStorePlugin.BorderColorFavoritedSlot;
+                    img.color = FavoriteConfig.BorderColorFavoritedSlot.Value;
                     img.enabled = playerConfig.IsSlotFavorited(new Vector2i(x, y));
                 }
             }
@@ -62,11 +65,11 @@ namespace QuickStackStore
                 {
                     if (img.enabled)
                     {
-                        img.color = QuickStackStorePlugin.BorderColorFavoritedItemOnFavoritedSlot;
+                        img.color = FavoriteConfig.BorderColorFavoritedItemOnFavoritedSlot.Value;
                     }
                     else
                     {
-                        img.color = QuickStackStorePlugin.BorderColorFavoritedItem;
+                        img.color = FavoriteConfig.BorderColorFavoritedItem.Value;
                     }
 
                     // do this at the end of the if statement, so we can use img.enabled to deduce the slot favoriting
@@ -80,11 +83,11 @@ namespace QuickStackStore
                     {
                         if (img.enabled)
                         {
-                            img.color = QuickStackStorePlugin.BorderColorTrashFlaggedItemOnFavoritedSlot;
+                            img.color = FavoriteConfig.BorderColorTrashFlaggedItemOnFavoritedSlot.Value;
                         }
                         else
                         {
-                            img.color = QuickStackStorePlugin.BorderColorTrashFlaggedItem;
+                            img.color = FavoriteConfig.BorderColorTrashFlaggedItem.Value;
                         }
 
                         // do this at the end of the if statement, so we can use img.enabled to deduce the slot favoriting
@@ -101,7 +104,7 @@ namespace QuickStackStore
             // change the parent to the m_queued image so we can access the new image without a loop
             obj.transform.SetParent(baseImg.transform);
             // set the new border image
-            obj.sprite = QuickStackStorePlugin.border;
+            obj.sprite = border;
 
             return obj;
         }
@@ -139,7 +142,7 @@ namespace QuickStackStore
                 return true;
             }
 
-            if (!Extensions.IsPressingFavoriteKey())
+            if (!Helper.IsPressingFavoriteKey())
             {
                 return true;
             }
@@ -152,10 +155,9 @@ namespace QuickStackStore
                 return true;
             }
 
-            // TODO conf to switch these?
             if (!isLeftClick)
             {
-                QuickStackStorePlugin.GetPlayerConfig(localPlayer.GetPlayerID()).ToggleSlotFavoriting(buttonPos);
+                UserConfig.GetPlayerConfig(localPlayer.GetPlayerID()).ToggleSlotFavoriting(buttonPos);
             }
             else
             {
@@ -166,16 +168,35 @@ namespace QuickStackStore
                     return true;
                 }
 
-                bool wasToggleSuccessful = QuickStackStorePlugin.GetPlayerConfig(localPlayer.GetPlayerID()).ToggleItemNameFavoriting(itemAt.m_shared);
+                bool wasToggleSuccessful = UserConfig.GetPlayerConfig(localPlayer.GetPlayerID()).ToggleItemNameFavoriting(itemAt.m_shared);
 
                 if (!wasToggleSuccessful)
                 {
-                    // TODO localization
-                    localPlayer.Message(MessageHud.MessageType.Center, "Can't favorite a trash flagged item!", 0, null);
+                    localPlayer.Message(MessageHud.MessageType.Center, LocalizationConfig.CantFavoriteTrashFlaggedItemWarning.Value, 0, null);
                 }
             }
 
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(Inventory))]
+    internal class PatchInventory
+    {
+        [HarmonyPatch(nameof(Inventory.TopFirst))]
+        [HarmonyPrefix]
+        [HarmonyPriority(Priority.HigherThanNormal)]
+        public static bool TopFirstPatch(ref bool __result)
+        {
+            if (GeneralConfig.UseTopDownLogicForEverything.Value)
+            {
+                __result = true;
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
     }
 }

@@ -4,11 +4,29 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using static QuickStackStore.QSSConfig;
 
 namespace QuickStackStore
 {
     public class UserConfig
     {
+        private static readonly Dictionary<long, UserConfig> playerConfigs = new Dictionary<long, UserConfig>();
+
+        public static UserConfig GetPlayerConfig(long playerID)
+        {
+            if (playerConfigs.TryGetValue(playerID, out UserConfig userConfig))
+            {
+                return userConfig;
+            }
+            else
+            {
+                userConfig = new UserConfig(playerID);
+                playerConfigs[playerID] = userConfig;
+
+                return userConfig;
+            }
+        }
+
         /// <summary>
         /// Create a user config for this local save file
         /// </summary>
@@ -77,11 +95,9 @@ namespace QuickStackStore
             this.Save();
         }
 
-        private bool debug = false;
-
         public bool ToggleItemNameFavoriting(ItemDrop.ItemData.SharedData item)
         {
-            if (!debug && this.trashFlaggedItems.Contains(item.m_name))
+            if (this.trashFlaggedItems.Contains(item.m_name))
             {
                 return false;
             }
@@ -94,7 +110,7 @@ namespace QuickStackStore
 
         public bool ToggleItemNameTrashFlagging(ItemDrop.ItemData.SharedData item)
         {
-            if (!debug && this.favoritedItems.Contains(item.m_name))
+            if (this.favoritedItems.Contains(item.m_name))
             {
                 return false;
             }
@@ -124,7 +140,7 @@ namespace QuickStackStore
 
         public bool IsItemNameConsideredTrashFlagged(ItemDrop.ItemData.SharedData item)
         {
-            return (TrashItems.AlwaysConsiderTrophiesTrashFlagged && item.m_itemType == ItemDrop.ItemData.ItemType.Trophie) || this.trashFlaggedItems.Contains(item.m_name);
+            return (TrashConfig.AlwaysConsiderTrophiesTrashFlagged.Value && item.m_itemType == ItemDrop.ItemData.ItemType.Trophie) || this.trashFlaggedItems.Contains(item.m_name);
         }
 
         public bool IsItemNameOrSlotFavorited(ItemDrop.ItemData item)

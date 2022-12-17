@@ -3,27 +3,15 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using static QuickStackStore.QSSConfig;
 
 namespace QuickStackStore
 {
-    internal class TrashItems
+    // base implementation originally from 'Trash Items' mod, as allowed in their permission settings on nexus
+    // https://www.nexusmods.com/valheim/mods/441
+    // https://github.com/virtuaCode/valheim-mods/tree/main/TrashItems
+    internal class TrashModule
     {
-        public enum ShowConfirmDialogOption
-        {
-            Never,
-            WhenNotTrashFlagged,
-            Always
-        }
-
-        public static bool EnableQuickTrash = true;
-        public static ShowConfirmDialogOption ShowConfirmDialogForNormalItem = ShowConfirmDialogOption.WhenNotTrashFlagged;
-        public static bool ShowConfirmDialogForQuickTrash = true;
-        public static KeyCode TrashHotkey = KeyCode.Delete;
-        public static Color TrashLabelColor = new Color(1f, 0.8482759f, 0);
-        public static string TrashLabel = "Trash";
-        public static bool DisplayTrashCanUI = true;
-        public static bool AlwaysConsiderTrophiesTrashFlagged = false;
-
         private static ClickState clickState = 0;
 
         public static Sprite trashSprite;
@@ -32,13 +20,11 @@ namespace QuickStackStore
         public static Transform trashRoot;
         public static TrashButton trashButton;
 
-        // TODO confirmation dialog
         public static void DoQuickTrash()
         {
-            if (ShowConfirmDialogForQuickTrash)
+            if (TrashConfig.ShowConfirmDialogForQuickTrash.Value)
             {
-                // TODO localization
-                ShowBaseConfirmDialog(null, "Quick trash?", string.Empty, QuickTrash);
+                ShowBaseConfirmDialog(null, LocalizationConfig.QuickTrashConfirmation.Value, string.Empty, QuickTrash);
             }
             else
             {
@@ -49,7 +35,7 @@ namespace QuickStackStore
         public static void QuickTrash()
         {
             var player = Player.m_localPlayer;
-            UserConfig playerConfig = QuickStackStorePlugin.GetPlayerConfig(player.GetPlayerID());
+            UserConfig playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
 
             int num = 0;
 
@@ -72,7 +58,6 @@ namespace QuickStackStore
             InventoryGui.instance.UpdateCraftingPanel(false);
 
             Debug.Log($"Quick trashed {num} item/s from player inventory");
-            // TODO report?
 
             player.GetInventory().Changed();
         }
@@ -89,7 +74,7 @@ namespace QuickStackStore
                     return;
                 }
 
-                if (trashRoot != null || QuickStackStorePlugin.DisableAllNewButtons || !DisplayTrashCanUI)
+                if (trashRoot != null || GeneralConfig.DisableAllNewButtons.Value || !TrashConfig.DisplayTrashCanUI.Value)
                 {
                     return;
                 }
@@ -134,7 +119,7 @@ namespace QuickStackStore
                 }
 
                 var player = Player.m_localPlayer;
-                var playerConfig = QuickStackStorePlugin.GetPlayerConfig(player.GetPlayerID());
+                var playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
 
                 if (clickState == ClickState.ClickedTrashFlagging)
                 {
@@ -142,8 +127,7 @@ namespace QuickStackStore
 
                     if (!didFlagSuccessfully)
                     {
-                        // TODO localization
-                        player.Message(MessageHud.MessageType.Center, "Can't trash flag a favorited item!", 0, null);
+                        player.Message(MessageHud.MessageType.Center, LocalizationConfig.CantTrashFlagFavoritedItemWarning.Value, 0, null);
                     }
 
                     clickState = 0;
@@ -154,13 +138,12 @@ namespace QuickStackStore
                 {
                     if ((player.m_inventory == ___m_dragInventory && playerConfig.IsSlotFavorited(___m_dragItem.m_gridPos)) || playerConfig.IsItemNameFavorited(___m_dragItem.m_shared))
                     {
-                        // TODO localization
-                        player.Message(MessageHud.MessageType.Center, "Can't trash favorited item!", 0, null);
+                        player.Message(MessageHud.MessageType.Center, LocalizationConfig.CantTrashFavoritedItemWarning.Value, 0, null);
                         clickState = 0;
                         return;
                     }
 
-                    var conf = ShowConfirmDialogForNormalItem;
+                    var conf = TrashConfig.ShowConfirmDialogForNormalItem.Value;
 
                     if (conf == ShowConfirmDialogOption.Always
                         || (conf == ShowConfirmDialogOption.WhenNotTrashFlagged && !playerConfig.IsItemNameConsideredTrashFlagged(___m_dragItem.m_shared)))
@@ -212,8 +195,8 @@ namespace QuickStackStore
                 RectTransform rect = GetComponent<RectTransform>();
                 rect.anchoredPosition -= new Vector2(0, 78);
 
-                SetText(TrashLabel);
-                SetColor(TrashLabelColor);
+                SetText(LocalizationConfig.TrashLabel.Value);
+                SetColor(TrashConfig.TrashLabelColor.Value);
 
                 // Replace armor with trash icon
                 Transform tArmor = transform.Find("armor_icon");
@@ -375,10 +358,9 @@ namespace QuickStackStore
                 return;
             }
 
-            // TODO add pointing support
             if (InventoryGui.instance.m_dragGo != null)
             {
-                if (Extensions.IsPressingFavoriteKey())
+                if (Helper.IsPressingFavoriteKey())
                 {
                     clickState = ClickState.ClickedTrashFlagging;
                 }
@@ -389,7 +371,7 @@ namespace QuickStackStore
             }
             else
             {
-                if (!usedFromHotkey && EnableQuickTrash && !Extensions.IsPressingFavoriteKey())
+                if (!usedFromHotkey && TrashConfig.EnableQuickTrash.Value && !Helper.IsPressingFavoriteKey())
                 {
                     clickState = ClickState.ClickedQuickTrash;
                 }
@@ -418,7 +400,7 @@ namespace QuickStackStore
         {
             if (ZInput.GetButtonDown("JoyButtonA") && handler.IsActive())
             {
-                TrashItems.TrashOrTrashFlagItem();
+                TrashModule.TrashOrTrashFlagItem();
                 // Switch back to inventory tab
                 InventoryGui.instance.SetActiveGroup(1);
             }

@@ -2,11 +2,12 @@
 using System;
 using System.Text;
 using UnityEngine;
+using static QuickStackStore.QSSConfig;
 
 namespace QuickStackStore
 {
     [HarmonyPatch(typeof(ItemDrop.ItemData))]
-    internal static class PatchItemData
+    internal static class TooltipRenderer
     {
         [HarmonyPatch(nameof(ItemDrop.ItemData.GetTooltip), new Type[]
         {
@@ -15,7 +16,7 @@ namespace QuickStackStore
             typeof(bool)
         })]
         [HarmonyPostfix]
-        public static void GetTooltip(ItemDrop.ItemData item, int qualityLevel, bool crafting, ref string __result)
+        public static void GetTooltip(ItemDrop.ItemData item, bool crafting, ref string __result)
         {
             if (crafting)
             {
@@ -25,20 +26,19 @@ namespace QuickStackStore
             StringBuilder stringBuilder = new StringBuilder(256);
             stringBuilder.Append(__result);
 
-            var conf = QuickStackStorePlugin.GetPlayerConfig(Player.m_localPlayer.GetPlayerID());
+            var conf = UserConfig.GetPlayerConfig(Player.m_localPlayer.GetPlayerID());
 
-            // TODO localization
             if (conf.IsItemNameFavorited(item.m_shared))
             {
-                var color = ColorUtility.ToHtmlStringRGB(QuickStackStorePlugin.BorderColorFavoritedItem);
+                var color = ColorUtility.ToHtmlStringRGB(FavoriteConfig.BorderColorFavoritedItem.Value);
 
-                stringBuilder.Append($"\n<color=#{color}>Will not be quick stacked</color>");
+                stringBuilder.Append($"\n<color=#{color}>{LocalizationConfig.FavoritedItemTooltip.Value}</color>");
             }
             else if (conf.IsItemNameConsideredTrashFlagged(item.m_shared))
             {
-                var color = ColorUtility.ToHtmlStringRGB(QuickStackStorePlugin.BorderColorTrashFlaggedItem);
+                var color = ColorUtility.ToHtmlStringRGB(FavoriteConfig.BorderColorTrashFlaggedItem.Value);
 
-                stringBuilder.Append($"\n<color=#{color}>Can be quick trashed</color>");
+                stringBuilder.Append($"\n<color=#{color}>{LocalizationConfig.TrashFlaggedItemTooltip.Value}</color>");
             }
 
             __result = stringBuilder.ToString();

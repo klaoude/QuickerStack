@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Events;
+using static ItemDrop;
 
 namespace QuickStackStore
 {
@@ -122,12 +123,12 @@ namespace QuickStackStore
         {
             private static void Prefix(ref Inventory __instance, ref Inventory fromInventory)
             {
-                List<ItemDrop.ItemData> list = new List<ItemDrop.ItemData>(fromInventory.GetAllItems());
-                foreach (ItemDrop.ItemData otherItem in list)
+                List<ItemData> list = new List<ItemData>(fromInventory.GetAllItems());
+                foreach (ItemData otherItem in list)
                 {
                     if (otherItem.m_shared.m_maxStackSize > 1)
                     {
-                        foreach (ItemDrop.ItemData myItem in __instance.m_inventory)
+                        foreach (ItemData myItem in __instance.m_inventory)
                         {
                             if (myItem.m_shared.m_name == otherItem.m_shared.m_name && myItem.m_quality == otherItem.m_quality)
                             {
@@ -150,9 +151,9 @@ namespace QuickStackStore
             }
         }
 
-        public static ItemDrop.ItemData GetBelt(Inventory inv)
+        public static ItemData GetBelt(Inventory inv)
         {
-            return inv.GetAllItems().Find((ItemDrop.ItemData x) => x.m_shared.m_name.Equals("$item_beltstrength"));
+            return inv.GetAllItems().Find((ItemData x) => x.m_shared.m_name.Equals("$item_beltstrength"));
         }
 
         [HarmonyPatch(typeof(TombStone), nameof(TombStone.EasyFitInInventory))]
@@ -162,15 +163,16 @@ namespace QuickStackStore
             {
                 if (player == Player.m_localPlayer && !__result)
                 {
-                    Container m_container = Traverse.Create(__instance).Field<Container>("m_container").Value;
+                    var tombStoneItems = __instance.m_container.m_inventory;
+                    var playerItems = player.m_inventory;
 
-                    int freeSlots = player.GetInventory().GetEmptySlots() - m_container.GetInventory().NrOfItems();
+                    int freeSlots = player.m_inventory.GetEmptySlots() - tombStoneItems.NrOfItems();
 
                     if (freeSlots < 0)
                     {
-                        foreach (ItemDrop.ItemData itemData in m_container.GetInventory().GetAllItems())
+                        foreach (ItemData itemData in tombStoneItems.m_inventory)
                         {
-                            if (player.GetInventory().FindFreeStackSpace(itemData.m_shared.m_name) >= itemData.m_stack)
+                            if (playerItems.FindFreeStackSpace(itemData.m_shared.m_name) >= itemData.m_stack)
                             {
                                 freeSlots++;
                             }
@@ -184,16 +186,16 @@ namespace QuickStackStore
 
                     float carryWeight = player.GetMaxCarryWeight();
 
-                    bool containerHasBelt = GetBelt(m_container.GetInventory()) != null;
-                    var playerBelt = GetBelt(player.GetInventory());
+                    bool containerHasBelt = GetBelt(tombStoneItems) != null;
+                    var playerBelt = GetBelt(playerItems);
 
-                    if (containerHasBelt || (playerBelt != null && !player.GetInventory().GetEquipedtems().Contains(playerBelt)))
+                    if (containerHasBelt || (playerBelt != null && !playerItems.GetEquipedtems().Contains(playerBelt)))
                     {
                         // Recalculating max player carry weight including Megingjord
                         carryWeight += 150f;
                     }
 
-                    if (player.GetInventory().GetTotalWeight() + m_container.GetInventory().GetTotalWeight() <= carryWeight)
+                    if (playerItems.GetTotalWeight() + tombStoneItems.GetTotalWeight() <= carryWeight)
                     {
                         __result = true;
                         return;

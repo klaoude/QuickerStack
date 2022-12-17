@@ -90,16 +90,18 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuickStackStorePlugin.cs" />
-    <Compile Include="Source\CompatibilitySupport.cs" />
-    <Compile Include="Source\Extensions.cs" />
-    <Compile Include="Source\HotkeyHook.cs" />
-    <Compile Include="Source\PatchInventory.cs" />
-    <Compile Include="Source\SortingUtils.cs" />
-    <Compile Include="Source\PatchContainer.cs" />
-    <Compile Include="Source\PatchInventoryGrid.cs" />
-    <Compile Include="Source\PatchItemData.cs" />
+    <Compile Include="Source\Modules\CompatibilitySupport.cs" />
+    <Compile Include="Source\ContainerFinder.cs" />
+    <Compile Include="Source\Helper.cs" />
+    <Compile Include="Source\Modules\QuickStackRestockModule.cs" />
+    <Compile Include="Source\Modules\StoreTakeAllModule.cs" />
+    <Compile Include="Source\Modules\SortModule.cs" />
+    <Compile Include="Source\QSSConfig.cs" />
+    <Compile Include="Source\UI\ButtonRenderer.cs" />
+    <Compile Include="Source\UI\BorderRenderer.cs" />
+    <Compile Include="Source\UI\TooltipRenderer.cs" />
     <Compile Include="Source\PatchTweaks.cs" />
-    <Compile Include="Source\TrashItems.cs" />
+    <Compile Include="Source\Modules\TrashModule.cs" />
     <Compile Include="Source\UserConfig.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -1,11 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static QuickStackStore.QSSConfig;
 
 namespace QuickStackStore
 {
-    public static class SortingUtilts
+    public static class SortModule
     {
+        public static void DoSort(Player player)
+        {
+            Container container = InventoryGui.instance.m_currentContainer;
+
+            if (container != null)
+            {
+                switch (SortConfig.SortHotkeyBehaviorWhenContainerOpen.Value)
+                {
+                    case SortBehavior.OnlySortContainer:
+                        Sort(InventoryGui.instance.m_currentContainer.GetInventory());
+                        break;
+
+                    case SortBehavior.SortBoth:
+                        Sort(InventoryGui.instance.m_currentContainer.GetInventory());
+                        Sort(player.GetInventory(), player);
+                        break;
+                }
+            }
+            else
+            {
+                Sort(player.GetInventory(), player);
+            }
+        }
+
         // TODO sort by item category?
         //private static void Test(ItemDrop.ItemData item)
         //{
@@ -65,18 +90,18 @@ namespace QuickStackStore
         // sorting by locale without setting it to english for everyone is dangerous due to desyncs
         public static IComparable SortByGetter(ItemDrop.ItemData item)
         {
-            switch (QuickStackStorePlugin.SortCriteria)
+            switch (SortConfig.SortCriteria.Value)
             {
-                case QuickStackStorePlugin.SortCriteriaEnum.TranslatedName:
+                case SortCriteriaEnum.TranslatedName:
                     return Localization.instance.Localize(item.m_shared.m_name);
 
-                case QuickStackStorePlugin.SortCriteriaEnum.Value:
+                case SortCriteriaEnum.Value:
                     return item.m_shared.m_value;
 
-                case QuickStackStorePlugin.SortCriteriaEnum.Weight:
+                case SortCriteriaEnum.Weight:
                     return item.m_shared.m_weight;
 
-                case QuickStackStorePlugin.SortCriteriaEnum.InternalName:
+                case SortCriteriaEnum.InternalName:
                 default:
                     return item.m_shared.m_name;
             }
@@ -96,7 +121,7 @@ namespace QuickStackStore
         {
             int comp = SortByGetter(a).CompareTo(SortByGetter(b));
 
-            if (!QuickStackStorePlugin.SortInAscendingOrder)
+            if (!SortConfig.SortInAscendingOrder.Value)
             {
                 comp *= -1;
             }
@@ -129,9 +154,9 @@ namespace QuickStackStore
 
             if (player != null)
             {
-                playerConfig = QuickStackStorePlugin.GetPlayerConfig(player.GetPlayerID());
+                playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
 
-                if (QuickStackStorePlugin.SortLeavesEmptyFavoritedSlotsEmpty)
+                if (SortConfig.SortLeavesEmptyFavoritedSlotsEmpty.Value)
                 {
                     foreach (var item in inventory.GetAllItems())
                     {
@@ -156,7 +181,7 @@ namespace QuickStackStore
             }
 
             //var offset = new Vector2i(offset % inventory.GetWidth(), offset / inventory.GetWidth());
-            bool ignoreFirstRow = player != null && !QuickStackStorePlugin.SortIncludesHotkeyBar;
+            bool ignoreFirstRow = player != null && !SortConfig.SortIncludesHotkeyBar.Value;
 
             // simple ignore hotbar
             var offset = ignoreFirstRow ? new Vector2i(0, 1) : new Vector2i(0, 0);
@@ -165,54 +190,12 @@ namespace QuickStackStore
 
             toSort.Sort((a, b) => SortCompare(a, b));
 
-            if (QuickStackStorePlugin.SortMergesStacks)
+            if (SortConfig.SortMergesStacks.Value)
             {
-                var grouped = toSort.Where(itm => itm.m_stack < itm.m_shared.m_maxStackSize).GroupBy(itm => itm.m_shared.m_name).Where(itm => itm.Count() > 1).Select(grouping => grouping.ToList());
-                //Plugin.instance.GetLogger().LogInfo($"There are {grouped.Count()} groups of stackable items");
-                foreach (var nonFullStacks in grouped)
-                {
-                    var maxStack = nonFullStacks.First().m_shared.m_maxStackSize;
-
-                    var numTimes = 0;
-                    var curStack = nonFullStacks[0];
-                    nonFullStacks.RemoveAt(0);
-
-                    var enumerator = nonFullStacks.GetEnumerator();
-                    while (nonFullStacks.Count >= 1)
-                    {
-                        numTimes += 1;
-                        enumerator.MoveNext();
-                        var stack = enumerator.Current;
-                        if (stack == null)
-                        {
-                            break;
-                        }
-
-                        if (curStack.m_stack >= maxStack)
-                        {
-                            curStack = stack;
-                            nonFullStacks.Remove(stack);
-                            enumerator = nonFullStacks.GetEnumerator();
-                            continue;
-                        }
-
-                        var toStack = Math.Min(maxStack - curStack.m_stack, stack.m_stack);
-                        if (toStack > 0)
-                        {
-                            curStack.m_stack += toStack;
-                            stack.m_stack -= toStack;
-
-                            if (stack.m_stack <= 0)
-                            {
-                                inventory.RemoveItem(stack);
-                            }
-                        }
-                    }
-                    //Plugin.instance.GetLogger().LogDebug($"Auto-Stacked in {numTimes} iterations");
-                }
+                MergeStacks(toSort, inventory);
             }
 
-            bool td = QuickStackStorePlugin.UseTopDownLogicForEverything;
+            bool td = GeneralConfig.UseTopDownLogicForEverything.Value;
 
             int currentIndex = 0;
             var width = inventory.GetWidth();
@@ -254,6 +237,52 @@ namespace QuickStackStore
             CompatibilitySupport.cache.Clear();
 
             inventory.Changed();
+        }
+
+        internal static void MergeStacks(List<ItemDrop.ItemData> toMerge, Inventory inventory)
+        {
+            var grouped = toMerge.Where(itm => itm.m_stack < itm.m_shared.m_maxStackSize).GroupBy(itm => itm.m_shared.m_name).Where(itm => itm.Count() > 1).Select(grouping => grouping.ToList());
+            //Plugin.instance.GetLogger().LogInfo($"There are {grouped.Count()} groups of stackable items");
+            foreach (var nonFullStacks in grouped)
+            {
+                var maxStack = nonFullStacks.First().m_shared.m_maxStackSize;
+
+                var numTimes = 0;
+                var curStack = nonFullStacks[0];
+                nonFullStacks.RemoveAt(0);
+
+                var enumerator = nonFullStacks.GetEnumerator();
+                while (nonFullStacks.Count >= 1)
+                {
+                    numTimes += 1;
+                    enumerator.MoveNext();
+                    var stack = enumerator.Current;
+                    if (stack == null)
+                    {
+                        break;
+                    }
+
+                    if (curStack.m_stack >= maxStack)
+                    {
+                        curStack = stack;
+                        nonFullStacks.Remove(stack);
+                        enumerator = nonFullStacks.GetEnumerator();
+                        continue;
+                    }
+
+                    var toStack = Math.Min(maxStack - curStack.m_stack, stack.m_stack);
+                    if (toStack > 0)
+                    {
+                        curStack.m_stack += toStack;
+                        stack.m_stack -= toStack;
+
+                        if (stack.m_stack <= 0)
+                        {
+                            inventory.RemoveItem(stack);
+                        }
+                    }
+                }
+            }
         }
     }
 }
