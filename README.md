@@ -13,7 +13,7 @@ For further information visit its [Nexus page](https://www.nexusmods.com/valheim
 
 ## Credits
 
-- QuickStackStore is based on the [Quick Stack mod](https://www.nexusmods.com/valheim/mods/23) by damnsneaker, who gave me permission to upload this (and has since changed the nexus permission settings)
+- QuickStackStore is based on the [Quick Stack mod](https://www.nexusmods.com/valheim/mods/29) by damnsneaker, who gave me permission to upload this (and has since changed the nexus permission settings)
 - QuickStackStore is actually forked off of the [Quicker Stack mod](https://github.com/klaoude/QuickerStack) by klaoude, which is a decompiled version with a few bug fixes of the Quick Stack mod and is released under MIT licence, but the threading that is special to Quicker Stack was removed from QuickStackStore
 - The sorting is based on the [Inventory Sorting mod](https://github.com/end360/Valheim-Inventory-Sorting) by end360, which is under MIT licence
 - The Trashing is based on the [Trash Items mod](https://github.com/virtuaCode/valheim-mods/tree/main/TrashItems) by virtuaCode which has permissive settings on its [nexus page](https://www.nexusmods.com/valheim/mods/441)
