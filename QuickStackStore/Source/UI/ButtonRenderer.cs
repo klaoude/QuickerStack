@@ -16,10 +16,10 @@ namespace QuickStackStore
         private static Button sortInventoryButton;
         private static Button restockAreaButton;
 
-        private static Button quickStackToChestButton;
+        private static Button quickStackToContainerButton;
         private static Button depositAllButton;
-        private static Button sortChestButton;
-        private static Button restockFromChestButton;
+        private static Button sortContainerButton;
+        private static Button restockFromContainerButton;
 
         private const float shrinkFactor = 0.9f;
         private const int vPadding = 8;
@@ -90,7 +90,8 @@ namespace QuickStackStore
                     else
                     {
                         takeAllButtonRect.localPosition = OppositePositionOfTakeAllButton();
-                        takeAllButtonRect.localPosition += new Vector3(origButtonLength, QuickStackConfig.DisplayQuickStackButtons.Value == ShowTwoButtons.OnlyInventoryButton ? 0 : -vOffset);
+                        bool goToTop = QuickStackConfig.DisplayQuickStackButtons.Value == ShowTwoButtons.OnlyInventoryButton;
+                        takeAllButtonRect.localPosition += new Vector3(origButtonLength, goToTop ? 0 : -vOffset);
                     }
                 }
 
@@ -141,21 +142,21 @@ namespace QuickStackStore
 
                 if (QuickStackConfig.DisplayQuickStackButtons.Value != ShowTwoButtons.OnlyInventoryButton)
                 {
-                    if (quickStackToChestButton == null)
+                    if (quickStackToContainerButton == null)
                     {
-                        quickStackToChestButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
+                        quickStackToContainerButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
 
                         // revert the moment from the take all button
-                        MoveButtonToIndex(ref quickStackToChestButton, startOffset, -vOffset, extraContainerButtons, 1);
+                        MoveButtonToIndex(ref quickStackToContainerButton, startOffset, -vOffset, extraContainerButtons, 1);
 
-                        quickStackToChestButton.onClick.RemoveAllListeners();
-                        quickStackToChestButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoQuickStack(Player.m_localPlayer, true)));
+                        quickStackToContainerButton.onClick.RemoveAllListeners();
+                        quickStackToContainerButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoQuickStack(Player.m_localPlayer, true)));
 
-                        quickStackToChestButton.GetComponentInChildren<Text>().text = LocalizationConfig.QuickStackLabel.Value;
+                        quickStackToContainerButton.GetComponentInChildren<Text>().text = LocalizationConfig.QuickStackLabel.Value;
                     }
                     else
                     {
-                        quickStackToChestButton.gameObject.SetActive(__instance.m_currentContainer != null);
+                        quickStackToContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
                     }
                 }
 
@@ -179,31 +180,31 @@ namespace QuickStackStore
 
                 if (RestockConfig.DisplayRestockButtons.Value != ShowTwoButtons.OnlyInventoryButton)
                 {
-                    if (restockFromChestButton == null)
+                    if (restockFromContainerButton == null)
                     {
-                        restockFromChestButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
-                        MoveButtonToIndex(ref restockFromChestButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
+                        restockFromContainerButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
+                        MoveButtonToIndex(ref restockFromContainerButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
-                        restockFromChestButton.onClick.RemoveAllListeners();
-                        restockFromChestButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoRestock(Player.m_localPlayer, true)));
+                        restockFromContainerButton.onClick.RemoveAllListeners();
+                        restockFromContainerButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoRestock(Player.m_localPlayer, true)));
 
-                        restockFromChestButton.GetComponentInChildren<Text>().text = LocalizationConfig.RestockLabel.Value;
+                        restockFromContainerButton.GetComponentInChildren<Text>().text = LocalizationConfig.RestockLabel.Value;
                     }
                     else
                     {
-                        restockFromChestButton.gameObject.SetActive(__instance.m_currentContainer != null);
+                        restockFromContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
                     }
                 }
 
                 if (SortConfig.DisplaySortButtons.Value != ShowTwoButtons.OnlyInventoryButton)
                 {
-                    if (sortChestButton == null)
+                    if (sortContainerButton == null)
                     {
-                        sortChestButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
-                        MoveButtonToIndex(ref sortChestButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
+                        sortContainerButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
+                        MoveButtonToIndex(ref sortContainerButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
-                        sortChestButton.onClick.RemoveAllListeners();
-                        sortChestButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(__instance.m_currentContainer.GetInventory())));
+                        sortContainerButton.onClick.RemoveAllListeners();
+                        sortContainerButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(__instance.m_currentContainer.GetInventory())));
 
                         var label = LocalizationConfig.SortLabel.Value;
 
@@ -212,11 +213,11 @@ namespace QuickStackStore
                             label += $" ({SortCriteriaToShortHumanReadableString(SortConfig.SortCriteria.Value)})";
                         }
 
-                        sortChestButton.GetComponentInChildren<Text>().text = label;
+                        sortContainerButton.GetComponentInChildren<Text>().text = label;
                     }
                     else
                     {
-                        sortChestButton.gameObject.SetActive(__instance.m_currentContainer != null);
+                        sortContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
                     }
                 }
             }
@@ -257,6 +258,9 @@ namespace QuickStackStore
 
                 case SortCriteriaEnum.Weight:
                     return LocalizationConfig.SortByWeightLabel.Value;
+
+                case SortCriteriaEnum.Type:
+                    return LocalizationConfig.SortByTypeLabel.Value;
 
                 default:
                     return "invalid";
@@ -312,14 +316,14 @@ namespace QuickStackStore
                 Object.Destroy(quickStackAreaButton.gameObject);
             }
 
-            if (quickStackToChestButton != null)
+            if (quickStackToContainerButton != null)
             {
-                Object.Destroy(quickStackToChestButton.gameObject);
+                Object.Destroy(quickStackToContainerButton.gameObject);
             }
 
-            if (sortChestButton != null)
+            if (sortContainerButton != null)
             {
-                Object.Destroy(sortChestButton.gameObject);
+                Object.Destroy(sortContainerButton.gameObject);
             }
 
             if (sortInventoryButton != null)
@@ -327,9 +331,9 @@ namespace QuickStackStore
                 Object.Destroy(sortInventoryButton.gameObject);
             }
 
-            if (restockFromChestButton != null)
+            if (restockFromContainerButton != null)
             {
-                Object.Destroy(restockFromChestButton.gameObject);
+                Object.Destroy(restockFromContainerButton.gameObject);
             }
 
             if (restockAreaButton != null)

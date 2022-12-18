@@ -24,7 +24,7 @@ namespace QuickStackStore
             }
 
             sw.Stop();
-            Debug.Log($"Found {list.Count} container/s out of {AllContainers.Count} in range in {sw.Elapsed} (global search)");
+            Debug.Log($"Found {list.Count} container/s out of {AllContainers.Count} in range in {sw.Elapsed}");
 
             return list;
         }

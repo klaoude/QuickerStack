@@ -5,7 +5,6 @@ using System.Reflection;
 
 namespace QuickStackStore
 {
-    // TODO OdinsQOL's quick slots, aedenthorns equipment slots, ComfyQuickSlots
     public static class CompatibilitySupport
     {
         private static MethodInfo IsEquipmentSlot;
@@ -29,20 +28,16 @@ namespace QuickStackStore
         {
             if (HasPlugin("randyknapp.mods.equipmentandquickslots"))
             {
-                //Plugin.instance.GetLogger().LogDebug("Found EquipmentAndQuickSlots plugin");
                 if (IsEquipmentSlot == null && IsQuickSlot == null)
                 {
                     var ass = Assembly.Load("EquipmentAndQuickSlots");
 
                     if (ass != null)
                     {
-                        //Plugin.instance.GetLogger().LogDebug("Found assembly");
                         var type = ass.GetTypes().First(a => a.IsClass && a.Name == "EquipmentAndQuickSlots");
                         var pubstatic = type.GetMethods(BindingFlags.Public | BindingFlags.Static);
                         IsEquipmentSlot = pubstatic.First(t => t.Name == "IsEquipmentSlot" && t.GetParameters().Length == 1);
-                        //Plugin.instance.GetLogger().LogDebug($"IsEquipmentSlot: {IsEquipmentSlot}");
                         IsQuickSlot = pubstatic.First(t => t.Name == "IsQuickSlot" && t.GetParameters().Length == 1);
-                        //Plugin.instance.GetLogger().LogDebug($"IsQuickSlot: {IsQuickSlot}");
                     }
                 }
 

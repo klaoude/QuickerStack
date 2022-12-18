@@ -31,63 +31,6 @@ namespace QuickStackStore
             }
         }
 
-        // TODO sort by item category?
-        //private static void Test(ItemDrop.ItemData item)
-        //{
-        //    switch (item.m_shared.m_itemType)
-        //    {
-        //        case ItemDrop.ItemData.ItemType.None:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Material:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Consumable:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.OneHandedWeapon:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Bow:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Shield:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Helmet:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Chest:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Ammo:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Customization:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Legs:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Hands:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Trophie:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.TwoHandedWeapon:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Torch:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Misc:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Shoulder:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Utility:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Tool:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Attach_Atgeir:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.Fish:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.TwoHandedWeaponLeft:
-        //            break;
-        //        case ItemDrop.ItemData.ItemType.AmmoNonEquipable:
-        //            break;
-        //        default:
-        //            break;
-        //    }
-        //}
-
-        // sorting by locale without setting it to english for everyone is dangerous due to desyncs
         public static IComparable SortByGetter(ItemDrop.ItemData item)
         {
             switch (SortConfig.SortCriteria.Value)
@@ -100,6 +43,9 @@ namespace QuickStackStore
 
                 case SortCriteriaEnum.Weight:
                     return item.m_shared.m_weight;
+
+                case SortCriteriaEnum.Type:
+                    return item.m_shared.m_itemType;
 
                 case SortCriteriaEnum.InternalName:
                 default:
@@ -180,8 +126,7 @@ namespace QuickStackStore
                 }
             }
 
-            //var offset = new Vector2i(offset % inventory.GetWidth(), offset / inventory.GetWidth());
-            bool ignoreFirstRow = player != null && !SortConfig.SortIncludesHotkeyBar.Value;
+            bool ignoreFirstRow = player != null && (GeneralConfig.NeverAffectHotkeyBar.Value || !SortConfig.SortIncludesHotkeyBar.Value);
 
             // simple ignore hotbar
             var offset = ignoreFirstRow ? new Vector2i(0, 1) : new Vector2i(0, 0);
@@ -231,7 +176,6 @@ namespace QuickStackStore
             }
 
             //sw.Stop();
-            //Plugin.instance.GetLogger().LogDebug($"Sorting inventory took {sw.Elapsed}");
 
             // Clear the cache in case anyone is using something that loads plugins at run-time.
             CompatibilitySupport.cache.Clear();
@@ -242,7 +186,7 @@ namespace QuickStackStore
         internal static void MergeStacks(List<ItemDrop.ItemData> toMerge, Inventory inventory)
         {
             var grouped = toMerge.Where(itm => itm.m_stack < itm.m_shared.m_maxStackSize).GroupBy(itm => itm.m_shared.m_name).Where(itm => itm.Count() > 1).Select(grouping => grouping.ToList());
-            //Plugin.instance.GetLogger().LogInfo($"There are {grouped.Count()} groups of stackable items");
+
             foreach (var nonFullStacks in grouped)
             {
                 var maxStack = nonFullStacks.First().m_shared.m_maxStackSize;
@@ -252,6 +196,7 @@ namespace QuickStackStore
                 nonFullStacks.RemoveAt(0);
 
                 var enumerator = nonFullStacks.GetEnumerator();
+
                 while (nonFullStacks.Count >= 1)
                 {
                     numTimes += 1;
@@ -271,6 +216,7 @@ namespace QuickStackStore
                     }
 
                     var toStack = Math.Min(maxStack - curStack.m_stack, stack.m_stack);
+
                     if (toStack > 0)
                     {
                         curStack.m_stack += toStack;

@@ -25,7 +25,7 @@ namespace QuickStackStore
 
         internal static bool IsPressingFavoriteKey()
         {
-            return Input.GetKey(FavoriteConfig.FavoriteModifierKey1.Value) || Input.GetKey(FavoriteConfig.FavoriteModifierKey2.Value);
+            return Input.GetKey(FavoriteConfig.FavoritingModifierKey1.Value) || Input.GetKey(FavoriteConfig.FavoritingModifierKey2.Value);
         }
 
         internal static Color GetMixedColor(Color color1, Color color2)
@@ -93,6 +93,10 @@ namespace QuickStackStore
             else if (Input.GetKeyDown(TrashConfig.TrashHotkey.Value))
             {
                 TrashModule.TrashOrTrashFlagItem(true);
+            }
+            else if (Input.GetKeyDown(TrashConfig.QuickTrashHotkey.Value))
+            {
+                TrashModule.AttemptQuickTrash();
             }
         }
     }

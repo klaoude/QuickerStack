@@ -16,17 +16,19 @@ namespace QuickStackStore
 
             return maxStack > 1 && maxStack > item.m_stack
                 && (!RestockConfig.RestockOnlyAmmoAndConsumables.Value || type == ItemData.ItemType.Ammo || type == ItemData.ItemType.Consumable)
-                && playerConfig.IsItemNameOrSlotFavorited(item) && !CompatibilitySupport.IsEquipOrQuickSlot(item.m_gridPos);
+                && ((!GeneralConfig.NeverAffectHotkeyBar.Value && RestockConfig.RestockIncludesHotkeyBar.Value) || item.m_gridPos.y > 0)
+                && (!RestockConfig.RestockOnlyFavoritedItems.Value || playerConfig.IsItemNameOrSlotFavorited(item))
+                && !CompatibilitySupport.IsEquipOrQuickSlot(item.m_gridPos);
         }
 
         private static bool ShouldQuickStackItem(ItemData item, UserConfig playerConfig)
         {
             return item.m_shared.m_maxStackSize > 1
-                && (QuickStackConfig.QuickStackIncludesHotkeyBar.Value || item.m_gridPos.y > 0)
+                && ((!GeneralConfig.NeverAffectHotkeyBar.Value && QuickStackConfig.QuickStackIncludesHotkeyBar.Value) || item.m_gridPos.y > 0)
                 && !playerConfig.IsItemNameOrSlotFavorited(item) && !CompatibilitySupport.IsEquipOrQuickSlot(item.m_gridPos);
         }
 
-        public static int RestockFromThisContainer(List<ItemData> firstItemList, List<ItemData> secondItemList, Inventory playerInventory, Inventory container)
+        private static int RestockFromThisContainer(List<ItemData> firstItemList, List<ItemData> secondItemList, Inventory playerInventory, Inventory container)
         {
             int num = 0;
 
@@ -77,7 +79,7 @@ namespace QuickStackStore
             return num;
         }
 
-        public static int StackItemsIntoThisContainer(List<ItemData> firstItemList, List<ItemData> secondItemList, Inventory playerInventory, Inventory container)
+        private static int StackItemsIntoThisContainer(List<ItemData> firstItemList, List<ItemData> secondItemList, Inventory playerInventory, Inventory container)
         {
             int num = 0;
 

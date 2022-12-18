@@ -100,7 +100,6 @@
     <Compile Include="Source\UI\ButtonRenderer.cs" />
     <Compile Include="Source\UI\BorderRenderer.cs" />
     <Compile Include="Source\UI\TooltipRenderer.cs" />
-    <Compile Include="Source\PatchTweaks.cs" />
     <Compile Include="Source\Modules\TrashModule.cs" />
     <Compile Include="Source\UserConfig.cs" />
   </ItemGroup>

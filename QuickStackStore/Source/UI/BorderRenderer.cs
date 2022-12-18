@@ -100,7 +100,7 @@ namespace QuickStackStore
         private static Image CreateBorderImage(Image baseImg)
         {
             // set m_queued parent as parent first, so the position is correct
-            var obj = GameObject.Instantiate<Image>(baseImg, baseImg.transform.parent);
+            var obj = Object.Instantiate(baseImg, baseImg.transform.parent);
             // change the parent to the m_queued image so we can access the new image without a loop
             obj.transform.SetParent(baseImg.transform);
             // set the new border image
