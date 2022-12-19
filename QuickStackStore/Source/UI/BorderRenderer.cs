@@ -63,6 +63,7 @@ namespace QuickStackStore
                 var isItemFavorited = playerConfig.IsItemNameFavorited(itemData.m_shared);
                 if (isItemFavorited)
                 {
+                    // enabled -> slot is favorited
                     if (img.enabled)
                     {
                         img.color = FavoriteConfig.BorderColorFavoritedItemOnFavoritedSlot.Value;
@@ -81,6 +82,7 @@ namespace QuickStackStore
 
                     if (isItemTrashFlagged)
                     {
+                        // enabled -> slot is favorited
                         if (img.enabled)
                         {
                             img.color = FavoriteConfig.BorderColorTrashFlaggedItemOnFavoritedSlot.Value;

@@ -177,9 +177,6 @@ namespace QuickStackStore
 
             //sw.Stop();
 
-            // Clear the cache in case anyone is using something that loads plugins at run-time.
-            CompatibilitySupport.cache.Clear();
-
             inventory.Changed();
         }
 

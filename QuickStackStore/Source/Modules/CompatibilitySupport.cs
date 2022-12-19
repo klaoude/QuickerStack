@@ -7,48 +7,96 @@ namespace QuickStackStore
 {
     public static class CompatibilitySupport
     {
-        private static MethodInfo IsEquipmentSlot;
-        private static MethodInfo IsQuickSlot;
-        public static Dictionary<string, bool> cache = new Dictionary<string, bool>();
+        private static MethodInfo IsComfyArmorSlot;
 
-        public static bool HasPlugin(string guid)
+        public static Dictionary<string, bool> cache = null;
+
+        public const string aeden = "aedenthorn.ExtendedPlayerInventory";
+        public const string comfy = "com.bruce.valheim.comfyquickslots";
+        public const string odinPlus = "com.odinplusqol.mod";
+        public const string odinExInv = "odinplusqol.OdinsExtendedInventory";
+        public const string randy = "randyknapp.mods.equipmentandquickslots";
+
+        public static string[] supportedPlugins = new string[]
         {
-            if (cache.ContainsKey(guid))
-            {
-                return cache[guid];
-            }
+            aeden,
+            comfy,
+            odinPlus,
+            odinExInv,
+            randy,
+        };
+
+        public static void RegenerateCache()
+        {
+            cache = new Dictionary<string, bool>();
 
             var plugins = UnityEngine.Object.FindObjectsOfType<BaseUnityPlugin>();
 
-            cache[guid] = plugins.Any(plugin => plugin.Info.Metadata.GUID == guid);
+            foreach (var guid in supportedPlugins)
+            {
+                cache[guid] = plugins.Any(plugin => plugin.Info.Metadata.GUID == guid);
+            }
+        }
+
+        public static bool HasPlugin(string guid)
+        {
+            if (cache == null)
+            {
+                RegenerateCache();
+            }
+
+            if (!cache.ContainsKey(guid))
+            {
+                var plugins = UnityEngine.Object.FindObjectsOfType<BaseUnityPlugin>();
+                cache[guid] = plugins.Any(plugin => plugin.Info.Metadata.GUID == guid);
+            }
+
             return cache[guid];
         }
 
-        public static bool IsEquipOrQuickSlot(Vector2i itemPos)
+        public static bool HasPluginThatRequiresMiniButtonHMove()
         {
-            if (HasPlugin("randyknapp.mods.equipmentandquickslots"))
+            return HasPlugin(aeden) || HasPlugin(odinExInv) || HasPlugin(odinPlus);
+        }
+
+        public static bool IsEquipOrQuickSlot(Vector2i itemPos, bool onlyCheckEquipSlot = false)
+        {
+            //if (HasPlugin("randyknapp.mods.equipmentandquickslots"))
+            //{
+            //    // randyknapps mod ignores everything this mod does anyway, so no need for specific compatibility
+            //}
+
+            //if (HasPlugin(aeden) || HasPlugin(odinExInv) || HasPlugin(odinPlus))
+            //{
+            //    // nothing to do here, these mods makes sure armor stays where it should, and we can't detect the quickslots. they are not affected by 'take all' too
+            //}
+
+            if (HasPlugin("com.bruce.valheim.comfyquickslots"))
             {
-                if (IsEquipmentSlot == null && IsQuickSlot == null)
+                if (IsComfyArmorSlot == null)
                 {
-                    var ass = Assembly.Load("EquipmentAndQuickSlots");
+                    var ass = Assembly.Load("ComfyQuickSlots");
 
                     if (ass != null)
                     {
-                        var type = ass.GetTypes().First(a => a.IsClass && a.Name == "EquipmentAndQuickSlots");
+                        var type = ass.GetTypes().First(a => a.IsClass && a.Name == "ComfyQuickSlots");
                         var pubstatic = type.GetMethods(BindingFlags.Public | BindingFlags.Static);
-                        IsEquipmentSlot = pubstatic.First(t => t.Name == "IsEquipmentSlot" && t.GetParameters().Length == 1);
-                        IsQuickSlot = pubstatic.First(t => t.Name == "IsQuickSlot" && t.GetParameters().Length == 1);
+                        IsComfyArmorSlot = pubstatic.First(t => t.Name == "IsArmorSlot" && t.GetParameters().Length == 1);
                     }
                 }
 
-                if ((bool)IsEquipmentSlot?.Invoke(null, new object[] { itemPos }))
+                if ((bool)IsComfyArmorSlot?.Invoke(null, new object[] { itemPos }))
                 {
                     return true;
                 }
 
-                if ((bool)IsQuickSlot?.Invoke(null, new object[] { itemPos }))
+                if (!onlyCheckEquipSlot)
                 {
-                    return true;
+                    // check for quickslot (could also be armor slot)
+                    if ((bool)IsComfyArmorSlot?.Invoke(null, new object[] { new Vector2i(itemPos.x - 3, itemPos.y) }))
+                    {
+                        return true;
+                    }
                 }
             }
 

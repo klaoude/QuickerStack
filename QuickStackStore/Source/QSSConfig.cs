@@ -143,7 +143,7 @@ namespace QuickStackStore
             string overrideHotkey = $"overridden by {DisableAllNewKeybinds}";
             string overrideHotkeyBar = $"overridden by {NeverAffectHotkeyBar}";
             string hotkey = "What to do when the hotkey is pressed while you have a container open.";
-            string twoButtons = $"Which of the two buttons to display ({overrideButton}). The hotkey works independently.";
+            string twoButtons = $"Which of the two buttons to display ({overrideButton}). Selecting {nameof(ShowTwoButtons.BothButDependingOnContext)} will hide the mini button while a container is open. The hotkey works independently.";
             string range = "How close the searched through containers have to be.";
             string favoriteFunction = "disallowing quick stacking, storing, sorting and trashing";
 
@@ -180,7 +180,7 @@ namespace QuickStackStore
 
             sectionName = "2.1 - Quick Stacking";
 
-            DisplayQuickStackButtons = Config.Bind(sectionName, nameof(DisplayQuickStackButtons), ShowTwoButtons.Both, twoButtons);
+            DisplayQuickStackButtons = Config.Bind(sectionName, nameof(DisplayQuickStackButtons), ShowTwoButtons.BothButDependingOnContext, twoButtons);
             DisplayQuickStackButtons.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
             QuickStackHotkeyBehaviorWhenContainerOpen = Config.Bind(sectionName, nameof(QuickStackHotkeyBehaviorWhenContainerOpen), QuickStackBehavior.QuickStackOnlyToCurrentContainer, hotkey);
@@ -193,7 +193,7 @@ namespace QuickStackStore
 
             sectionName = "2.2 - Quick Restocking";
 
-            DisplayRestockButtons = Config.Bind(sectionName, nameof(DisplayRestockButtons), ShowTwoButtons.Both, twoButtons);
+            DisplayRestockButtons = Config.Bind(sectionName, nameof(DisplayRestockButtons), ShowTwoButtons.BothButDependingOnContext, twoButtons);
             DisplayRestockButtons.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
             RestockFromNearbyRange = Config.Bind(sectionName, nameof(RestockFromNearbyRange), 10f, range);
@@ -211,7 +211,7 @@ namespace QuickStackStore
             DisplayStoreAllButton = Config.Bind(sectionName, nameof(DisplayStoreAllButton), true, $"Whether to display the 'Store All' button in containers {overrideButton}");
             DisplayStoreAllButton.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
-            StoreAllIncludesEquippedItems = Config.Bind(sectionName, nameof(StoreAllIncludesEquippedItems), true, "Whether to also unequip and store non favorited equipped items or exclude them.");
+            StoreAllIncludesEquippedItems = Config.Bind(sectionName, nameof(StoreAllIncludesEquippedItems), false, "Whether to also unequip and store non favorited equipped items or exclude them.");
             StoreAllIncludesHotkeyBar = Config.Bind(sectionName, nameof(StoreAllIncludesHotkeyBar), true, $"Whether to also store all non favorited items from the hotkey bar ({overrideHotkeyBar})");
 
             sectionName = "4 - Sorting";
@@ -227,7 +227,7 @@ namespace QuickStackStore
             SortInAscendingOrder = Config.Bind(sectionName, nameof(SortInAscendingOrder), true, "Whether the current first sort criteria should be used in ascending or descending order.");
             SortIncludesHotkeyBar = Config.Bind(sectionName, nameof(SortIncludesHotkeyBar), true, $"Whether to also sort non favorited items from the hotkey bar ({overrideHotkeyBar}).");
             SortKey = Config.Bind(sectionName, nameof(SortKey), KeyCode.O, $"The hotkey to sort the inventory or the current container or both (depending on {SortHotkeyBehaviorWhenContainerOpen}, {overrideHotkey}).");
-            SortLeavesEmptyFavoritedSlotsEmpty = Config.Bind(sectionName, nameof(SortLeavesEmptyFavoritedSlotsEmpty), false, "Whether sort treats empty favorited slots as occupied and leaves them empty, so you don't accidentally put items on them.");
+            SortLeavesEmptyFavoritedSlotsEmpty = Config.Bind(sectionName, nameof(SortLeavesEmptyFavoritedSlotsEmpty), true, "Whether sort treats empty favorited slots as occupied and leaves them empty, so you don't accidentally put items on them.");
             SortMergesStacks = Config.Bind(sectionName, nameof(SortMergesStacks), true, "Whether to merge stacks after sorting or keep them as separate non full stacks.");
 
             sectionName = "5 - Trashing";
@@ -318,7 +318,8 @@ namespace QuickStackStore
         {
             Both,
             OnlyInventoryButton,
-            OnlyContainerButton
+            OnlyContainerButton,
+            BothButDependingOnContext,
         }
 
         public enum QuickStackBehavior

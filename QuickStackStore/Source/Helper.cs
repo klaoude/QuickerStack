@@ -56,6 +56,13 @@ namespace QuickStackStore
                 return Sprite.Create(tex, size, pivot, units);
             }
         }
+
+        // taken from https://github.com/aedenthorn/ValheimMods AedenthornUtils.IgnoreKeyPresses, public domain
+        public static bool IgnoreKeyPresses()
+        {
+            // removed InventoryGui.IsVisible() because we specifically want that to be the case
+            return ZNetScene.instance == null || Player.m_localPlayer == null || Minimap.IsOpen() || Console.IsVisible() || TextInput.IsVisible() || ZNet.instance.InPasswordDialog() || Chat.instance?.HasFocus() == true || StoreGui.IsVisible() || Menu.IsVisible() || TextViewer.instance?.IsVisible() == true;
+        }
     }
 
     [HarmonyPatch(typeof(Player), nameof(Player.Update))]
@@ -73,7 +80,12 @@ namespace QuickStackStore
                 return;
             }
 
-            if (Chat.instance.m_input.isFocused || Minimap.InTextInput() || TextInput.instance.m_visibleFrame)
+            if (!InventoryGui.IsVisible())
+            {
+                return;
+            }
+
+            if (Helper.IgnoreKeyPresses())
             {
                 return;
             }

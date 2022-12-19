@@ -11,8 +11,6 @@ namespace QuickStackStore
         private const string NAME = "Quick Stack - Store - Sort - Trash - Restock";
         private const string VERSION = "0.9";
 
-        // TODO support for OdinsQOL's quick slots, aedenthorns equipment slots, ComfyQuickSlots
-
         // TODO check 'SuppressContainerSoundAndVisuals' for other clients in multiplayer
         // TODO container in use can still get quick stacked to!!!! applied first fix, check if working
 

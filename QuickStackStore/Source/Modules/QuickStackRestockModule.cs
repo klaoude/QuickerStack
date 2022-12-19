@@ -18,7 +18,7 @@ namespace QuickStackStore
                 && (!RestockConfig.RestockOnlyAmmoAndConsumables.Value || type == ItemData.ItemType.Ammo || type == ItemData.ItemType.Consumable)
                 && ((!GeneralConfig.NeverAffectHotkeyBar.Value && RestockConfig.RestockIncludesHotkeyBar.Value) || item.m_gridPos.y > 0)
                 && (!RestockConfig.RestockOnlyFavoritedItems.Value || playerConfig.IsItemNameOrSlotFavorited(item))
-                && !CompatibilitySupport.IsEquipOrQuickSlot(item.m_gridPos);
+                && !CompatibilitySupport.IsEquipOrQuickSlot(item.m_gridPos, true);
         }
 
         private static bool ShouldQuickStackItem(ItemData item, UserConfig playerConfig)

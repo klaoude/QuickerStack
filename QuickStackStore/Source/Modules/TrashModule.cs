@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -87,6 +86,9 @@ namespace QuickStackStore
         [HarmonyPatch(typeof(InventoryGui))]
         internal static class TrashItemsPatches
         {
+            // slightly lower priority so we get rendered on top of equipment slot mods
+            // (lower priority -> later rendering -> you get rendered on top)
+            [HarmonyPriority(Priority.LowerThanNormal)]
             [HarmonyPatch(nameof(InventoryGui.Show))]
             [HarmonyPostfix]
             public static void Show_Postfix(InventoryGui __instance)
@@ -103,7 +105,10 @@ namespace QuickStackStore
 
                 Transform playerInventory = __instance.m_player.transform;
 
-                trashRoot = Object.Instantiate(playerInventory.Find("Armor"), playerInventory);
+                var armor = playerInventory.Find("Armor");
+                trashRoot = Object.Instantiate(armor, playerInventory);
+                // fix rendering order by going to the right place in the hierachy
+                trashRoot.SetSiblingIndex(armor.GetSiblingIndex() + 1);
                 trashButton = trashRoot.gameObject.AddComponent<TrashButton>();
             }
 
@@ -192,7 +197,6 @@ namespace QuickStackStore
 
         public class TrashButton : MonoBehaviour
         {
-            private Canvas canvas;
             private RectTransform rectTransform;
             private GameObject buttonGo;
 
@@ -220,7 +224,6 @@ namespace QuickStackStore
 
                 tArmor.GetComponent<Image>().sprite = trashSprite;
 
-                transform.SetSiblingIndex(0);
                 transform.gameObject.name = "Trash";
 
                 buttonGo = new GameObject("ButtonCanvas");
@@ -228,7 +231,6 @@ namespace QuickStackStore
                 rectTransform.transform.SetParent(transform.transform, true);
                 rectTransform.anchoredPosition = Vector2.zero;
                 rectTransform.sizeDelta = new Vector2(70, 74);
-                canvas = buttonGo.AddComponent<Canvas>();
                 buttonGo.AddComponent<GraphicRaycaster>();
 
                 // Add trash ui button
@@ -252,24 +254,6 @@ namespace QuickStackStore
                 InventoryGui.instance.m_uiGroups = InventoryGui.instance.m_uiGroups.AddToArray(handler);
 
                 gameObject.AddComponent<TrashHandler>();
-            }
-
-            protected void Start()
-            {
-                StartCoroutine(DelayedOverrideSorting());
-            }
-
-            private IEnumerator DelayedOverrideSorting()
-            {
-                yield return null;
-
-                if (canvas == null)
-                {
-                    yield break;
-                }
-
-                canvas.overrideSorting = true;
-                canvas.sortingOrder = 1;
             }
 
             public void SetText(string text)

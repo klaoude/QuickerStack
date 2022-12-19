@@ -27,6 +27,9 @@ namespace QuickStackStore
         [HarmonyPatch(typeof(InventoryGui))]
         internal static class PatchGuiShow
         {
+            // slightly lower priority so we get rendered on top of equipment slot mods
+            // (lower priority -> later rendering -> you get rendered on top)
+            [HarmonyPriority(Priority.LowerThanNormal)]
             [HarmonyPatch(nameof(InventoryGui.Show))]
             [HarmonyPostfix]
             public static void Show_Postfix(InventoryGui __instance)
@@ -102,27 +105,7 @@ namespace QuickStackStore
 
                 int miniButtons = 0;
 
-                if (QuickStackConfig.DisplayQuickStackButtons.Value != ShowTwoButtons.OnlyContainerButton)
-                {
-                    if (quickStackAreaButton == null)
-                    {
-                        quickStackAreaButton = CreateSmallButton(__instance, nameof(quickStackAreaButton), LocalizationConfig.QuickStackLabelCharacter.Value, ++miniButtons);
-
-                        quickStackAreaButton.onClick.RemoveAllListeners();
-                        quickStackAreaButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoQuickStack(Player.m_localPlayer)));
-                    }
-                }
-
-                if (RestockConfig.DisplayRestockButtons.Value != ShowTwoButtons.OnlyContainerButton)
-                {
-                    if (restockAreaButton == null)
-                    {
-                        restockAreaButton = CreateSmallButton(__instance, nameof(restockAreaButton), LocalizationConfig.RestockLabelCharacter.Value, ++miniButtons);
-
-                        restockAreaButton.onClick.RemoveAllListeners();
-                        restockAreaButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoRestock(Player.m_localPlayer)));
-                    }
-                }
+                var displaySortButtons = RestockConfig.DisplayRestockButtons.Value;
 
                 if (SortConfig.DisplaySortButtons.Value != ShowTwoButtons.OnlyContainerButton)
                 {
@@ -133,6 +116,43 @@ namespace QuickStackStore
                         sortInventoryButton.onClick.RemoveAllListeners();
                         sortInventoryButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(Player.m_localPlayer.GetInventory(), Player.m_localPlayer)));
                     }
+
+                    // this one is deliberately unaffected by the randy equipment slot compatibility
+                    sortInventoryButton.gameObject.SetActive(__instance.m_currentContainer == null || displaySortButtons != ShowTwoButtons.BothButDependingOnContext);
+                }
+
+                var displayRestockButtons = RestockConfig.DisplayRestockButtons.Value;
+
+                if (displayRestockButtons != ShowTwoButtons.OnlyContainerButton)
+                {
+                    if (restockAreaButton == null)
+                    {
+                        restockAreaButton = CreateSmallButton(__instance, nameof(restockAreaButton), LocalizationConfig.RestockLabelCharacter.Value, ++miniButtons);
+
+                        restockAreaButton.onClick.RemoveAllListeners();
+                        restockAreaButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoRestock(Player.m_localPlayer)));
+                    }
+
+                    bool shouldntShow = __instance.m_currentContainer != null && (displayRestockButtons == ShowTwoButtons.BothButDependingOnContext || CompatibilitySupport.HasPlugin(CompatibilitySupport.randy));
+
+                    restockAreaButton.gameObject.SetActive(!shouldntShow);
+                }
+
+                var displayQuickStackButtons = QuickStackConfig.DisplayQuickStackButtons.Value;
+
+                if (displayQuickStackButtons != ShowTwoButtons.OnlyContainerButton)
+                {
+                    if (quickStackAreaButton == null)
+                    {
+                        quickStackAreaButton = CreateSmallButton(__instance, nameof(quickStackAreaButton), LocalizationConfig.QuickStackLabelCharacter.Value, ++miniButtons);
+
+                        quickStackAreaButton.onClick.RemoveAllListeners();
+                        quickStackAreaButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoQuickStack(Player.m_localPlayer)));
+                    }
+
+                    bool shouldntShow = __instance.m_currentContainer != null && (displayQuickStackButtons == ShowTwoButtons.BothButDependingOnContext || CompatibilitySupport.HasPlugin(CompatibilitySupport.randy));
+
+                    quickStackAreaButton.gameObject.SetActive(!shouldntShow);
                 }
 
                 Vector2 startOffset = takeAllButtonRect.localPosition;
@@ -146,18 +166,24 @@ namespace QuickStackStore
                     {
                         quickStackToContainerButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
 
-                        // revert the moment from the take all button
-                        MoveButtonToIndex(ref quickStackToContainerButton, startOffset, -vOffset, extraContainerButtons, 1);
+                        if (CompatibilitySupport.HasPlugin(CompatibilitySupport.randy))
+                        {
+                            // jump to the opposite side of the default 'take all' button position, because we are out of space
+                            MoveButtonToIndex(ref quickStackToContainerButton, startOffset, -vOffset, 1, 1);
+                        }
+                        else
+                        {
+                            // revert the vertical movement from the 'take all' button
+                            MoveButtonToIndex(ref quickStackToContainerButton, startOffset, -vOffset, extraContainerButtons, 1);
+                        }
 
                         quickStackToContainerButton.onClick.RemoveAllListeners();
                         quickStackToContainerButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoQuickStack(Player.m_localPlayer, true)));
 
                         quickStackToContainerButton.GetComponentInChildren<Text>().text = LocalizationConfig.QuickStackLabel.Value;
                     }
-                    else
-                    {
-                        quickStackToContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
-                    }
+
+                    quickStackToContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
                 }
 
                 if (StoreTakeAllConfig.DisplayStoreAllButton.Value)
@@ -172,10 +198,8 @@ namespace QuickStackStore
 
                         depositAllButton.GetComponentInChildren<Text>().text = LocalizationConfig.StoreAllLabel.Value;
                     }
-                    else
-                    {
-                        depositAllButton.gameObject.SetActive(__instance.m_currentContainer != null);
-                    }
+
+                    depositAllButton.gameObject.SetActive(__instance.m_currentContainer != null);
                 }
 
                 if (RestockConfig.DisplayRestockButtons.Value != ShowTwoButtons.OnlyInventoryButton)
@@ -190,10 +214,8 @@ namespace QuickStackStore
 
                         restockFromContainerButton.GetComponentInChildren<Text>().text = LocalizationConfig.RestockLabel.Value;
                     }
-                    else
-                    {
-                        restockFromContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
-                    }
+
+                    restockFromContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
                 }
 
                 if (SortConfig.DisplaySortButtons.Value != ShowTwoButtons.OnlyInventoryButton)
@@ -215,10 +237,8 @@ namespace QuickStackStore
 
                         sortContainerButton.GetComponentInChildren<Text>().text = label;
                     }
-                    else
-                    {
-                        sortContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
-                    }
+
+                    sortContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
                 }
             }
         }
@@ -277,10 +297,19 @@ namespace QuickStackStore
             int size = 38;
 
             Transform obj = Object.Instantiate(instance.m_takeAllButton.transform, weight.parent);
-            obj.localPosition = weight.localPosition + new Vector3((size + hPadding) * (existingMiniButtons - 1) + 2, -56f);
             obj.name = name;
 
-            obj.transform.SetAsFirstSibling();
+            if (CompatibilitySupport.HasPlugin(CompatibilitySupport.randy))
+            {
+                obj.localPosition = weight.localPosition - new Vector3(-2, (size + hPadding) * (existingMiniButtons - 1) + 58f);
+            }
+            else
+            {
+                var shouldMoveLower = CompatibilitySupport.HasPluginThatRequiresMiniButtonHMove() && instance.m_player.Find("EquipmentBkg") != null;
+                float vPos = shouldMoveLower ? -75f : -58f;
+
+                obj.localPosition = weight.localPosition + new Vector3((size + hPadding) * (existingMiniButtons - 1) + 2, vPos);
+            }
 
             var rect = (RectTransform)obj.transform;
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, size);
