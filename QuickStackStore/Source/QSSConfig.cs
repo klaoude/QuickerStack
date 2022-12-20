@@ -31,6 +31,7 @@ namespace QuickStackStore
             public static ConfigEntry<Color> BorderColorFavoritedSlot;
             public static ConfigEntry<Color> BorderColorTrashFlaggedItem;
             public static ConfigEntry<Color> BorderColorTrashFlaggedItemOnFavoritedSlot;
+            public static ConfigEntry<bool> DisplayTooltipHint;
             public static ConfigEntry<KeyCode> FavoritingModifierKey1;
             public static ConfigEntry<KeyCode> FavoritingModifierKey2;
         }
@@ -139,9 +140,9 @@ namespace QuickStackStore
 
             // keep the entries within a section in alphabetical order for the r2modman config manager
 
-            string overrideButton = $"overridden by {DisableAllNewButtons}";
-            string overrideHotkey = $"overridden by {DisableAllNewKeybinds}";
-            string overrideHotkeyBar = $"overridden by {NeverAffectHotkeyBar}";
+            string overrideButton = $"overridden by {nameof(DisableAllNewButtons)}";
+            string overrideHotkey = $"overridden by {nameof(DisableAllNewKeybinds)}";
+            string overrideHotkeyBar = $"overridden by {nameof(NeverAffectHotkeyBar)}";
             string hotkey = "What to do when the hotkey is pressed while you have a container open.";
             string twoButtons = $"Which of the two buttons to display ({overrideButton}). Selecting {nameof(ShowTwoButtons.BothButDependingOnContext)} will hide the mini button while a container is open. The hotkey works independently.";
             string range = "How close the searched through containers have to be.";
@@ -170,6 +171,8 @@ namespace QuickStackStore
             // black
             BorderColorTrashFlaggedItemOnFavoritedSlot = Config.Bind(sectionName, nameof(BorderColorTrashFlaggedItemOnFavoritedSlot), Color.black, "Color of the border of a favorited slot that also contains a trash flagged item.");
 
+            DisplayTooltipHint = Config.Bind(sectionName, nameof(DisplayTooltipHint), true, "Whether to add additional info the item tooltip of a favorited or trash flagged item.");
+
             string favoritingKey = $"While holding this, left clicking on items or right clicking on slots favorites them, {favoriteFunction}, or trash flags them if you are hovering an item on the trash can.";
             FavoritingModifierKey1 = Config.Bind(sectionName, nameof(FavoritingModifierKey1), KeyCode.LeftAlt, $"{favoritingKey} Identical to {nameof(FavoritingModifierKey2)}.");
             FavoritingModifierKey2 = Config.Bind(sectionName, nameof(FavoritingModifierKey2), KeyCode.RightAlt, $"{favoritingKey} Identical to {nameof(FavoritingModifierKey1)}.");
@@ -185,7 +188,7 @@ namespace QuickStackStore
 
             QuickStackHotkeyBehaviorWhenContainerOpen = Config.Bind(sectionName, nameof(QuickStackHotkeyBehaviorWhenContainerOpen), QuickStackBehavior.QuickStackOnlyToCurrentContainer, hotkey);
             QuickStackIncludesHotkeyBar = Config.Bind(sectionName, nameof(QuickStackIncludesHotkeyBar), true, $"Whether to also quick stack items from the hotkey bar ({overrideHotkeyBar}).");
-            QuickStackKey = Config.Bind(sectionName, nameof(QuickStackKey), KeyCode.P, $"The hotkey to start quick stacking to the current or nearby containers (depending on {QuickStackHotkeyBehaviorWhenContainerOpen}, {overrideHotkey}).");
+            QuickStackKey = Config.Bind(sectionName, nameof(QuickStackKey), KeyCode.P, $"The hotkey to start quick stacking to the current or nearby containers (depending on {nameof(QuickStackHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
             QuickStackToNearbyRange = Config.Bind(sectionName, nameof(QuickStackToNearbyRange), 10f, range);
             QuickStackTrophiesIntoSameContainer = Config.Bind(sectionName, nameof(QuickStackTrophiesIntoSameContainer), false, "Whether to put all types of trophies in the container if any trophy is found in that container.");
 
@@ -199,9 +202,9 @@ namespace QuickStackStore
             RestockFromNearbyRange = Config.Bind(sectionName, nameof(RestockFromNearbyRange), 10f, range);
             RestockHotkeyBehaviorWhenContainerOpen = Config.Bind(sectionName, nameof(RestockHotkeyBehaviorWhenContainerOpen), RestockBehavior.RestockOnlyFromCurrentContainer, hotkey);
             RestockIncludesHotkeyBar = Config.Bind(sectionName, nameof(RestockIncludesHotkeyBar), true, $"Whether to also try to restock items currently in the hotkey bar ({overrideHotkeyBar}).");
-            RestockKey = Config.Bind(sectionName, nameof(RestockKey), KeyCode.R, $"The hotkey to start restocking from the current or nearby containers (depending on {RestockHotkeyBehaviorWhenContainerOpen}, {overrideHotkey}).");
-            RestockOnlyAmmoAndConsumables = Config.Bind(sectionName, nameof(RestockOnlyAmmoAndConsumables), false, $"Whether restocking should only restock ammo and consumable or every stackable item (like materials). Also affected by {RestockOnlyFavoritedItems}.");
-            RestockOnlyFavoritedItems = Config.Bind(sectionName, nameof(RestockOnlyFavoritedItems), true, $"Whether restocking should only restock favorited items or items on favorited slots or every stackable item. Also affected by {RestockOnlyAmmoAndConsumables}.");
+            RestockKey = Config.Bind(sectionName, nameof(RestockKey), KeyCode.R, $"The hotkey to start restocking from the current or nearby containers (depending on {nameof(RestockHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
+            RestockOnlyAmmoAndConsumables = Config.Bind(sectionName, nameof(RestockOnlyAmmoAndConsumables), false, $"Whether restocking should only restock ammo and consumable or every stackable item (like materials). Also affected by {nameof(RestockOnlyFavoritedItems)}.");
+            RestockOnlyFavoritedItems = Config.Bind(sectionName, nameof(RestockOnlyFavoritedItems), true, $"Whether restocking should only restock favorited items or items on favorited slots or every stackable item. Also affected by {nameof(RestockOnlyAmmoAndConsumables)}.");
             ShowRestockResultMessage = Config.Bind(sectionName, nameof(ShowRestockResultMessage), true, "Whether to show the central screen report message after restocking.");
 
             sectionName = "3 - Store and Take All";
@@ -222,11 +225,11 @@ namespace QuickStackStore
             DisplaySortCriteriaInLabel = Config.Bind(sectionName, nameof(DisplaySortCriteriaInLabel), false, "Whether to display the current sort criteria in the inventory sort button as a reminder. The author thinks the button is a bit too small for it to look good.");
             DisplaySortCriteriaInLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
-            SortCriteria = Config.Bind(sectionName, nameof(SortCriteria), SortCriteriaEnum.InternalName, "The sort criteria the sort button uses. Ties are settled by internal name, quality and stack size.");
+            SortCriteria = Config.Bind(sectionName, nameof(SortCriteria), SortCriteriaEnum.Type, "The sort criteria the sort button uses. Ties are broken by internal name, quality and stack size.");
             SortHotkeyBehaviorWhenContainerOpen = Config.Bind(sectionName, nameof(SortHotkeyBehaviorWhenContainerOpen), SortBehavior.OnlySortContainer, hotkey);
             SortInAscendingOrder = Config.Bind(sectionName, nameof(SortInAscendingOrder), true, "Whether the current first sort criteria should be used in ascending or descending order.");
             SortIncludesHotkeyBar = Config.Bind(sectionName, nameof(SortIncludesHotkeyBar), true, $"Whether to also sort non favorited items from the hotkey bar ({overrideHotkeyBar}).");
-            SortKey = Config.Bind(sectionName, nameof(SortKey), KeyCode.O, $"The hotkey to sort the inventory or the current container or both (depending on {SortHotkeyBehaviorWhenContainerOpen}, {overrideHotkey}).");
+            SortKey = Config.Bind(sectionName, nameof(SortKey), KeyCode.O, $"The hotkey to sort the inventory or the current container or both (depending on {nameof(SortHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
             SortLeavesEmptyFavoritedSlotsEmpty = Config.Bind(sectionName, nameof(SortLeavesEmptyFavoritedSlotsEmpty), true, "Whether sort treats empty favorited slots as occupied and leaves them empty, so you don't accidentally put items on them.");
             SortMergesStacks = Config.Bind(sectionName, nameof(SortMergesStacks), true, "Whether to merge stacks after sorting or keep them as separate non full stacks.");
 
@@ -296,14 +299,14 @@ namespace QuickStackStore
             RestockResultMessagePartial = Config.Bind(sectionName, nameof(RestockResultMessagePartial), "Partially restocked ({0}/{1})", string.Empty);
             RestockResultMessageFull = Config.Bind(sectionName, nameof(RestockResultMessageFull), "Fully restocked (total: {0})", string.Empty);
 
-            TrashConfirmationOkayButton = Config.Bind(sectionName, nameof(QuickTrashConfirmation), "Trash", string.Empty);
+            TrashConfirmationOkayButton = Config.Bind(sectionName, nameof(TrashConfirmationOkayButton), "Trash", string.Empty);
             QuickTrashConfirmation = Config.Bind(sectionName, nameof(QuickTrashConfirmation), "Quick trash?", string.Empty);
             CantTrashFavoritedItemWarning = Config.Bind(sectionName, nameof(CantTrashFavoritedItemWarning), "Can't trash favorited item!", string.Empty);
             CantTrashHotkeyBarItemWarning = Config.Bind(sectionName, nameof(CantTrashHotkeyBarItemWarning), "Settings disallow trashing of item in hotkey bar!", string.Empty);
             CantTrashFlagFavoritedItemWarning = Config.Bind(sectionName, nameof(CantTrashFlagFavoritedItemWarning), "Can't trash flag a favorited item!", string.Empty);
             CantFavoriteTrashFlaggedItemWarning = Config.Bind(sectionName, nameof(CantFavoriteTrashFlaggedItemWarning), "Can't favorite a trash flagged item!", string.Empty);
 
-            FavoritedItemTooltip = Config.Bind(sectionName, nameof(FavoritedItemTooltip), "Will not be quick stacked, stored, sorted or trashed", string.Empty);
+            FavoritedItemTooltip = Config.Bind(sectionName, nameof(FavoritedItemTooltip), "Will not be quick stacked, sorted,\nstore all'd or trashed", string.Empty);
             TrashFlaggedItemTooltip = Config.Bind(sectionName, nameof(TrashFlaggedItemTooltip), "Can be quick trashed", string.Empty);
         }
 

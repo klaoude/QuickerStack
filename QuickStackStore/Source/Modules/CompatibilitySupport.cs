@@ -54,7 +54,7 @@ namespace QuickStackStore
             return cache[guid];
         }
 
-        public static bool HasPluginThatRequiresMiniButtonHMove()
+        public static bool HasPluginThatRequiresMiniButtonVMove()
         {
             return HasPlugin(aeden) || HasPlugin(odinExInv) || HasPlugin(odinPlus);
         }
@@ -68,7 +68,7 @@ namespace QuickStackStore
 
             //if (HasPlugin(aeden) || HasPlugin(odinExInv) || HasPlugin(odinPlus))
             //{
-            //    // nothing to do here, these mods makes sure armor stays where it should, and we can't detect the quickslots. they are not affected by 'take all' too
+            //    // nothing to do here, these mods makes sure armor stays where it should, and we can't detect the quickslots. at least they are not affected by 'take all'
             //}
 
             if (HasPlugin("com.bruce.valheim.comfyquickslots"))

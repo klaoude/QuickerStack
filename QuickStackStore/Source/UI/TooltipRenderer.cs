@@ -18,7 +18,7 @@ namespace QuickStackStore
         [HarmonyPostfix]
         public static void GetTooltip(ItemDrop.ItemData item, bool crafting, ref string __result)
         {
-            if (crafting)
+            if (crafting || !FavoriteConfig.DisplayTooltipHint.Value)
             {
                 return;
             }

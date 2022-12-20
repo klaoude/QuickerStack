@@ -7,6 +7,23 @@ namespace QuickStackStore
 {
     public static class SortModule
     {
+        /* Categories:
+            0 = None, Customization, Misc
+            1 = Trophie
+            2 = Material
+            3 = Fish
+            4 = Consumable
+            5 = AmmoNonEquipable
+            6 = Ammo
+            7 = Bow, Tool, OneHandedWeapon, TwoHandedWeapon, TwoHandedWeaponLeft, Attach_Atgeir, Torch
+            8 = Shield
+            9 = Utility
+            10 = Helmet, Shoulder, Chest, Hands, Legs
+        */
+
+        // convert the type enum to custom categories
+        public static int[] TypeToCategory = new int[] { 0, 2, 4, 7, 7, 8, 10, 10, 0, 6, 0, 10, 10, 1, 7, 7, 0, 10, 9, 7, 7, 3, 7, 5 };
+
         public static void DoSort(Player player)
         {
             Container container = InventoryGui.instance.m_currentContainer;
@@ -45,7 +62,16 @@ namespace QuickStackStore
                     return item.m_shared.m_weight;
 
                 case SortCriteriaEnum.Type:
-                    return item.m_shared.m_itemType;
+                    var typeNum = (int)item.m_shared.m_itemType;
+
+                    if (typeNum < 0 || typeNum > 23)
+                    {
+                        return typeNum;
+                    }
+                    else
+                    {
+                        return TypeToCategory[(int)item.m_shared.m_itemType];
+                    }
 
                 case SortCriteriaEnum.InternalName:
                 default:

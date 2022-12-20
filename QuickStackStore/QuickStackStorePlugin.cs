@@ -9,10 +9,7 @@ namespace QuickStackStore
     public class QuickStackStorePlugin : BaseUnityPlugin
     {
         private const string NAME = "Quick Stack - Store - Sort - Trash - Restock";
-        private const string VERSION = "0.9";
-
-        // TODO check 'SuppressContainerSoundAndVisuals' for other clients in multiplayer
-        // TODO container in use can still get quick stacked to!!!! applied first fix, check if working
+        private const string VERSION = "1.0";
 
         // TODO maybe sort and equals checks should also check quality for non stackables (the base game doesn't though)
         // TODO controller support
