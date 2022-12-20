@@ -140,7 +140,7 @@ namespace QuickStackStore
 
         public bool IsItemNameConsideredTrashFlagged(ItemDrop.ItemData.SharedData item)
         {
-            return (TrashConfig.AlwaysConsiderTrophiesTrashFlagged.Value && item.m_itemType == ItemDrop.ItemData.ItemType.Trophie) || this.trashFlaggedItems.Contains(item.m_name);
+            return (TrashConfig.AlwaysConsiderTrophiesTrashFlagged.Value && item.m_itemType == ItemDrop.ItemData.ItemType.Trophie && !IsItemNameFavorited(item)) || this.trashFlaggedItems.Contains(item.m_name);
         }
 
         public bool IsItemNameOrSlotFavorited(ItemDrop.ItemData item)
