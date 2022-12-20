@@ -16,7 +16,7 @@ namespace QuickStackStore
 
             return maxStack > 1 && maxStack > item.m_stack
                 && (!RestockConfig.RestockOnlyAmmoAndConsumables.Value || type == ItemData.ItemType.Ammo || type == ItemData.ItemType.Consumable)
-                && ((!GeneralConfig.NeverAffectHotkeyBar.Value && RestockConfig.RestockIncludesHotkeyBar.Value) || item.m_gridPos.y > 0)
+                && ((GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && RestockConfig.RestockIncludesHotkeyBar.Value) || item.m_gridPos.y > 0)
                 && (!RestockConfig.RestockOnlyFavoritedItems.Value || playerConfig.IsItemNameOrSlotFavorited(item))
                 && !CompatibilitySupport.IsEquipOrQuickSlot(item.m_gridPos, true);
         }
@@ -24,7 +24,7 @@ namespace QuickStackStore
         private static bool ShouldQuickStackItem(ItemData item, UserConfig playerConfig)
         {
             return item.m_shared.m_maxStackSize > 1
-                && ((!GeneralConfig.NeverAffectHotkeyBar.Value && QuickStackConfig.QuickStackIncludesHotkeyBar.Value) || item.m_gridPos.y > 0)
+                && ((GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && QuickStackConfig.QuickStackIncludesHotkeyBar.Value) || item.m_gridPos.y > 0)
                 && !playerConfig.IsItemNameOrSlotFavorited(item) && !CompatibilitySupport.IsEquipOrQuickSlot(item.m_gridPos);
         }
 

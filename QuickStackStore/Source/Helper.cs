@@ -70,7 +70,7 @@ namespace QuickStackStore
     {
         public static void Postfix(Player __instance)
         {
-            if (GeneralConfig.DisableAllNewKeybinds.Value)
+            if (GeneralConfig.OverrideKeybindBehavior.Value == OverrideKeybindBehavior.DisableAllNewHotkeys)
             {
                 return;
             }

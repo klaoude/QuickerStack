@@ -1,4 +1,8 @@
 ﻿using BepInEx.Configuration;
+using HarmonyLib;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using static QuickStackStore.QSSConfig.FavoriteConfig;
 using static QuickStackStore.QSSConfig.GeneralConfig;
@@ -17,9 +21,9 @@ namespace QuickStackStore
 
         internal class GeneralConfig
         {
-            internal static ConfigEntry<bool> DisableAllNewButtons;
-            internal static ConfigEntry<bool> DisableAllNewKeybinds;
-            internal static ConfigEntry<bool> NeverAffectHotkeyBar;
+            internal static ConfigEntry<OverrideButtonDisplay> OverrideButtonDisplay;
+            internal static ConfigEntry<OverrideKeybindBehavior> OverrideKeybindBehavior;
+            internal static ConfigEntry<OverrideHotkeyBarBehavior> OverrideHotkeyBarBehavior;
             internal static ConfigEntry<bool> SuppressContainerSoundAndVisuals;
             internal static ConfigEntry<bool> UseTopDownLogicForEverything;
         }
@@ -140,9 +144,9 @@ namespace QuickStackStore
 
             // keep the entries within a section in alphabetical order for the r2modman config manager
 
-            string overrideButton = $"overridden by {nameof(DisableAllNewButtons)}";
-            string overrideHotkey = $"overridden by {nameof(DisableAllNewKeybinds)}";
-            string overrideHotkeyBar = $"overridden by {nameof(NeverAffectHotkeyBar)}";
+            string overrideButton = $"overridden by {nameof(GeneralConfig.OverrideButtonDisplay)}";
+            string overrideHotkey = $"overridden by {nameof(GeneralConfig.OverrideKeybindBehavior)}";
+            string overrideHotkeyBar = $"overridden by {nameof(GeneralConfig.OverrideHotkeyBarBehavior)}";
             string hotkey = "What to do when the hotkey is pressed while you have a container open.";
             string twoButtons = $"Which of the two buttons to display ({overrideButton}). Selecting {nameof(ShowTwoButtons.BothButDependingOnContext)} will hide the mini button while a container is open. The hotkey works independently.";
             string range = "How close the searched through containers have to be.";
@@ -150,11 +154,29 @@ namespace QuickStackStore
 
             sectionName = "0 - General";
 
-            DisableAllNewButtons = Config.Bind(sectionName, nameof(DisableAllNewButtons), false, "Override to disable all new UI elements no matter the current individual setting of each of them.");
-            DisableAllNewButtons.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            GeneralConfig.OverrideButtonDisplay = Config.Bind(sectionName, nameof(GeneralConfig.OverrideButtonDisplay), OverrideButtonDisplay.UseIndividualConfigOptions, "Override to disable all new UI elements no matter the current individual setting of each of them.");
+            GeneralConfig.OverrideButtonDisplay.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
-            DisableAllNewKeybinds = Config.Bind(sectionName, nameof(DisableAllNewKeybinds), false, "Override to disable all new keybinds no matter the current individual setting of each of them.");
-            NeverAffectHotkeyBar = Config.Bind(sectionName, nameof(NeverAffectHotkeyBar), true, "Override to never affect the hotkey bar with any feature no matter the individual setting of each of them. Recommended to turn off if you are actually using favoriting.");
+            GeneralConfig.OverrideHotkeyBarBehavior = Config.Bind(sectionName, nameof(GeneralConfig.OverrideHotkeyBarBehavior), OverrideHotkeyBarBehavior.NeverAffectHotkeyBar, "Override to never affect the hotkey bar with any feature no matter the individual setting of each of them. Recommended to turn off if you are actually using favoriting.");
+            GeneralConfig.OverrideKeybindBehavior = Config.Bind(sectionName, nameof(GeneralConfig.OverrideKeybindBehavior), OverrideKeybindBehavior.UseIndividualConfigOptions, "Override to disable all new keybinds no matter the current individual setting of each of them.");
+
+            bool oldValue = false;
+
+            if (TryGetOldConfigValue(new ConfigDefinition(sectionName, "DisableAllNewButtons"), ref oldValue))
+            {
+                GeneralConfig.OverrideButtonDisplay.Value = oldValue ? OverrideButtonDisplay.DisableAllNewButtons : OverrideButtonDisplay.UseIndividualConfigOptions;
+            }
+
+            if (TryGetOldConfigValue(new ConfigDefinition(sectionName, "DisableAllNewKeybinds"), ref oldValue))
+            {
+                GeneralConfig.OverrideKeybindBehavior.Value = oldValue ? OverrideKeybindBehavior.DisableAllNewHotkeys : OverrideKeybindBehavior.UseIndividualConfigOptions;
+            }
+
+            if (TryGetOldConfigValue(new ConfigDefinition(sectionName, "NeverAffectHotkeyBar"), ref oldValue))
+            {
+                GeneralConfig.OverrideHotkeyBarBehavior.Value = oldValue ? OverrideHotkeyBarBehavior.NeverAffectHotkeyBar : OverrideHotkeyBarBehavior.UseIndividualConfigOptions;
+            }
+
             UseTopDownLogicForEverything = Config.Bind(sectionName, nameof(UseTopDownLogicForEverything), false, "Whether to always put items into the top first row (affects the entire game) rather than top or bottom first depending on the item type (base game uses top first only for weapons and tools, bottom first for the rest). Recommended to keep off.");
 
             sectionName = "1 - Favoriting";
@@ -308,6 +330,59 @@ namespace QuickStackStore
 
             FavoritedItemTooltip = Config.Bind(sectionName, nameof(FavoritedItemTooltip), "Will not be quick stacked, sorted,\nstore all'd or trashed", string.Empty);
             TrashFlaggedItemTooltip = Config.Bind(sectionName, nameof(TrashFlaggedItemTooltip), "Can be quick trashed", string.Empty);
+        }
+
+        public static bool TryGetOldConfigValue<T>(ConfigDefinition configDefinition, ref T oldValue, bool removeIfFound = true)
+        {
+            if (!TomlTypeConverter.CanConvert(typeof(T)))
+            {
+                throw new ArgumentException(string.Format("Type {0} is not supported by the config system. Supported types: {1}", typeof(T), string.Join(", ", (from x in TomlTypeConverter.GetSupportedTypes() select x.Name).ToArray())));
+            }
+
+            try
+            {
+                var iolock = AccessTools.FieldRefAccess<ConfigFile, object>("_ioLock").Invoke(Config);
+                var orphanedEntries = (Dictionary<ConfigDefinition, string>)AccessTools.PropertyGetter(typeof(ConfigFile), "OrphanedEntries").Invoke(Config, new object[0]);
+
+                lock (iolock)
+                {
+                    if (orphanedEntries.TryGetValue(configDefinition, out string oldValueString))
+                    {
+                        oldValue = (T)TomlTypeConverter.ConvertToValue(oldValueString, typeof(T));
+
+                        if (removeIfFound)
+                        {
+                            orphanedEntries.Remove(configDefinition);
+                        }
+
+                        return true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Error getting orphaned entry: {e.StackTrace}");
+            }
+
+            return false;
+        }
+
+        public enum OverrideButtonDisplay
+        {
+            DisableAllNewButtons,
+            UseIndividualConfigOptions
+        }
+
+        public enum OverrideKeybindBehavior
+        {
+            DisableAllNewHotkeys,
+            UseIndividualConfigOptions
+        }
+
+        public enum OverrideHotkeyBarBehavior
+        {
+            NeverAffectHotkeyBar,
+            UseIndividualConfigOptions
         }
 
         public enum ShowConfirmDialogOption

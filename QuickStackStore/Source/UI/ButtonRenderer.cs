@@ -59,7 +59,7 @@ namespace QuickStackStore
 
                 int extraContainerButtons = 0;
 
-                if (!GeneralConfig.DisableAllNewButtons.Value)
+                if (GeneralConfig.OverrideButtonDisplay.Value != OverrideButtonDisplay.DisableAllNewButtons)
                 {
                     if (StoreTakeAllConfig.DisplayStoreAllButton.Value)
                     {
@@ -99,7 +99,7 @@ namespace QuickStackStore
                     }
                 }
 
-                if (GeneralConfig.DisableAllNewButtons.Value)
+                if (GeneralConfig.OverrideButtonDisplay.Value == OverrideButtonDisplay.DisableAllNewButtons)
                 {
                     return;
                 }

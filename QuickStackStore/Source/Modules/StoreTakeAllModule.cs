@@ -41,7 +41,7 @@ namespace QuickStackStore
         internal static bool ShouldMoveItem(ItemData item, UserConfig playerConfig, bool takeAllOverride = false)
         {
             return takeAllOverride ||
-                (((!GeneralConfig.NeverAffectHotkeyBar.Value && StoreTakeAllConfig.StoreAllIncludesHotkeyBar.Value) || item.m_gridPos.y > 0)
+                (((GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && StoreTakeAllConfig.StoreAllIncludesHotkeyBar.Value) || item.m_gridPos.y > 0)
                 && (StoreTakeAllConfig.StoreAllIncludesEquippedItems.Value || !item.m_equiped)
                 && !playerConfig.IsItemNameOrSlotFavorited(item)
                 && !CompatibilitySupport.IsEquipOrQuickSlot(item.m_gridPos));

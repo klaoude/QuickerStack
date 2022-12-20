@@ -44,7 +44,7 @@ namespace QuickStackStore
             {
                 var item = list[i];
 
-                if (item.m_gridPos.y == 0 && (GeneralConfig.NeverAffectHotkeyBar.Value || !TrashConfig.TrashingCanAffectHotkeyBar.Value))
+                if (item.m_gridPos.y == 0 && (GeneralConfig.OverrideHotkeyBarBehavior.Value == OverrideHotkeyBarBehavior.NeverAffectHotkeyBar || !TrashConfig.TrashingCanAffectHotkeyBar.Value))
                 {
                     continue;
                 }
@@ -98,7 +98,7 @@ namespace QuickStackStore
                     return;
                 }
 
-                if (trashRoot != null || GeneralConfig.DisableAllNewButtons.Value || !TrashConfig.DisplayTrashCanUI.Value)
+                if (trashRoot != null || GeneralConfig.OverrideButtonDisplay.Value == OverrideButtonDisplay.DisableAllNewButtons || !TrashConfig.DisplayTrashCanUI.Value)
                 {
                     return;
                 }
@@ -163,7 +163,7 @@ namespace QuickStackStore
 
                 if (clickState == ClickState.ClickedTrash)
                 {
-                    if (player.m_inventory == ___m_dragInventory && ___m_dragItem.m_gridPos.y == 0 && (GeneralConfig.NeverAffectHotkeyBar.Value || !TrashConfig.TrashingCanAffectHotkeyBar.Value))
+                    if (player.m_inventory == ___m_dragInventory && ___m_dragItem.m_gridPos.y == 0 && (GeneralConfig.OverrideHotkeyBarBehavior.Value == OverrideHotkeyBarBehavior.NeverAffectHotkeyBar || !TrashConfig.TrashingCanAffectHotkeyBar.Value))
                     {
                         player.Message(MessageHud.MessageType.Center, LocalizationConfig.CantTrashHotkeyBarItemWarning.Value, 0, null);
                         clickState = 0;

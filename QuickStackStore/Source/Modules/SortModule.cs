@@ -152,7 +152,7 @@ namespace QuickStackStore
                 }
             }
 
-            bool ignoreFirstRow = player != null && (GeneralConfig.NeverAffectHotkeyBar.Value || !SortConfig.SortIncludesHotkeyBar.Value);
+            bool ignoreFirstRow = player != null && (GeneralConfig.OverrideHotkeyBarBehavior.Value == OverrideHotkeyBarBehavior.NeverAffectHotkeyBar || !SortConfig.SortIncludesHotkeyBar.Value);
 
             // simple ignore hotbar
             var offset = ignoreFirstRow ? new Vector2i(0, 1) : new Vector2i(0, 0);
@@ -214,7 +214,6 @@ namespace QuickStackStore
             {
                 var maxStack = nonFullStacks.First().m_shared.m_maxStackSize;
 
-                var numTimes = 0;
                 var curStack = nonFullStacks[0];
                 nonFullStacks.RemoveAt(0);
 
@@ -222,9 +221,9 @@ namespace QuickStackStore
 
                 while (nonFullStacks.Count >= 1)
                 {
-                    numTimes += 1;
                     enumerator.MoveNext();
                     var stack = enumerator.Current;
+
                     if (stack == null)
                     {
                         break;
@@ -248,6 +247,7 @@ namespace QuickStackStore
                         if (stack.m_stack <= 0)
                         {
                             inventory.RemoveItem(stack);
+                            toMerge.Remove(stack);
                         }
                     }
                 }

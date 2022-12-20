@@ -9,7 +9,7 @@ namespace QuickStackStore
     public class QuickStackStorePlugin : BaseUnityPlugin
     {
         private const string NAME = "Quick Stack - Store - Sort - Trash - Restock";
-        private const string VERSION = "1.0";
+        private const string VERSION = "1.0.1";
 
         // TODO maybe sort and equals checks should also check quality for non stackables (the base game doesn't though)
         // TODO controller support

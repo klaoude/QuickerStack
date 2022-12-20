@@ -11,14 +11,12 @@ All these features are controlled by the option to favorite items or slots simil
 
 There is also an extensive configuration system, that applies changes immediately. I highly recommend using an in-game Configuration Manager mod. I put a lot of effort into the descriptions of the config options, so if you have any questions, please read them.
 
-![image](https://staticdelivery.nexusmods.com/mods/3667/images/2094/2094-1671368544-16670968.png)
-
 
 ## 1 - Favoriting
 
 Favoriting is the main draw to combine all these features into one mod. By holding the Favoriting Key (default: Alt) you can left click on an item to favorite it, or right click to favorite the slot it is in. This prevents most features of this mod from affecting it. No accidental quick stacking, sorting, storing or trashing. The favoriting state is shown with a custom colored border around the slot.
 
-If you are actively using Favoriting, I recommend disabling the config option 'NeverAffectHotkeyBar' in the 'General' section.
+If you are actively using Favoriting, I recommend changing the config option 'OverrideHotkeyBarBehavior' in the 'General' section from 'NeverAffectHotkeyBar' to 'UseIndividualConfigOptions'.
 
 ![image](https://staticdelivery.nexusmods.com/mods/3667/images/2094/2094-1671547317-763384465.gif)
 
@@ -66,7 +64,7 @@ Ties are always broken by internal name, quality and stack size.
 
 ## 5 - Trashing and Quick Trashing
 
-Trashing is based on the amazing mod [Trash Items](https://www.nexusmods.com/valheim/mods/441) mod by [virtuaCode](https://www.nexusmods.com/valheim/users/111195808). It adds a trash can UI element to the inventory screen to quickly trash any non favorited item.
+Trashing is based on the amazing mod [Trash Items](https://www.nexusmods.com/valheim/mods/441) mod by [virtuaCode](https://www.nexusmods.com/valheim/users/111195808) (with permission). It adds a trash can UI element to the inventory screen to quickly trash any non favorited item.
 
 This mod also adds Quick Trashing. By holding the Favoriting Key while you attempt to trash an item, you instead 'trash flag' this kind of item, similar to favoriting. When you click on the trash can without holding an item, an option to Quick Trash will appear allowing to trash all trash flagged items in your inventory.
 
