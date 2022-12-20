@@ -5,6 +5,8 @@
 
 .vscode/
 
+QuickStackStore.dll
+
 # User-specific files
 *.rsuser
 *.suo

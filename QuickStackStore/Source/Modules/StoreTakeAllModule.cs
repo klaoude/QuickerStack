@@ -42,7 +42,7 @@ namespace QuickStackStore
         {
             return takeAllOverride ||
                 (((!GeneralConfig.NeverAffectHotkeyBar.Value && StoreTakeAllConfig.StoreAllIncludesHotkeyBar.Value) || item.m_gridPos.y > 0)
-                && (!StoreTakeAllConfig.StoreAllIncludesEquippedItems.Value || !item.m_equiped)
+                && (StoreTakeAllConfig.StoreAllIncludesEquippedItems.Value || !item.m_equiped)
                 && !playerConfig.IsItemNameOrSlotFavorited(item)
                 && !CompatibilitySupport.IsEquipOrQuickSlot(item.m_gridPos));
         }

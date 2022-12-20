@@ -1,0 +1,2 @@
+1020 x 1000 (with inventory)
+1020 x 480 (without inventory)
