@@ -33,18 +33,18 @@ namespace QuickStackStore
                 switch (SortConfig.SortHotkeyBehaviorWhenContainerOpen.Value)
                 {
                     case SortBehavior.OnlySortContainer:
-                        Sort(InventoryGui.instance.m_currentContainer.GetInventory());
+                        Sort(InventoryGui.instance.m_currentContainer.m_inventory);
                         break;
 
                     case SortBehavior.SortBoth:
-                        Sort(InventoryGui.instance.m_currentContainer.GetInventory());
-                        Sort(player.GetInventory(), player);
+                        Sort(InventoryGui.instance.m_currentContainer.m_inventory);
+                        Sort(player.m_inventory, player);
                         break;
                 }
             }
             else
             {
-                Sort(player.GetInventory(), player);
+                Sort(player.m_inventory, player);
             }
         }
 
@@ -121,35 +121,11 @@ namespace QuickStackStore
             //var sw = new System.Diagnostics.Stopwatch();
             //sw.Start();
 
-            var blockedSlots = new List<Vector2i>();
             UserConfig playerConfig = null;
 
             if (player != null)
             {
                 playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
-
-                if (SortConfig.SortLeavesEmptyFavoritedSlotsEmpty.Value)
-                {
-                    foreach (var item in inventory.GetAllItems())
-                    {
-                        if (playerConfig.IsItemNameFavorited(item.m_shared))
-                        {
-                            blockedSlots.Add(item.m_gridPos);
-                        }
-                    }
-
-                    blockedSlots.AddRange(playerConfig.GetFavoritedSlotsCopy());
-                }
-                else
-                {
-                    foreach (var item in inventory.GetAllItems())
-                    {
-                        if (playerConfig.IsItemNameOrSlotFavorited(item))
-                        {
-                            blockedSlots.Add(item.m_gridPos);
-                        }
-                    }
-                }
             }
 
             bool ignoreFirstRow = player != null && (GeneralConfig.OverrideHotkeyBarBehavior.Value == OverrideHotkeyBarBehavior.NeverAffectHotkeyBar || !SortConfig.SortIncludesHotkeyBar.Value);
@@ -157,98 +133,114 @@ namespace QuickStackStore
             // simple ignore hotbar
             var offset = ignoreFirstRow ? new Vector2i(0, 1) : new Vector2i(0, 0);
 
-            var toSort = inventory.GetAllItems().Where(item => ShouldSortItem(item, offset, playerConfig)).ToList();
+            var allowedSlots = GetAllowedSlots(inventory, ignoreFirstRow, playerConfig);
 
-            toSort.Sort((a, b) => SortCompare(a, b));
+            var toSort = inventory.m_inventory.Where(item => ShouldSortItem(item, offset, playerConfig)).ToList();
 
             if (SortConfig.SortMergesStacks.Value)
             {
                 MergeStacks(toSort, inventory);
             }
 
-            bool td = GeneralConfig.UseTopDownLogicForEverything.Value;
+            toSort.Sort((a, b) => SortCompare(a, b));
 
-            int currentIndex = 0;
-            var width = inventory.GetWidth();
+            for (int i = 0; i < toSort.Count; i++)
+            {
+                toSort[i].m_gridPos = allowedSlots[i];
+            }
+
+            //sw.Stop();
+            //UnityEngine.Debug.LogWarning(sw.Elapsed);
+
+            inventory.Changed();
+        }
+
+        private static List<Vector2i> GetAllowedSlots(Inventory inventory, bool ignoreFirstRow, UserConfig playerConfig = null)
+        {
+            var allowedSlots = new List<Vector2i>();
 
             int y;
             int max;
 
-            if (td)
+            if (GeneralConfig.UseTopDownLogicForEverything.Value)
             {
-                // top down
                 y = ignoreFirstRow ? 1 : 0;
                 max = inventory.GetHeight();
             }
             else
             {
-                // bottom up
-                y = inventory.GetHeight() - 1;
-                max = ignoreFirstRow ? 1 : 0;
+                // this simulates iterating backwards, when you negate y
+                y = -inventory.GetHeight() + 1;
+                max = ignoreFirstRow ? 0 : 1;
             }
 
-            for (; currentIndex < toSort.Count() && ((td && y < max) || (!td && y >= max)); y += td ? 1 : -1)
+            for (; y < max; y++)
             {
-                for (int x = 0; x < width && currentIndex < toSort.Count(); x++)
+                for (int x = 0; x < inventory.GetWidth(); x++)
                 {
-                    var pos = new Vector2i(x, y);
+                    var pos = new Vector2i(x, GeneralConfig.UseTopDownLogicForEverything.Value ? y : -y);
 
-                    if (!blockedSlots.Contains(pos))
+                    if (playerConfig != null)
                     {
-                        toSort.ElementAt(currentIndex).m_gridPos = pos;
-                        currentIndex++;
+                        if (CompatibilitySupport.IsEquipOrQuickSlot(pos) || (SortConfig.SortLeavesEmptyFavoritedSlotsEmpty.Value && playerConfig.IsSlotFavorited(pos)))
+                        {
+                            continue;
+                        }
+                    }
+
+                    allowedSlots.Add(pos);
+                }
+            }
+
+            if (playerConfig != null)
+            {
+                foreach (var item in inventory.m_inventory)
+                {
+                    if (playerConfig.IsItemNameOrSlotFavorited(item))
+                    {
+                        allowedSlots.Remove(item.m_gridPos);
                     }
                 }
             }
 
-            //sw.Stop();
-
-            inventory.Changed();
+            return allowedSlots;
         }
 
         internal static void MergeStacks(List<ItemDrop.ItemData> toMerge, Inventory inventory)
         {
-            var grouped = toMerge.Where(itm => itm.m_stack < itm.m_shared.m_maxStackSize).GroupBy(itm => itm.m_shared.m_name).Where(itm => itm.Count() > 1).Select(grouping => grouping.ToList());
+            var grouped = toMerge.Where(itm => itm.m_stack < itm.m_shared.m_maxStackSize).GroupBy(itm => itm.m_shared.m_name).Select(grouping => grouping.ToList()).ToList();
 
             foreach (var nonFullStacks in grouped)
             {
+                if (nonFullStacks.Count <= 1)
+                {
+                    continue;
+                }
+
+                var totalItemCount = 0;
+
+                foreach (var item in nonFullStacks)
+                {
+                    totalItemCount += item.m_stack;
+                }
+
                 var maxStack = nonFullStacks.First().m_shared.m_maxStackSize;
 
-                var curStack = nonFullStacks[0];
-                nonFullStacks.RemoveAt(0);
+                var remainingItemCount = totalItemCount;
 
-                var enumerator = nonFullStacks.GetEnumerator();
-
-                while (nonFullStacks.Count >= 1)
+                foreach (var item in nonFullStacks)
                 {
-                    enumerator.MoveNext();
-                    var stack = enumerator.Current;
-
-                    if (stack == null)
+                    if (remainingItemCount <= 0)
                     {
-                        break;
+                        item.m_stack = 0;
+                        inventory.RemoveItem(item);
+                        toMerge.Remove(item);
                     }
-
-                    if (curStack.m_stack >= maxStack)
+                    else
                     {
-                        curStack = stack;
-                        nonFullStacks.Remove(stack);
-                        enumerator = nonFullStacks.GetEnumerator();
-                        continue;
-                    }
+                        item.m_stack = Math.Min(maxStack, remainingItemCount);
 
-                    var toStack = Math.Min(maxStack - curStack.m_stack, stack.m_stack);
-
-                    if (toStack > 0)
-                    {
-                        curStack.m_stack += toStack;
-                        stack.m_stack -= toStack;
-
-                        if (stack.m_stack <= 0)
-                        {
-                            inventory.RemoveItem(stack);
-                            toMerge.Remove(stack);
-                        }
+                        remainingItemCount -= item.m_stack;
                     }
                 }
             }

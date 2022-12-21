@@ -73,6 +73,12 @@ If you are scared of trashing the one stack of an item that you usually consider
 ![image](https://staticdelivery.nexusmods.com/mods/3667/images/2094/2094-1671547324-1808242402.gif)
 
 
+## Incompatibilities
+
+Better Archery (still in investigation)
+- Disable the Quiver feature, as it breaks most mods that interact with the inventory
+
+
 ## Compatibility
 
 This mod has explicit compatibility for the following Equipment and Quick Slot mods
@@ -81,7 +87,7 @@ This mod has explicit compatibility for the following Equipment and Quick Slot m
 - My mod will respect both the equipment slots and the quick slots, and intentionally allows restocking the quick slots. I still recommend slot favoriting them. 'Take All' will put items into the quick slots though, but that is intended functionality of ComfyQuickSlots.
 
 [OdinsQOL](https://valheim.thunderstore.io/package/OdinPlus/OdinsQOL/) and [OdinsExtendedInventory](https://valheim.thunderstore.io/package/OdinPlus/OdinsExtendedInventory/):
-- My mod will respect the equipment slots and the buttons from my mod will move to not overlap if the separate equipment slot UI is enabled. My mod cannot detect the quick slots as they are implemented as normal inventory slots, so I recommend slot favoriting them. Luckily, due to that restocking is possible.
+- These mods will prevent items from entering the equipment slots automatically, but if you don't slot favorite them, then sorting may move items to the wrong slot at the top of the inventory (because these mods will push them away). The buttons from my mod will move to not overlap if the separate equipment slot UI is enabled. My mod cannot detect the quick slots as they are implemented as normal inventory slots, so I recommend slot favoriting them. Luckily, due to that restocking is possible.
 
 Aedenthorn's [Extended Player Inventory](https://www.nexusmods.com/valheim/mods/1356):
 - This mod behaves identically to OdinsQOL and OdinsExtendedInventory, because they used Aeden's work as a base. If you use this, be sure to download this mod from Nexus and not from Thunderstore, as those are unofficial irregularly updated versions.

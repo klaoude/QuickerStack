@@ -51,10 +51,7 @@ namespace QuickStackStore
                         int itemsToMove = Math.Min(pItem.m_shared.m_maxStackSize - pItem.m_stack, cItem.m_stack);
                         pItem.m_stack += itemsToMove;
 
-                        Debug.Log($"adding to partiallyFilledStacks: {partialStackCounter.Count}");
                         partialStackCounter.Add(pItem.m_gridPos);
-                        //partialStackCounter.Add(new Tuple<int, int>(pItem.m_gridPos.x, pItem.m_gridPos.y));
-                        Debug.Log($"count is now partiallyFilledStacks: {partialStackCounter.Count}");
 
                         if (cItem.m_stack == itemsToMove)
                         {
@@ -153,7 +150,7 @@ namespace QuickStackStore
 
             UserConfig playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
 
-            List<ItemData> restockables = player.m_inventory.GetAllItems().Where((itm) => ShouldRestockItem(itm, playerConfig)).ToList();
+            List<ItemData> restockables = player.m_inventory.m_inventory.Where((itm) => ShouldRestockItem(itm, playerConfig)).ToList();
 
             int totalCount = restockables.Count;
 
@@ -176,7 +173,6 @@ namespace QuickStackStore
 
                 if (RestockConfig.RestockHotkeyBehaviorWhenContainerOpen.Value == RestockBehavior.RestockOnlyFromCurrentContainer || RestockOnlyFromCurrentContainerOverride)
                 {
-                    Debug.Log($"partiallyFilledStacks: {partiallyFilledStacks.Count}");
                     ReportRestockResult(player, completelyFilledStacks, partiallyFilledStacks.Count, totalCount);
                     return;
                 }
@@ -203,7 +199,7 @@ namespace QuickStackStore
 
             UserConfig playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
 
-            List<ItemData> quickStackables = player.m_inventory.GetAllItems().Where((itm) => ShouldQuickStackItem(itm, playerConfig)).ToList();
+            List<ItemData> quickStackables = player.m_inventory.m_inventory.Where((itm) => ShouldQuickStackItem(itm, playerConfig)).ToList();
 
             if (quickStackables.Count == 0 && QuickStackConfig.ShowQuickStackResultMessage.Value)
             {
@@ -339,7 +335,7 @@ namespace QuickStackStore
                         nview.GetZDO().Set("InUse", container.m_inUse ? 1 : 0);
                         ZDOMan.instance.ForceSendZDO(ZNet.instance.GetUID(), nview.GetZDO().m_uid);
 
-                        num += method(firstList, secondList, player.m_inventory, container.GetInventory(), differenceCounter);
+                        num += method(firstList, secondList, player.m_inventory, container.m_inventory, differenceCounter);
 
                         container.m_inUse = false;
                         nview.GetZDO().Set("InUse", container.m_inUse ? 1 : 0);
@@ -350,7 +346,7 @@ namespace QuickStackStore
                         container.SetInUse(true);
                         ZDOMan.instance.ForceSendZDO(ZNet.instance.GetUID(), nview.GetZDO().m_uid);
 
-                        num += method(firstList, secondList, player.m_inventory, container.GetInventory(), differenceCounter);
+                        num += method(firstList, secondList, player.m_inventory, container.m_inventory, differenceCounter);
 
                         container.SetInUse(false);
                         ZDOMan.instance.ForceSendZDO(ZNet.instance.GetUID(), nview.GetZDO().m_uid);

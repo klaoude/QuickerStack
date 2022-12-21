@@ -117,7 +117,7 @@ namespace QuickStackStore
                         sortInventoryButton = CreateMiniButton(__instance, nameof(sortInventoryButton), LocalizationConfig.SortLabelCharacter.Value);
 
                         sortInventoryButton.onClick.RemoveAllListeners();
-                        sortInventoryButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(Player.m_localPlayer.GetInventory(), Player.m_localPlayer)));
+                        sortInventoryButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(Player.m_localPlayer.m_inventory, Player.m_localPlayer)));
                     }
 
                     // this one is deliberately unaffected by the randy equipment slot compatibility
@@ -246,7 +246,7 @@ namespace QuickStackStore
                         MoveButtonToIndex(ref sortContainerButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
                         sortContainerButton.onClick.RemoveAllListeners();
-                        sortContainerButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(__instance.m_currentContainer.GetInventory())));
+                        sortContainerButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(__instance.m_currentContainer.m_inventory)));
 
                         var label = LocalizationConfig.SortLabel.Value;
 

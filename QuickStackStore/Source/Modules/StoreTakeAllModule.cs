@@ -24,16 +24,16 @@ namespace QuickStackStore
 
         private static void TakeAllItemsInOrder(Player player)
         {
-            Inventory fromInventory = InventoryGui.instance.m_currentContainer.GetInventory();
-            Inventory toInventory = player.GetInventory();
+            Inventory fromInventory = InventoryGui.instance.m_currentContainer.m_inventory;
+            Inventory toInventory = player.m_inventory;
 
             MoveAllItemsInOrder(player, fromInventory, toInventory, true);
         }
 
         internal static void StoreAllItemsInOrder(Player player)
         {
-            Inventory fromInventory = player.GetInventory();
-            Inventory toInventory = InventoryGui.instance.m_currentContainer.GetInventory();
+            Inventory fromInventory = player.m_inventory;
+            Inventory toInventory = InventoryGui.instance.m_currentContainer.m_inventory;
 
             MoveAllItemsInOrder(player, fromInventory, toInventory);
         }
@@ -57,7 +57,7 @@ namespace QuickStackStore
             InventoryGui.instance.SetupDragItem(null, null, 0);
 
             UserConfig playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
-            var list = fromInventory.GetAllItems().Where((item) => ShouldMoveItem(item, playerConfig, takeAllOverride)).ToList();
+            var list = fromInventory.m_inventory.Where((item) => ShouldMoveItem(item, playerConfig, takeAllOverride)).ToList();
 
             list.Sort((ItemData a, ItemData b) => Helper.CompareSlotOrder(a.m_gridPos, b.m_gridPos));
 

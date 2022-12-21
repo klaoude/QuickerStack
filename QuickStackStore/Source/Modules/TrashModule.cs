@@ -38,7 +38,7 @@ namespace QuickStackStore
 
             int num = 0;
 
-            var list = player.GetInventory().GetAllItems();
+            var list = player.m_inventory.m_inventory;
 
             for (int i = list.Count - 1; i >= 0; i--)
             {
@@ -54,7 +54,7 @@ namespace QuickStackStore
                     num++;
                     player.RemoveEquipAction(item);
                     player.UnequipItem(item, false);
-                    player.GetInventory().RemoveItem(item);
+                    player.m_inventory.RemoveItem(item);
                 }
             }
 
@@ -63,7 +63,7 @@ namespace QuickStackStore
 
             Debug.Log($"Quick trashed {num} item/s from player inventory");
 
-            player.GetInventory().Changed();
+            player.m_inventory.Changed();
         }
 
         private static void TrashItem(InventoryGui __instance, Inventory ___m_dragInventory, ItemDrop.ItemData ___m_dragItem, int ___m_dragAmount)

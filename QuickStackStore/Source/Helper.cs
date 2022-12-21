@@ -80,11 +80,6 @@ namespace QuickStackStore
                 return;
             }
 
-            if (!InventoryGui.IsVisible())
-            {
-                return;
-            }
-
             if (Helper.IgnoreKeyPresses())
             {
                 return;
@@ -98,7 +93,13 @@ namespace QuickStackStore
             {
                 QuickStackRestockModule.DoRestock(__instance);
             }
-            else if (Input.GetKeyDown(SortConfig.SortKey.Value))
+
+            if (!InventoryGui.IsVisible())
+            {
+                return;
+            }
+
+            if (Input.GetKeyDown(SortConfig.SortKey.Value))
             {
                 SortModule.DoSort(__instance);
             }

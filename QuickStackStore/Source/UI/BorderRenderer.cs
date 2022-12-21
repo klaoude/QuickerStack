@@ -15,7 +15,7 @@ namespace QuickStackStore
         [HarmonyPostfix]
         internal static void UpdateGui(Player player, Inventory ___m_inventory, List<InventoryGrid.Element> ___m_elements)
         {
-            if (player == null || player.GetInventory() != ___m_inventory)
+            if (player == null || player.m_inventory != ___m_inventory)
             {
                 return;
             }
@@ -45,7 +45,7 @@ namespace QuickStackStore
                 }
             }
 
-            foreach (ItemDrop.ItemData itemData in ___m_inventory.GetAllItems())
+            foreach (ItemDrop.ItemData itemData in ___m_inventory.m_inventory)
             {
                 int index = itemData.GetIndexFromItemData(width);
 
@@ -163,7 +163,7 @@ namespace QuickStackStore
             }
             else
             {
-                ItemDrop.ItemData itemAt = __instance.GetInventory().GetItemAt(buttonPos.x, buttonPos.y);
+                ItemDrop.ItemData itemAt = __instance.m_inventory.GetItemAt(buttonPos.x, buttonPos.y);
 
                 if (itemAt == null)
                 {
