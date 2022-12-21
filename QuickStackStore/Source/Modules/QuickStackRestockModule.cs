@@ -96,9 +96,11 @@ namespace QuickStackStore
                     {
                         for (int j = firstItemList.Count - 1; j >= 0; j--)
                         {
-                            if (container.AddItem(cItem))
+                            var pItem = firstItemList[j];
+
+                            if (container.AddItem(pItem))
                             {
-                                playerInventory.m_inventory.Remove(cItem);
+                                playerInventory.m_inventory.Remove(pItem);
                                 firstItemList.RemoveAt(j);
                                 num++;
                             }
