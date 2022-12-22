@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 using static ItemDrop;
 using static QuickStackStore.QSSConfig;
 
@@ -9,23 +8,24 @@ namespace QuickStackStore
 {
     internal class QuickStackRestockModule
     {
-        private static bool ShouldRestockItem(ItemData item, UserConfig playerConfig)
+        private static bool ShouldRestockItem(ItemData item, UserConfig playerConfig, int inventoryHeight, bool includeHotbar)
         {
             var maxStack = item.m_shared.m_maxStackSize;
             var type = item.m_shared.m_itemType;
 
             return maxStack > 1 && maxStack > item.m_stack
+                && (item.m_gridPos.y > 0 || includeHotbar)
                 && (!RestockConfig.RestockOnlyAmmoAndConsumables.Value || type == ItemData.ItemType.Ammo || type == ItemData.ItemType.Consumable)
-                && ((GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && RestockConfig.RestockIncludesHotkeyBar.Value) || item.m_gridPos.y > 0)
                 && (!RestockConfig.RestockOnlyFavoritedItems.Value || playerConfig.IsItemNameOrSlotFavorited(item))
-                && !CompatibilitySupport.IsEquipOrQuickSlot(item.m_gridPos, true);
+                && !CompatibilitySupport.IsEquipOrQuickSlot(inventoryHeight, item.m_gridPos, false);
         }
 
-        private static bool ShouldQuickStackItem(ItemData item, UserConfig playerConfig)
+        private static bool ShouldQuickStackItem(ItemData item, UserConfig playerConfig, int inventoryHeight, bool includeHotbar)
         {
             return item.m_shared.m_maxStackSize > 1
-                && ((GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && QuickStackConfig.QuickStackIncludesHotkeyBar.Value) || item.m_gridPos.y > 0)
-                && !playerConfig.IsItemNameOrSlotFavorited(item) && !CompatibilitySupport.IsEquipOrQuickSlot(item.m_gridPos);
+                && (item.m_gridPos.y > 0 || includeHotbar)
+                && !playerConfig.IsItemNameOrSlotFavorited(item)
+                && !CompatibilitySupport.IsEquipOrQuickSlot(inventoryHeight, item.m_gridPos);
         }
 
         private static int RestockFromThisContainer(List<ItemData> firstItemList, List<ItemData> unusedList, Inventory playerInventory, Inventory container, HashSet<Vector2i> partialStackCounter)
@@ -81,6 +81,8 @@ namespace QuickStackStore
         private static int StackItemsIntoThisContainer(List<ItemData> firstItemList, List<ItemData> secondItemList, Inventory playerInventory, Inventory container, HashSet<Vector2i> unusedCounter)
         {
             int num = 0;
+
+            Helper.Log($"Starting quick stack: inventory count: {playerInventory.m_inventory.Count}, container count: {container.m_inventory.Count}", DebugSeverity.Everything);
 
             if (QuickStackConfig.QuickStackTrophiesIntoSameContainer.Value && firstItemList?.Count > 0)
             {
@@ -138,6 +140,8 @@ namespace QuickStackStore
             container.Changed();
             playerInventory.Changed();
 
+            Helper.Log($"Finished quick stack: Removed {num} stacks (remember that these merge with non full stacks in the container first). Inventory count: {playerInventory.m_inventory.Count}, container count: {container.m_inventory.Count}", DebugSeverity.Everything);
+
             return num;
         }
 
@@ -152,7 +156,9 @@ namespace QuickStackStore
 
             UserConfig playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
 
-            List<ItemData> restockables = player.m_inventory.m_inventory.Where((itm) => ShouldRestockItem(itm, playerConfig)).ToList();
+            var includeHotbar = GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && RestockConfig.RestockIncludesHotkeyBar.Value;
+
+            List<ItemData> restockables = player.m_inventory.m_inventory.Where((itm) => ShouldRestockItem(itm, playerConfig, player.m_inventory.GetHeight(), includeHotbar)).ToList();
 
             int totalCount = restockables.Count;
 
@@ -182,10 +188,16 @@ namespace QuickStackStore
 
             List<Container> containers = ContainerFinder.FindContainersInRange(player.transform.position, RestockConfig.RestockFromNearbyRange.Value);
 
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+
             if (containers.Count > 0)
             {
                 completelyFilledStacks += ApplyToMultipleContainers(RestockFromThisContainer, restockables, null, player, containers, partiallyFilledStacks);
             }
+
+            sw.Stop();
+            Helper.Log($"Restocking time: {sw.Elapsed}", DebugSeverity.AlsoSpeedTests);
 
             ReportRestockResult(player, completelyFilledStacks, partiallyFilledStacks.Count, totalCount);
         }
@@ -201,7 +213,9 @@ namespace QuickStackStore
 
             UserConfig playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
 
-            List<ItemData> quickStackables = player.m_inventory.m_inventory.Where((itm) => ShouldQuickStackItem(itm, playerConfig)).ToList();
+            var includeHotbar = GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && QuickStackConfig.QuickStackIncludesHotkeyBar.Value;
+
+            List<ItemData> quickStackables = player.m_inventory.m_inventory.Where((itm) => ShouldQuickStackItem(itm, playerConfig, player.m_inventory.GetHeight(), includeHotbar)).ToList();
 
             if (quickStackables.Count == 0 && QuickStackConfig.ShowQuickStackResultMessage.Value)
             {
@@ -247,10 +261,16 @@ namespace QuickStackStore
 
             List<Container> containers = ContainerFinder.FindContainersInRange(player.transform.position, QuickStackConfig.QuickStackToNearbyRange.Value);
 
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+
             if (containers.Count > 0)
             {
                 movedCount += ApplyToMultipleContainers(StackItemsIntoThisContainer, trophies, quickStackables, player, containers, null);
             }
+
+            sw.Stop();
+            Helper.Log($"Quick stacking time: {sw.Elapsed}", DebugSeverity.AlsoSpeedTests);
 
             ReportQuickStackResult(player, movedCount);
         }
@@ -279,7 +299,7 @@ namespace QuickStackStore
             else
             {
                 message = $"Invalid restock: Restocked more items than we originally had ({movedCount}/{totalCount})";
-                Debug.Log(message);
+                Helper.LogO(message, DebugLevel.Warning);
             }
 
             player.Message(MessageHud.MessageType.Center, message, 0, null);

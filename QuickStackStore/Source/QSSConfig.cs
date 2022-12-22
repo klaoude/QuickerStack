@@ -15,6 +15,20 @@ using static QuickStackStore.QSSConfig.TrashConfig;
 
 namespace QuickStackStore
 {
+    [HarmonyPatch(typeof(Player))]
+    internal static class PlayerPatch
+    {
+        [HarmonyPatch(nameof(Player.Start))]
+        [HarmonyPostfix]
+        internal static void StartPatch(Player __instance)
+        {
+            if (__instance == Player.m_localPlayer)
+            {
+                QSSConfig.ResetAllFavoritingData_SettingChanged(null, null);
+            }
+        }
+    }
+
     internal class QSSConfig
     {
         public static ConfigFile Config;
@@ -136,6 +150,13 @@ namespace QuickStackStore
             public static ConfigEntry<string> TrashFlaggedItemTooltip;
         }
 
+        internal class DebugConfig
+        {
+            public static ConfigEntry<DebugLevel> ShowDebugLogs;
+            public static ConfigEntry<DebugSeverity> DebugSeverity;
+            public static ConfigEntry<ResetFavoritingData> ResetAllFavoritingData;
+        }
+
         internal static void LoadConfig(QuickStackStorePlugin plugin)
         {
             Config = plugin.Config;
@@ -226,8 +247,8 @@ namespace QuickStackStore
             RestockHotkeyBehaviorWhenContainerOpen = Config.Bind(sectionName, nameof(RestockHotkeyBehaviorWhenContainerOpen), RestockBehavior.RestockOnlyFromCurrentContainer, hotkey);
             RestockIncludesHotkeyBar = Config.Bind(sectionName, nameof(RestockIncludesHotkeyBar), true, $"Whether to also try to restock items currently in the hotkey bar ({overrideHotkeyBar}).");
             RestockKey = Config.Bind(sectionName, nameof(RestockKey), KeyCode.R, $"The hotkey to start restocking from the current or nearby containers (depending on {nameof(RestockHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
-            RestockOnlyAmmoAndConsumables = Config.Bind(sectionName, nameof(RestockOnlyAmmoAndConsumables), false, $"Whether restocking should only restock ammo and consumable or every stackable item (like materials). Also affected by {nameof(RestockOnlyFavoritedItems)}.");
-            RestockOnlyFavoritedItems = Config.Bind(sectionName, nameof(RestockOnlyFavoritedItems), true, $"Whether restocking should only restock favorited items or items on favorited slots or every stackable item. Also affected by {nameof(RestockOnlyAmmoAndConsumables)}.");
+            RestockOnlyAmmoAndConsumables = Config.Bind(sectionName, nameof(RestockOnlyAmmoAndConsumables), true, $"Whether restocking should only restock ammo and consumable or every stackable item (like materials). Also affected by {nameof(RestockOnlyFavoritedItems)}.");
+            RestockOnlyFavoritedItems = Config.Bind(sectionName, nameof(RestockOnlyFavoritedItems), false, $"Whether restocking should only restock favorited items or items on favorited slots or every stackable item. Also affected by {nameof(RestockOnlyAmmoAndConsumables)}.");
             ShowRestockResultMessage = Config.Bind(sectionName, nameof(ShowRestockResultMessage), true, "Whether to show the central screen report message after restocking.");
 
             sectionName = "3 - Store and Take All";
@@ -270,6 +291,14 @@ namespace QuickStackStore
             TrashHotkey = Config.Bind(sectionName, nameof(TrashHotkey), KeyCode.Delete, $"The hotkey to trash the currently held item ({overrideHotkey}).");
             TrashingCanAffectHotkeyBar = Config.Bind(sectionName, nameof(TrashingCanAffectHotkeyBar), true, $"Whether trashing and quick trashing can trash items that are currently in the hotkey bar ({overrideHotkeyBar}).");
             TrashLabelColor = Config.Bind(sectionName, nameof(TrashLabelColor), new Color(1f, 0.8482759f, 0), "The color of the text below the trash can in the player inventory.");
+
+            sectionName = "8 - Debugging";
+
+            DebugConfig.ShowDebugLogs = Config.Bind(sectionName, nameof(DebugConfig.ShowDebugLogs), DebugLevel.Disabled, "Enable debug logs into the console. Optionally set it to print as warnings, so the yellow color is easier to spot. Some important prints ignore this setting.");
+            DebugConfig.ResetAllFavoritingData = Config.Bind(sectionName, nameof(DebugConfig.ResetAllFavoritingData), ResetFavoritingData.No, "This deletes all the favoriting of your items and slots, as well as trash flagging, the next time the mod checks for it (either on loading a character or on config change while ingame), and then resets this config back to 'No'.");
+            DebugConfig.ResetAllFavoritingData.SettingChanged -= ResetAllFavoritingData_SettingChanged;
+            DebugConfig.ResetAllFavoritingData.SettingChanged += ResetAllFavoritingData_SettingChanged;
+            DebugConfig.DebugSeverity = Config.Bind(sectionName, nameof(DebugConfig.DebugSeverity), DebugSeverity.Normal, $"Filters which kind of debug messages are shown when {DebugConfig.ShowDebugLogs} is not disabled. Only use {DebugSeverity.Everything} for testing.");
 
             sectionName = "9 - Localization";
 
@@ -333,6 +362,25 @@ namespace QuickStackStore
             TrashFlaggedItemTooltip = Config.Bind(sectionName, nameof(TrashFlaggedItemTooltip), "Can be quick trashed", string.Empty);
         }
 
+        internal static void ResetAllFavoritingData_SettingChanged(object sender, EventArgs e)
+        {
+            if (DebugConfig.ResetAllFavoritingData?.Value != ResetFavoritingData.YesDeleteAllMyFavoritingData)
+            {
+                return;
+            }
+
+            DebugConfig.ResetAllFavoritingData.SettingChanged -= ResetAllFavoritingData_SettingChanged;
+            DebugConfig.ResetAllFavoritingData.Value = ResetFavoritingData.No;
+            DebugConfig.ResetAllFavoritingData.SettingChanged += ResetAllFavoritingData_SettingChanged;
+
+            if (Player.m_localPlayer != null)
+            {
+                var playerConfig = UserConfig.GetPlayerConfig(Player.m_localPlayer.GetPlayerID());
+
+                playerConfig.ResetAllFavoriting();
+            }
+        }
+
         public static bool TryGetOldConfigValue<T>(ConfigDefinition configDefinition, ref T oldValue, bool removeIfFound = true)
         {
             if (!TomlTypeConverter.CanConvert(typeof(T)))
@@ -362,7 +410,7 @@ namespace QuickStackStore
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"Error getting orphaned entry: {e.StackTrace}");
+                Helper.LogO($"Error getting orphaned entry: {e.StackTrace}", DebugLevel.Warning);
             }
 
             return false;
@@ -416,7 +464,7 @@ namespace QuickStackStore
         public enum SortBehavior
         {
             OnlySortContainer,
-            SortBoth,
+            SortBoth
         }
 
         public enum SortCriteriaEnum
@@ -426,6 +474,26 @@ namespace QuickStackStore
             Value,
             Weight,
             Type
+        }
+
+        internal enum DebugLevel
+        {
+            Disabled = 0,
+            Log = 1,
+            Warning = 2
+        }
+
+        internal enum DebugSeverity
+        {
+            Normal = 0,
+            AlsoSpeedTests = 1,
+            Everything = 2
+        }
+
+        internal enum ResetFavoritingData
+        {
+            No,
+            YesDeleteAllMyFavoritingData
         }
     }
 }

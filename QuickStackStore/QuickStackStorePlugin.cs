@@ -5,11 +5,12 @@ using UnityEngine;
 
 namespace QuickStackStore
 {
+    [BepInIncompatibility("virtuacode.valheim.trashitems")]
     [BepInPlugin("goldenrevolver.quick_stack_store", NAME, VERSION)]
     public class QuickStackStorePlugin : BaseUnityPlugin
     {
-        private const string NAME = "Quick Stack - Store - Sort - Trash - Restock";
-        private const string VERSION = "1.0.3";
+        public const string NAME = "Quick Stack - Store - Sort - Trash - Restock";
+        public const string VERSION = "1.1.0";
 
         // TODO maybe sort and equals checks should also check quality for non stackables (the base game doesn't though)
         // TODO controller support

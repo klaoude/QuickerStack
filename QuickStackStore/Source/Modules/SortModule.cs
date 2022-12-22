@@ -24,9 +24,25 @@ namespace QuickStackStore
         // convert the type enum to custom categories
         public static int[] TypeToCategory = new int[] { 0, 2, 4, 7, 7, 8, 10, 10, 0, 6, 0, 10, 10, 1, 7, 7, 0, 10, 9, 7, 7, 3, 7, 5 };
 
+        private static bool ShouldSortItem(ItemDrop.ItemData item, UserConfig playerConfig, int inventoryHeight, bool includeHotbar)
+        {
+            return !playerConfig.IsItemNameFavorited(item.m_shared)
+                && ShouldSortSlot(item.m_gridPos, playerConfig, inventoryHeight, includeHotbar);
+        }
+
+        // when changing this, also change SortModule.GetAllowedSlots
+        private static bool ShouldSortSlot(Vector2i slot, UserConfig playerConfig, int playerInventoryHeight, bool includeHotbar)
+        {
+            return (slot.y > 0 || includeHotbar)
+                && !playerConfig.IsSlotFavorited(slot)
+                && !CompatibilitySupport.IsEquipOrQuickSlot(playerInventoryHeight, slot);
+        }
+
         public static void DoSort(Player player)
         {
             Container container = InventoryGui.instance.m_currentContainer;
+
+            var playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
 
             if (container != null)
             {
@@ -38,13 +54,13 @@ namespace QuickStackStore
 
                     case SortBehavior.SortBoth:
                         Sort(InventoryGui.instance.m_currentContainer.m_inventory);
-                        Sort(player.m_inventory, player);
+                        Sort(player.m_inventory, playerConfig);
                         break;
                 }
             }
             else
             {
-                Sort(player.m_inventory, player);
+                Sort(player.m_inventory, playerConfig);
             }
         }
 
@@ -79,16 +95,6 @@ namespace QuickStackStore
             }
         }
 
-        private static bool IsOutsideOfOffset(Vector2i itemPos, Vector2i offset)
-        {
-            return itemPos.y > offset.y || (itemPos.y == offset.y && itemPos.x >= offset.x);
-        }
-
-        private static bool ShouldSortItem(ItemDrop.ItemData item, Vector2i offset, UserConfig playerConfig = null)
-        {
-            return (playerConfig == null || !playerConfig.IsItemNameOrSlotFavorited(item)) && IsOutsideOfOffset(item.m_gridPos, offset) && !CompatibilitySupport.IsEquipOrQuickSlot(item.m_gridPos);
-        }
-
         public static int SortCompare(ItemDrop.ItemData a, ItemDrop.ItemData b)
         {
             int comp = SortByGetter(a).CompareTo(SortByGetter(b));
@@ -116,26 +122,27 @@ namespace QuickStackStore
             return comp;
         }
 
-        public static void Sort(Inventory inventory, Player player = null)
+        public static void Sort(Inventory inventory, UserConfig playerConfig = null)
         {
-            //var sw = new System.Diagnostics.Stopwatch();
-            //sw.Start();
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
 
-            UserConfig playerConfig = null;
+            bool includeHotbar = playerConfig == null || (GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && SortConfig.SortIncludesHotkeyBar.Value);
 
-            if (player != null)
+            // TODO combine allowedSlots compatibility checks and toSort filter, for better maintainability
+
+            var allowedSlots = GetAllowedSlots(inventory, includeHotbar, playerConfig);
+
+            List<ItemDrop.ItemData> toSort;
+
+            if (playerConfig == null)
             {
-                playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
+                toSort = new List<ItemDrop.ItemData>(inventory.m_inventory);
             }
-
-            bool ignoreFirstRow = player != null && (GeneralConfig.OverrideHotkeyBarBehavior.Value == OverrideHotkeyBarBehavior.NeverAffectHotkeyBar || !SortConfig.SortIncludesHotkeyBar.Value);
-
-            // simple ignore hotbar
-            var offset = ignoreFirstRow ? new Vector2i(0, 1) : new Vector2i(0, 0);
-
-            var allowedSlots = GetAllowedSlots(inventory, ignoreFirstRow, playerConfig);
-
-            var toSort = inventory.m_inventory.Where(item => ShouldSortItem(item, offset, playerConfig)).ToList();
+            else
+            {
+                toSort = inventory.m_inventory.Where(item => ShouldSortItem(item, playerConfig, inventory.GetHeight(), includeHotbar)).ToList();
+            }
 
             if (SortConfig.SortMergesStacks.Value)
             {
@@ -146,60 +153,75 @@ namespace QuickStackStore
 
             for (int i = 0; i < toSort.Count; i++)
             {
+                Helper.Log($"Sorting item from ({toSort[i].m_gridPos}) to ({allowedSlots[i]})", DebugSeverity.Everything);
+
                 toSort[i].m_gridPos = allowedSlots[i];
             }
 
-            //sw.Stop();
-            //UnityEngine.Debug.LogWarning(sw.Elapsed);
+            sw.Stop();
+            Helper.Log($"Sorting time: {sw.Elapsed}", DebugSeverity.AlsoSpeedTests);
 
             inventory.Changed();
         }
 
-        private static List<Vector2i> GetAllowedSlots(Inventory inventory, bool ignoreFirstRow, UserConfig playerConfig = null)
+        private static List<Vector2i> GetAllowedSlots(Inventory inventory, bool includeHotbar, UserConfig playerConfig)
         {
             var allowedSlots = new List<Vector2i>();
 
             int y;
-            int max;
+            int yMax;
 
             if (GeneralConfig.UseTopDownLogicForEverything.Value)
             {
-                y = ignoreFirstRow ? 1 : 0;
-                max = inventory.GetHeight();
+                y = includeHotbar ? 0 : 1;
+                yMax = inventory.GetHeight();
             }
             else
             {
-                // this simulates iterating backwards, when you negate y
+                // this simulates iterating backwards, when you negate/abs y
                 y = -inventory.GetHeight() + 1;
-                max = ignoreFirstRow ? 0 : 1;
+                yMax = includeHotbar ? 1 : 0;
             }
 
-            for (; y < max; y++)
+            var blockedSlots = new HashSet<Vector2i>();
+
+            if (playerConfig != null)
+            {
+                foreach (var item in inventory.m_inventory)
+                {
+                    if (playerConfig.IsItemNameFavorited(item.m_shared))
+                    {
+                        blockedSlots.Add(item.m_gridPos);
+                    }
+                }
+            }
+
+            for (; y < yMax; y++)
             {
                 for (int x = 0; x < inventory.GetWidth(); x++)
                 {
-                    var pos = new Vector2i(x, GeneralConfig.UseTopDownLogicForEverything.Value ? y : -y);
+                    // see y initialization for reason for abs
+                    var pos = new Vector2i(x, Math.Abs(y));
 
                     if (playerConfig != null)
                     {
-                        if (CompatibilitySupport.IsEquipOrQuickSlot(pos) || (SortConfig.SortLeavesEmptyFavoritedSlotsEmpty.Value && playerConfig.IsSlotFavorited(pos)))
+                        if (blockedSlots.Contains(pos))
+                        {
+                            continue;
+                        }
+
+                        if (SortConfig.SortLeavesEmptyFavoritedSlotsEmpty.Value && playerConfig.IsSlotFavorited(pos))
+                        {
+                            continue;
+                        }
+
+                        if (CompatibilitySupport.IsEquipOrQuickSlot(inventory.GetHeight(), pos))
                         {
                             continue;
                         }
                     }
 
                     allowedSlots.Add(pos);
-                }
-            }
-
-            if (playerConfig != null)
-            {
-                foreach (var item in inventory.m_inventory)
-                {
-                    if (playerConfig.IsItemNameOrSlotFavorited(item))
-                    {
-                        allowedSlots.Remove(item.m_gridPos);
-                    }
                 }
             }
 

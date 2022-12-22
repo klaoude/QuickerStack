@@ -112,20 +112,23 @@ namespace QuickStackStore
 
                 if (SortConfig.DisplaySortButtons.Value != ShowTwoButtons.OnlyContainerButton)
                 {
-                    if (sortInventoryButton == null)
-                    {
-                        sortInventoryButton = CreateMiniButton(__instance, nameof(sortInventoryButton), LocalizationConfig.SortLabelCharacter.Value);
-
-                        sortInventoryButton.onClick.RemoveAllListeners();
-                        sortInventoryButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(Player.m_localPlayer.m_inventory, Player.m_localPlayer)));
-                    }
-
                     // this one is deliberately unaffected by the randy equipment slot compatibility
                     bool shouldShow = __instance.m_currentContainer == null || displaySortButtons != ShowTwoButtons.BothButDependingOnContext;
 
-                    sortInventoryButton.gameObject.SetActive(shouldShow);
+                    if (sortInventoryButton == null)
+                    {
+                        sortInventoryButton = CreateMiniButton(__instance, nameof(sortInventoryButton), LocalizationConfig.SortLabelCharacter.Value);
+                        sortInventoryButton.gameObject.SetActive(shouldShow);
 
-                    if (shouldShow)
+                        if (shouldShow)
+                        {
+                            __instance.StartCoroutine(WaitAFrameToRepositionMiniButton(__instance, sortInventoryButton.transform, weight, ++miniButtons));
+                        }
+
+                        sortInventoryButton.onClick.RemoveAllListeners();
+                        sortInventoryButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(Player.m_localPlayer.m_inventory, UserConfig.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()))));
+                    }
+                    else
                     {
                         RepositionMiniButton(__instance, sortInventoryButton.transform, weight, ++miniButtons);
                     }
@@ -135,21 +138,29 @@ namespace QuickStackStore
 
                 if (displayRestockButtons != ShowTwoButtons.OnlyContainerButton)
                 {
+                    bool shouldntShow = __instance.m_currentContainer != null && (displayRestockButtons == ShowTwoButtons.BothButDependingOnContext || CompatibilitySupport.HasPlugin(CompatibilitySupport.randy));
+
                     if (restockAreaButton == null)
                     {
                         restockAreaButton = CreateMiniButton(__instance, nameof(restockAreaButton), LocalizationConfig.RestockLabelCharacter.Value);
+                        restockAreaButton.gameObject.SetActive(!shouldntShow);
+
+                        if (!shouldntShow)
+                        {
+                            __instance.StartCoroutine(WaitAFrameToRepositionMiniButton(__instance, restockAreaButton.transform, weight, ++miniButtons));
+                        }
 
                         restockAreaButton.onClick.RemoveAllListeners();
                         restockAreaButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoRestock(Player.m_localPlayer)));
                     }
-
-                    bool shouldntShow = __instance.m_currentContainer != null && (displayRestockButtons == ShowTwoButtons.BothButDependingOnContext || CompatibilitySupport.HasPlugin(CompatibilitySupport.randy));
-
-                    restockAreaButton.gameObject.SetActive(!shouldntShow);
-
-                    if (!shouldntShow)
+                    else
                     {
-                        RepositionMiniButton(__instance, restockAreaButton.transform, weight, ++miniButtons);
+                        restockAreaButton.gameObject.SetActive(!shouldntShow);
+
+                        if (!shouldntShow)
+                        {
+                            RepositionMiniButton(__instance, restockAreaButton.transform, weight, ++miniButtons);
+                        }
                     }
                 }
 
@@ -157,21 +168,29 @@ namespace QuickStackStore
 
                 if (displayQuickStackButtons != ShowTwoButtons.OnlyContainerButton)
                 {
+                    bool shouldntShow = __instance.m_currentContainer != null && (displayQuickStackButtons == ShowTwoButtons.BothButDependingOnContext || CompatibilitySupport.HasPlugin(CompatibilitySupport.randy));
+
                     if (quickStackAreaButton == null)
                     {
                         quickStackAreaButton = CreateMiniButton(__instance, nameof(quickStackAreaButton), LocalizationConfig.QuickStackLabelCharacter.Value);
+                        quickStackAreaButton.gameObject.SetActive(!shouldntShow);
+
+                        if (!shouldntShow)
+                        {
+                            __instance.StartCoroutine(WaitAFrameToRepositionMiniButton(__instance, quickStackAreaButton.transform, weight, ++miniButtons));
+                        }
 
                         quickStackAreaButton.onClick.RemoveAllListeners();
                         quickStackAreaButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoQuickStack(Player.m_localPlayer)));
                     }
-
-                    bool shouldntShow = __instance.m_currentContainer != null && (displayQuickStackButtons == ShowTwoButtons.BothButDependingOnContext || CompatibilitySupport.HasPlugin(CompatibilitySupport.randy));
-
-                    quickStackAreaButton.gameObject.SetActive(!shouldntShow);
-
-                    if (!shouldntShow)
+                    else
                     {
-                        RepositionMiniButton(__instance, quickStackAreaButton.transform, weight, ++miniButtons);
+                        quickStackAreaButton.gameObject.SetActive(!shouldntShow);
+
+                        if (!shouldntShow)
+                        {
+                            RepositionMiniButton(__instance, quickStackAreaButton.transform, weight, ++miniButtons);
+                        }
                     }
                 }
 
@@ -338,6 +357,13 @@ namespace QuickStackStore
 
                 button.localPosition = weight.localPosition + new Vector3((miniButtonSize + 2) * (existingMiniButtons - 1) + 2, vPos);
             }
+        }
+
+        // wait for one frame for Odin to finish spawning the 'EquipmentBkg' object
+        internal static IEnumerator WaitAFrameToRepositionMiniButton(InventoryGui instance, Transform button, Transform weight, int existingMiniButtons)
+        {
+            yield return null;
+            RepositionMiniButton(instance, button, weight, existingMiniButtons);
         }
 
         internal static void OnButtonRelevantSettingChanged(QuickStackStorePlugin plugin)

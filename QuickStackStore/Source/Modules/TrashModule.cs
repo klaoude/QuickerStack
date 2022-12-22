@@ -61,7 +61,7 @@ namespace QuickStackStore
             InventoryGui.instance.SetupDragItem(null, null, 0);
             InventoryGui.instance.UpdateCraftingPanel(false);
 
-            Debug.Log($"Quick trashed {num} item/s from player inventory");
+            Helper.Log($"Quick trashed {num} item/s from player inventory");
 
             player.m_inventory.Changed();
         }
@@ -219,7 +219,7 @@ namespace QuickStackStore
 
                 if (!tArmor)
                 {
-                    Debug.LogError("armor_icon not found!");
+                    Helper.LogO("armor_icon not found!", DebugLevel.Warning);
                 }
 
                 tArmor.GetComponent<Image>().sprite = trashSprite;
@@ -262,7 +262,7 @@ namespace QuickStackStore
 
                 if (!tText)
                 {
-                    Debug.LogError("ac_text not found!");
+                    Helper.LogO("ac_text not found!", DebugLevel.Warning);
                     return;
                 }
 
@@ -275,7 +275,7 @@ namespace QuickStackStore
 
                 if (!tText)
                 {
-                    Debug.LogError("ac_text not found!");
+                    Helper.LogO("ac_text not found!", DebugLevel.Warning);
                     return;
                 }
 
@@ -348,7 +348,7 @@ namespace QuickStackStore
 
         public static void TrashOrTrashFlagItem(bool usedFromHotkey = false)
         {
-            //Debug.Log("Trash Item clicked!");
+            Helper.Log("Trash Item called!");
 
             if (clickState != ClickState.None || InventoryGui.instance == null)
             {
@@ -377,7 +377,7 @@ namespace QuickStackStore
 
         public static void AttemptQuickTrash()
         {
-            //Debug.Log("Trash Item clicked!");
+            Helper.Log("Quick Trash Item called!");
 
             if (clickState != ClickState.None || InventoryGui.instance == null || InventoryGui.instance.m_dragGo != null)
             {

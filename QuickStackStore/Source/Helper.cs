@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
@@ -9,6 +8,39 @@ namespace QuickStackStore
 {
     public static class Helper
     {
+        internal static void Log(object s, DebugSeverity debugSeverity = DebugSeverity.Normal)
+        {
+            if ((int)debugSeverity > (int)(DebugConfig.DebugSeverity?.Value ?? 0))
+            {
+                return;
+            }
+
+            var toPrint = $"{QuickStackStorePlugin.NAME} {QuickStackStorePlugin.VERSION}: {(s != null ? s.ToString() : "null")}";
+
+            if (DebugConfig.ShowDebugLogs?.Value == DebugLevel.Log)
+            {
+                Debug.Log(toPrint);
+            }
+            else if (DebugConfig.ShowDebugLogs?.Value == DebugLevel.Warning)
+            {
+                Debug.LogWarning(toPrint);
+            }
+        }
+
+        internal static void LogO(object s, DebugLevel OverrideLevel)
+        {
+            var toPrint = $"{QuickStackStorePlugin.NAME} {QuickStackStorePlugin.VERSION}: {(s != null ? s.ToString() : "null")}";
+
+            if (OverrideLevel == DebugLevel.Log)
+            {
+                Debug.Log(toPrint);
+            }
+            else if (OverrideLevel == DebugLevel.Warning)
+            {
+                Debug.LogWarning(toPrint);
+            }
+        }
+
         internal static int CompareSlotOrder(Vector2i a, Vector2i b)
         {
             // Bottom left to top right
@@ -110,28 +142,6 @@ namespace QuickStackStore
             else if (Input.GetKeyDown(TrashConfig.QuickTrashHotkey.Value))
             {
                 TrashModule.AttemptQuickTrash();
-            }
-        }
-    }
-
-    public static class Extensions
-    {
-        public static int GetIndexFromItemData(this ItemDrop.ItemData item, int width)
-        {
-            return item.m_gridPos.y * width + item.m_gridPos.x;
-        }
-
-        public static bool XAdd<T>(this List<T> instance, T item)
-        {
-            if (instance.Contains(item))
-            {
-                instance.Remove(item);
-                return false;
-            }
-            else
-            {
-                instance.Add(item);
-                return true;
             }
         }
     }

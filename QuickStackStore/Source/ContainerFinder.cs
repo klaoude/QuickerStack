@@ -24,7 +24,7 @@ namespace QuickStackStore
             }
 
             sw.Stop();
-            Debug.Log($"Found {list.Count} container/s out of {AllContainers.Count} in range in {sw.Elapsed}");
+            Helper.Log($"Found {list.Count} container/s out of {AllContainers.Count} in range in {sw.Elapsed}", QSSConfig.DebugSeverity.AlsoSpeedTests);
 
             return list;
         }
@@ -35,7 +35,7 @@ namespace QuickStackStore
     {
         [HarmonyPatch(nameof(Container.Awake))]
         [HarmonyPostfix]
-        internal static void Awake(Container __instance, ZNetView ___m_nview)
+        internal static void Awake(Container __instance)
         {
             ContainerFinder.AllContainers.Add(__instance);
         }
@@ -44,7 +44,6 @@ namespace QuickStackStore
         [HarmonyPostfix]
         internal static void OnDestroyed(Container __instance)
         {
-            Debug.Log($"Destoying container instance: {__instance.transform.position}");
             ContainerFinder.AllContainers.Remove(__instance);
         }
     }

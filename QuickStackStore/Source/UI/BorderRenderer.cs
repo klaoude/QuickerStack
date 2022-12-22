@@ -47,7 +47,7 @@ namespace QuickStackStore
 
             foreach (ItemDrop.ItemData itemData in ___m_inventory.m_inventory)
             {
-                int index = itemData.GetIndexFromItemData(width);
+                int index = itemData.GridVectorToGridIndex(width);
 
                 Image img;
 
@@ -199,6 +199,14 @@ namespace QuickStackStore
             {
                 return true;
             }
+        }
+    }
+
+    public static class ItemDataExtension
+    {
+        public static int GridVectorToGridIndex(this ItemDrop.ItemData item, int width)
+        {
+            return item.m_gridPos.y * width + item.m_gridPos.x;
         }
     }
 }

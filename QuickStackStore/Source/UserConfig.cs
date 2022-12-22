@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using static QuickStackStore.QSSConfig;
@@ -37,13 +38,31 @@ namespace QuickStackStore
             this.Load();
         }
 
+        internal void ResetAllFavoriting()
+        {
+            Helper.LogO("Resetting all favoriting data!", DebugLevel.Warning);
+
+            this.favoritedSlots = new HashSet<Vector2i>();
+            this.favoritedItems = new HashSet<string>();
+            this.trashFlaggedItems = new HashSet<string>();
+
+            Save();
+        }
+
         private void Save()
         {
             using (Stream stream = File.Open(this._configPath, FileMode.Create))
             {
-                _bf.Serialize(stream, this.favoritedSlots);
-                _bf.Serialize(stream, this.favoritedItems);
-                _bf.Serialize(stream, this.trashFlaggedItems);
+                var tupledSlots = new List<Tuple<int, int>>();
+
+                foreach (var item in this.favoritedSlots)
+                {
+                    tupledSlots.Add(new Tuple<int, int>(item.x, item.y));
+                }
+
+                _bf.Serialize(stream, tupledSlots);
+                _bf.Serialize(stream, this.favoritedItems.ToList());
+                _bf.Serialize(stream, this.trashFlaggedItems.ToList());
             }
         }
 
@@ -82,16 +101,40 @@ namespace QuickStackStore
             using (Stream stream = File.Open(this._configPath, FileMode.OpenOrCreate))
             {
                 stream.Seek(0L, SeekOrigin.Begin);
-                LoadProperty<List<Tuple<int, int>>>(stream, out this.favoritedSlots);
-                LoadProperty<List<string>>(stream, out this.favoritedItems);
-                LoadProperty<List<string>>(stream, out this.trashFlaggedItems);
+
+                favoritedSlots = new HashSet<Vector2i>();
+                favoritedItems = new HashSet<string>();
+                trashFlaggedItems = new HashSet<string>();
+
+                var deserializedFavoritedSlots = new List<Tuple<int, int>>();
+                LoadProperty(stream, out deserializedFavoritedSlots);
+
+                foreach (var item in deserializedFavoritedSlots)
+                {
+                    favoritedSlots.Add(new Vector2i(item.Item1, item.Item2));
+                }
+
+                var deserializedFavoritedItems = new List<string>();
+                LoadProperty(stream, out deserializedFavoritedItems);
+
+                foreach (var item in deserializedFavoritedItems)
+                {
+                    favoritedItems.Add(item);
+                }
+
+                var deserializedTrashFlaggedItems = new List<string>();
+                LoadProperty(stream, out deserializedTrashFlaggedItems);
+
+                foreach (var item in deserializedTrashFlaggedItems)
+                {
+                    trashFlaggedItems.Add(item);
+                }
             }
         }
 
         public void ToggleSlotFavoriting(Vector2i position)
         {
-            Tuple<int, int> item = new Tuple<int, int>(position.x, position.y);
-            this.favoritedSlots.XAdd(item);
+            this.favoritedSlots.XAdd(position);
             this.Save();
         }
 
@@ -123,9 +166,7 @@ namespace QuickStackStore
 
         public bool IsSlotFavorited(Vector2i position)
         {
-            Tuple<int, int> item = new Tuple<int, int>(position.x, position.y);
-
-            return this.favoritedSlots.Contains(item);
+            return this.favoritedSlots.Contains(position);
         }
 
         public bool IsItemNameFavorited(ItemDrop.ItemData.SharedData item)
@@ -140,7 +181,8 @@ namespace QuickStackStore
 
         public bool IsItemNameConsideredTrashFlagged(ItemDrop.ItemData.SharedData item)
         {
-            return (TrashConfig.AlwaysConsiderTrophiesTrashFlagged.Value && item.m_itemType == ItemDrop.ItemData.ItemType.Trophie && !IsItemNameFavorited(item)) || this.trashFlaggedItems.Contains(item.m_name);
+            return IsItemNameLiterallyTrashFlagged(item)
+                || (TrashConfig.AlwaysConsiderTrophiesTrashFlagged.Value && item.m_itemType == ItemDrop.ItemData.ItemType.Trophie && !IsItemNameFavorited(item));
         }
 
         public bool IsItemNameOrSlotFavorited(ItemDrop.ItemData item)
@@ -148,23 +190,28 @@ namespace QuickStackStore
             return IsItemNameFavorited(item.m_shared) || IsSlotFavorited(item.m_gridPos);
         }
 
-        public Vector2i[] GetFavoritedSlotsCopy()
-        {
-            var ret = new Vector2i[favoritedSlots.Count];
-
-            for (int i = 0; i < ret.Length; i++)
-            {
-                ret[i] = new Vector2i(favoritedSlots[i].Item1, favoritedSlots[i].Item2);
-            }
-
-            return ret;
-        }
-
         private readonly string _configPath = string.Empty;
-        private List<Tuple<int, int>> favoritedSlots;
-        private List<string> favoritedItems;
-        private List<string> trashFlaggedItems;
+        private HashSet<Vector2i> favoritedSlots;
+        private HashSet<string> favoritedItems;
+        private HashSet<string> trashFlaggedItems;
         private readonly long _uid;
         private static readonly BinaryFormatter _bf = new BinaryFormatter();
+    }
+
+    public static class CollectionExtension
+    {
+        public static bool XAdd<T>(this HashSet<T> instance, T item)
+        {
+            if (instance.Contains(item))
+            {
+                instance.Remove(item);
+                return false;
+            }
+            else
+            {
+                instance.Add(item);
+                return true;
+            }
+        }
     }
 }
