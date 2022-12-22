@@ -55,9 +55,18 @@ namespace QuickStackStore
             return yPosCompare != 0 ? yPosCompare : a.x.CompareTo(b.x);
         }
 
-        internal static bool IsPressingFavoriteKey()
+        internal static bool HasCurrentlyToggledFavoriting = false;
+
+        internal static bool IsInFavoritingMode()
         {
-            return Input.GetKey(FavoriteConfig.FavoritingModifierKey1.Value) || Input.GetKey(FavoriteConfig.FavoritingModifierKey2.Value);
+            if (FavoriteConfig.FavoritingModifierToggles.Value)
+            {
+                return HasCurrentlyToggledFavoriting;
+            }
+            else
+            {
+                return Input.GetKey(FavoriteConfig.FavoritingModifierKey1.Value) || Input.GetKey(FavoriteConfig.FavoritingModifierKey2.Value);
+            }
         }
 
         internal static Color GetMixedColor(Color color1, Color color2)
@@ -129,6 +138,16 @@ namespace QuickStackStore
             if (!InventoryGui.IsVisible())
             {
                 return;
+            }
+
+            if (FavoriteConfig.FavoritingModifierToggles.Value)
+            {
+                if (Input.GetKeyDown(FavoriteConfig.FavoritingModifierKey1.Value) || Input.GetKeyDown(FavoriteConfig.FavoritingModifierKey2.Value))
+                {
+                    // flip
+                    Helper.HasCurrentlyToggledFavoriting ^= true;
+                    return;
+                }
             }
 
             if (Input.GetKeyDown(SortConfig.SortKey.Value))

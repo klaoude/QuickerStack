@@ -52,6 +52,7 @@ namespace QuickStackStore
             public static ConfigEntry<bool> DisplayTooltipHint;
             public static ConfigEntry<KeyCode> FavoritingModifierKey1;
             public static ConfigEntry<KeyCode> FavoritingModifierKey2;
+            public static ConfigEntry<bool> FavoritingModifierToggles;
         }
 
         internal class QuickStackConfig
@@ -87,6 +88,7 @@ namespace QuickStackStore
 
         internal class SortConfig
         {
+            public static ConfigEntry<AutoSortBehavior> AutoSort;
             public static ConfigEntry<ShowTwoButtons> DisplaySortButtons;
             public static ConfigEntry<bool> DisplaySortCriteriaInLabel;
             public static ConfigEntry<SortCriteriaEnum> SortCriteria;
@@ -220,6 +222,7 @@ namespace QuickStackStore
             string favoritingKey = $"While holding this, left clicking on items or right clicking on slots favorites them, {favoriteFunction}, or trash flags them if you are hovering an item on the trash can.";
             FavoritingModifierKey1 = Config.Bind(sectionName, nameof(FavoritingModifierKey1), KeyCode.LeftAlt, $"{favoritingKey} Identical to {nameof(FavoritingModifierKey2)}.");
             FavoritingModifierKey2 = Config.Bind(sectionName, nameof(FavoritingModifierKey2), KeyCode.RightAlt, $"{favoritingKey} Identical to {nameof(FavoritingModifierKey1)}.");
+            FavoritingModifierToggles = Config.Bind(sectionName, nameof(FavoritingModifierToggles), false, "Switch favoriting from requiring to hold the favoriting button to having to press it once to enter favoriting mode and then once again to exit it (automatically exits when closing and opening the inventory again too). This also affects trash flagging.");
 
             sectionName = "2 - Quick Stacking and Restocking";
 
@@ -262,6 +265,8 @@ namespace QuickStackStore
             StoreAllIncludesHotkeyBar = Config.Bind(sectionName, nameof(StoreAllIncludesHotkeyBar), true, $"Whether to also store all non favorited items from the hotkey bar ({overrideHotkeyBar})");
 
             sectionName = "4 - Sorting";
+
+            AutoSort = Config.Bind(sectionName, nameof(AutoSort), AutoSortBehavior.Never, "Automatically let the mod sort the player inventory every time you open it, as well as every container you open. This respects your other sorting config options.");
 
             DisplaySortButtons = Config.Bind(sectionName, nameof(DisplaySortButtons), ShowTwoButtons.Both, twoButtons);
             DisplaySortButtons.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
@@ -474,6 +479,14 @@ namespace QuickStackStore
             Value,
             Weight,
             Type
+        }
+
+        public enum AutoSortBehavior
+        {
+            Never,
+            SortContainerOnOpen,
+            SortPlayerInventoryOnOpen,
+            Both
         }
 
         internal enum DebugLevel

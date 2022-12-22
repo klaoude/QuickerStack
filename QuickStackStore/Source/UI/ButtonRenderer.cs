@@ -34,11 +34,28 @@ namespace QuickStackStore
             [HarmonyPatch(nameof(InventoryGui.Show))]
             [HarmonyPostfix]
             public static void Show_Postfix(InventoryGui __instance)
-
             {
                 if (__instance != InventoryGui.instance)
                 {
                     return;
+                }
+
+                if (Player.m_localPlayer)
+                {
+                    // reset in case player forgot to turn it off
+                    Helper.HasCurrentlyToggledFavoriting = false;
+
+                    var conf = SortConfig.AutoSort.Value;
+
+                    if (conf == AutoSortBehavior.SortPlayerInventoryOnOpen || conf == AutoSortBehavior.Both)
+                    {
+                        SortModule.Sort(Player.m_localPlayer.m_inventory, UserConfig.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()));
+                    }
+
+                    if (__instance.m_currentContainer && (conf == AutoSortBehavior.SortContainerOnOpen || conf == AutoSortBehavior.Both))
+                    {
+                        SortModule.Sort(__instance.m_currentContainer.m_inventory);
+                    }
                 }
 
                 var takeAllButtonRect = __instance.m_takeAllButton.GetComponent<RectTransform>();

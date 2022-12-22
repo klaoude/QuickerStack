@@ -144,7 +144,7 @@ namespace QuickStackStore
                 return true;
             }
 
-            if (!Helper.IsPressingFavoriteKey())
+            if (!Helper.IsInFavoritingMode())
             {
                 return true;
             }
