@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -197,8 +198,10 @@ namespace QuickStackStore
 
         public class TrashButton : MonoBehaviour
         {
-            private RectTransform rectTransform;
-            private GameObject buttonGo;
+            protected Canvas canvas;
+            protected GraphicRaycaster raycaster;
+            protected RectTransform rectTransform;
+            protected GameObject buttonGo;
 
             protected void Awake()
             {
@@ -231,11 +234,16 @@ namespace QuickStackStore
                 rectTransform.transform.SetParent(transform.transform, true);
                 rectTransform.anchoredPosition = Vector2.zero;
                 rectTransform.sizeDelta = new Vector2(70, 74);
-                buttonGo.AddComponent<GraphicRaycaster>();
+
+                // Add canvas and raycaster for DelayedOverrideSorting
+                canvas = buttonGo.AddComponent<Canvas>();
+                raycaster = buttonGo.AddComponent<GraphicRaycaster>();
 
                 // Add trash ui button
                 Button button = buttonGo.AddComponent<Button>();
                 button.onClick.AddListener(() => TrashOrTrashFlagItem());
+
+                // Add invisible image so we become clickable
                 var image = buttonGo.AddComponent<Image>();
                 image.color = new Color(0, 0, 0, 0);
 
@@ -254,6 +262,24 @@ namespace QuickStackStore
                 InventoryGui.instance.m_uiGroups = InventoryGui.instance.m_uiGroups.AddToArray(handler);
 
                 gameObject.AddComponent<TrashHandler>();
+            }
+
+            protected void Start()
+            {
+                StartCoroutine(DelayedOverrideSorting());
+            }
+
+            protected IEnumerator DelayedOverrideSorting()
+            {
+                yield return null;
+
+                if (canvas == null)
+                {
+                    yield break;
+                }
+
+                canvas.overrideSorting = true;
+                canvas.sortingOrder = 1;
             }
 
             public void SetText(string text)
