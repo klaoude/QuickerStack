@@ -19,12 +19,13 @@ For further information visit its [Nexus page](https://www.nexusmods.com/valheim
 #### BepInEx
  - Download and install [BepInEx](https://valheim.thunderstore.io/package/denikson/BepInExPack_Valheim/) *(this is an Valheim specific pack)*
  - Follow the information under manual install
+ - Alternatively, use a mod manager to install BepInEx
 #### BepInEx Publicizer
  - To get access to private members, you need the publicized assembly files
- - Install the assembly publicizer for BepInEx from: https://github.com/elliotttate/Bepinex-Tools/releases
- - The `Bepinex-Publicizer` folder from the `.zip` should be placed under `<ValheimGameDirectory>\BepInEx\plugins`
- - Run the game once, BepInEx console should pop-up. At the background, BepInEx Publicizer will create assemblies  
- under `<ValheimGameDirectory>\valheim_Data\Managed\publicized_assemblies`
+ - Download the assembly publicizer for BepInEx from: https://github.com/elliotttate/Bepinex-Tools/releases
+ - The publicizer is just like any other mod. So install it with a mod manager or manually take the `Bepinex-Publicizer` folder from the `.zip` and place it under `<ValheimGameDirectory>\BepInEx\plugins`
+ - Run the game once, the BepInEx console should pop-up. In the background, BepInEx Publicizer will create assemblies under `<ValheimGameDirectory>\valheim_Data\Managed\publicized_assemblies`
+ - You can now remove or deactive the publicizer, or keep it there, so it automatically updates the assemblies when the game updates
  
  You should now successfully build this project 🎉
 
