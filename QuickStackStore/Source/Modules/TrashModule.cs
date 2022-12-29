@@ -214,17 +214,30 @@ namespace QuickStackStore
                 RectTransform rect = GetComponent<RectTransform>();
                 rect.anchoredPosition -= new Vector2(0, 78);
 
-                SetText(LocalizationConfig.TrashLabel.Value);
-                SetColor(TrashConfig.TrashLabelColor.Value);
-
-                // Replace armor with trash icon
+                Transform tText = transform.Find("ac_text");
                 Transform tArmor = transform.Find("armor_icon");
 
-                if (!tArmor)
+                if (!tText || !tArmor)
                 {
-                    Helper.LogO("armor_icon not found!", DebugLevel.Warning);
+                    if (!tText)
+                    {
+                        Helper.LogO("ac_text not found!", DebugLevel.Warning);
+                    }
+
+                    if (!tArmor)
+                    {
+                        Helper.LogO("armor_icon not found!", DebugLevel.Warning);
+                    }
+
+                    Helper.LogO("If you are using Better UI Reforged, this happens the moment you edit the config to either reenable the trash can UI or change its label text while already ingame. A simple log out to main menu and log back in will fix this, don't worry about it. If not, please report this on the mod page or github.", DebugLevel.Warning);
+
+                    return;
                 }
 
+                tText.GetComponent<Text>().text = LocalizationConfig.TrashLabel.Value;
+                tText.GetComponent<Text>().color = TrashConfig.TrashLabelColor.Value;
+
+                // Replace armor with trash icon
                 tArmor.GetComponent<Image>().sprite = trashSprite;
 
                 transform.gameObject.name = "Trash";
@@ -281,32 +294,6 @@ namespace QuickStackStore
                 canvas.overrideSorting = true;
                 canvas.sortingOrder = 1;
             }
-
-            public void SetText(string text)
-            {
-                Transform tText = transform.Find("ac_text");
-
-                if (!tText)
-                {
-                    Helper.LogO("ac_text not found!", DebugLevel.Warning);
-                    return;
-                }
-
-                tText.GetComponent<Text>().text = text;
-            }
-
-            public void SetColor(Color color)
-            {
-                Transform tText = transform.Find("ac_text");
-
-                if (!tText)
-                {
-                    Helper.LogO("ac_text not found!", DebugLevel.Warning);
-                    return;
-                }
-
-                tText.GetComponent<Text>().color = color;
-            }
         }
 
         public static void ShowConfirmDialog(ItemDrop.ItemData item, int itemAmount, UnityAction onConfirm)
@@ -331,7 +318,6 @@ namespace QuickStackStore
             okButton.onClick.AddListener(new UnityAction(OnChoice));
             okButton.onClick.AddListener(onConfirm);
             okButton.GetComponentInChildren<Text>().text = LocalizationConfig.TrashConfirmationOkayButton.Value;
-            // TODO maybe make this color configurable
             okButton.GetComponentInChildren<Text>().color = new Color(1, 0.2f, 0.1f);
 
             var cancelButton = dialog.transform.Find("win_bkg/Button_cancel").GetComponent<Button>();

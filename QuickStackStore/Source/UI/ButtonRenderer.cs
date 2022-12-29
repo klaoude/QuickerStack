@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using static QuickStackStore.CompatibilitySupport;
 using static QuickStackStore.QSSConfig;
 
 namespace QuickStackStore
@@ -12,6 +13,9 @@ namespace QuickStackStore
         private static float origButtonLength = -1;
         private static Vector3 origButtonPosition;
 
+        internal static Text favoritingTogglingButtonText;
+
+        private static Button favoritingTogglingButton;
         private static Button quickStackAreaButton;
         private static Button sortInventoryButton;
         private static Button restockAreaButton;
@@ -23,7 +27,7 @@ namespace QuickStackStore
 
         private const float shrinkFactor = 0.9f;
         private const int vPadding = 8;
-        private const int miniButtonSize = 38;
+        private const int hAlign = 1;
 
         [HarmonyPatch(typeof(InventoryGui))]
         internal static class PatchInventoryGui
@@ -69,6 +73,7 @@ namespace QuickStackStore
                     takeAllButtonRect.GetComponent<Button>().onClick.AddListener(new UnityAction(() => StoreTakeAllModule.ContextSensitiveTakeAll(__instance)));
                 }
 
+                // intentionally not checking "ShouldBlockChangesToTakeAllButton", because then everything would look stupid
                 if (takeAllButtonRect.sizeDelta.x == origButtonLength)
                 {
                     takeAllButtonRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, origButtonLength * shrinkFactor);
@@ -101,18 +106,26 @@ namespace QuickStackStore
 
                 float vOffset = takeAllButtonRect.sizeDelta.y + vPadding;
 
+                Vector3 startOffset = takeAllButtonRect.localPosition;
+
                 if (takeAllButtonRect.localPosition == origButtonPosition)
                 {
                     if (extraContainerButtons <= 1)
                     {
                         // move the button to the left by half of its removed length
-                        takeAllButtonRect.localPosition -= new Vector3((origButtonLength / 2) * (1 - shrinkFactor), 0);
+                        startOffset -= new Vector3((origButtonLength / 2) * (1 - shrinkFactor), 0);
                     }
                     else
                     {
-                        takeAllButtonRect.localPosition = OppositePositionOfTakeAllButton();
+                        startOffset = OppositePositionOfTakeAllButton();
+
                         bool goToTop = QuickStackConfig.DisplayQuickStackButtons.Value == ShowTwoButtons.OnlyInventoryButton;
-                        takeAllButtonRect.localPosition += new Vector3(origButtonLength, goToTop ? 0 : -vOffset);
+                        startOffset += new Vector3(origButtonLength - hAlign, goToTop ? 0 : -vOffset);
+                    }
+
+                    if (!ShouldBlockChangesToTakeAllButton())
+                    {
+                        takeAllButtonRect.localPosition = startOffset;
                     }
                 }
 
@@ -127,6 +140,8 @@ namespace QuickStackStore
 
                 var displaySortButtons = SortConfig.DisplaySortButtons.Value;
 
+                var randyStatus = HasRandyPlugin();
+
                 if (SortConfig.DisplaySortButtons.Value != ShowTwoButtons.OnlyContainerButton)
                 {
                     // this one is deliberately unaffected by the randy equipment slot compatibility
@@ -139,7 +154,7 @@ namespace QuickStackStore
 
                         if (shouldShow)
                         {
-                            __instance.StartCoroutine(WaitAFrameToRepositionMiniButton(__instance, sortInventoryButton.transform, weight, ++miniButtons));
+                            __instance.StartCoroutine(WaitAFrameToRepositionMiniButton(__instance, sortInventoryButton.transform, weight, ++miniButtons, randyStatus));
                         }
 
                         sortInventoryButton.onClick.RemoveAllListeners();
@@ -147,7 +162,7 @@ namespace QuickStackStore
                     }
                     else
                     {
-                        RepositionMiniButton(__instance, sortInventoryButton.transform, weight, ++miniButtons);
+                        RepositionMiniButton(__instance, sortInventoryButton.transform, weight, ++miniButtons, randyStatus);
                     }
                 }
 
@@ -155,7 +170,7 @@ namespace QuickStackStore
 
                 if (displayRestockButtons != ShowTwoButtons.OnlyContainerButton)
                 {
-                    bool shouldntShow = __instance.m_currentContainer != null && (displayRestockButtons == ShowTwoButtons.BothButDependingOnContext || CompatibilitySupport.HasPlugin(CompatibilitySupport.randy));
+                    bool shouldntShow = __instance.m_currentContainer != null && (displayRestockButtons == ShowTwoButtons.BothButDependingOnContext || randyStatus == RandyStatus.EnabledWithQuickSlots);
 
                     if (restockAreaButton == null)
                     {
@@ -164,7 +179,7 @@ namespace QuickStackStore
 
                         if (!shouldntShow)
                         {
-                            __instance.StartCoroutine(WaitAFrameToRepositionMiniButton(__instance, restockAreaButton.transform, weight, ++miniButtons));
+                            __instance.StartCoroutine(WaitAFrameToRepositionMiniButton(__instance, restockAreaButton.transform, weight, ++miniButtons, randyStatus));
                         }
 
                         restockAreaButton.onClick.RemoveAllListeners();
@@ -176,7 +191,7 @@ namespace QuickStackStore
 
                         if (!shouldntShow)
                         {
-                            RepositionMiniButton(__instance, restockAreaButton.transform, weight, ++miniButtons);
+                            RepositionMiniButton(__instance, restockAreaButton.transform, weight, ++miniButtons, randyStatus);
                         }
                     }
                 }
@@ -185,7 +200,7 @@ namespace QuickStackStore
 
                 if (displayQuickStackButtons != ShowTwoButtons.OnlyContainerButton)
                 {
-                    bool shouldntShow = __instance.m_currentContainer != null && (displayQuickStackButtons == ShowTwoButtons.BothButDependingOnContext || CompatibilitySupport.HasPlugin(CompatibilitySupport.randy));
+                    bool shouldntShow = __instance.m_currentContainer != null && (displayQuickStackButtons == ShowTwoButtons.BothButDependingOnContext || randyStatus == RandyStatus.EnabledWithQuickSlots);
 
                     if (quickStackAreaButton == null)
                     {
@@ -194,7 +209,7 @@ namespace QuickStackStore
 
                         if (!shouldntShow)
                         {
-                            __instance.StartCoroutine(WaitAFrameToRepositionMiniButton(__instance, quickStackAreaButton.transform, weight, ++miniButtons));
+                            __instance.StartCoroutine(WaitAFrameToRepositionMiniButton(__instance, quickStackAreaButton.transform, weight, ++miniButtons, randyStatus));
                         }
 
                         quickStackAreaButton.onClick.RemoveAllListeners();
@@ -206,15 +221,51 @@ namespace QuickStackStore
 
                         if (!shouldntShow)
                         {
-                            RepositionMiniButton(__instance, quickStackAreaButton.transform, weight, ++miniButtons);
+                            RepositionMiniButton(__instance, quickStackAreaButton.transform, weight, ++miniButtons, randyStatus);
                         }
                     }
                 }
 
-                Vector2 startOffset = takeAllButtonRect.localPosition;
-                int buttonsBelowTakeAll = 0;
+                var favConf = FavoriteConfig.DisplayFavoriteToggleButton.Value;
 
-                __instance.m_takeAllButton.gameObject.SetActive(__instance.m_currentContainer != null);
+                if (favConf != FavoritingToggling.Disabled)
+                {
+                    int index;
+                    Transform parent;
+
+                    if (favConf == FavoritingToggling.EnabledBottomButton)
+                    {
+                        index = ++miniButtons;
+                        parent = weight;
+                    }
+                    else
+                    {
+                        index = -1;
+                        parent = __instance.m_player.transform.Find("Armor"); // TODO don't use this because of better ui reforged
+                    }
+
+                    if (favoritingTogglingButton == null)
+                    {
+                        favoritingTogglingButton = CreateMiniButton(__instance, nameof(favoritingTogglingButton), "\u2605");
+                        favoritingTogglingButton.gameObject.SetActive(true);
+
+                        favoritingTogglingButtonText = favoritingTogglingButton.transform.Find("Text").GetComponent<Text>();
+
+                        // trigger text reset without changing value
+                        Helper.HasCurrentlyToggledFavoriting |= false;
+
+                        __instance.StartCoroutine(WaitAFrameToRepositionMiniButton(__instance, favoritingTogglingButton.transform, parent, index, randyStatus));
+
+                        favoritingTogglingButton.onClick.RemoveAllListeners();
+                        favoritingTogglingButton.onClick.AddListener(new UnityAction(() => Helper.HasCurrentlyToggledFavoriting ^= true));
+                    }
+                    else
+                    {
+                        RepositionMiniButton(__instance, favoritingTogglingButton.transform, parent, index, randyStatus);
+                    }
+                }
+
+                int buttonsBelowTakeAll = 0;
 
                 if (QuickStackConfig.DisplayQuickStackButtons.Value != ShowTwoButtons.OnlyInventoryButton)
                 {
@@ -222,10 +273,14 @@ namespace QuickStackStore
                     {
                         quickStackToContainerButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
 
-                        if (CompatibilitySupport.HasPlugin(CompatibilitySupport.randy))
+                        if (randyStatus == RandyStatus.EnabledWithQuickSlots)
                         {
-                            // jump to the opposite side of the default 'take all' button position, because we are out of space
+                            // jump to the opposite side of the default 'take all' button position, because we are out of space due to randy's quickslots
                             MoveButtonToIndex(ref quickStackToContainerButton, startOffset, -vOffset, 1, 1);
+                        }
+                        else if (ShouldBlockChangesToTakeAllButton())
+                        {
+                            MoveButtonToIndex(ref quickStackToContainerButton, startOffset, 0, extraContainerButtons, 1);
                         }
                         else
                         {
@@ -296,6 +351,11 @@ namespace QuickStackStore
 
                     sortContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
                 }
+
+                if (!ShouldBlockChangesToTakeAllButton())
+                {
+                    takeAllButtonRect.gameObject.SetActive(__instance.m_currentContainer != null);
+                }
             }
         }
 
@@ -343,6 +403,11 @@ namespace QuickStackStore
             }
         }
 
+        private const int miniButtonSize = 38;
+        private const int miniButtonHPadding = 2;
+        private const float normalMiniButtonVOffset = -56f;
+        private const float lowerMiniButtonVOffset = -75f;
+
         private static Button CreateMiniButton(InventoryGui instance, string name, string buttonText)
         {
             var playerInventory = instance.m_player.transform;
@@ -354,40 +419,48 @@ namespace QuickStackStore
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, miniButtonSize);
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, miniButtonSize);
 
-            Text text = rect.transform.Find("Text").GetComponent<Text>();
+            Text text = rect.Find("Text").GetComponent<Text>();
             text.text = buttonText;
             text.resizeTextForBestFit = true;
 
             return rect.GetComponent<Button>();
         }
 
-        private static void RepositionMiniButton(InventoryGui instance, Transform button, Transform weight, int existingMiniButtons)
+        private static void RepositionMiniButton(InventoryGui instance, Transform button, Transform weight, int existingMiniButtons, RandyStatus randyStatus)
         {
-            if (CompatibilitySupport.HasPlugin(CompatibilitySupport.randy))
+            if (existingMiniButtons == -1)
             {
-                button.localPosition = weight.localPosition - new Vector3(-2, (miniButtonSize + 2) * (existingMiniButtons - 1) + 58f);
+                button.localPosition = weight.localPosition + new Vector3(hAlign, 70f);
+                return;
+            }
+
+            float distanceToMove = (miniButtonSize + miniButtonHPadding) * (existingMiniButtons - 1);
+
+            if (randyStatus == RandyStatus.EnabledWithQuickSlots)
+            {
+                button.localPosition = weight.localPosition + new Vector3(hAlign, -distanceToMove + normalMiniButtonVOffset);
             }
             else
             {
-                var shouldMoveLower = CompatibilitySupport.HasPluginThatRequiresMiniButtonVMove() && instance.m_player.Find("EquipmentBkg") != null;
-                float vPos = shouldMoveLower ? -75f : -58f;
+                var shouldMoveLower = randyStatus == RandyStatus.EnabledWithoutQuickSlots || (HasPluginThatRequiresMiniButtonVMove() && instance.m_player.Find("EquipmentBkg") != null);
+                float vPos = shouldMoveLower ? lowerMiniButtonVOffset : normalMiniButtonVOffset;
 
-                button.localPosition = weight.localPosition + new Vector3((miniButtonSize + 2) * (existingMiniButtons - 1) + 2, vPos);
+                button.localPosition = weight.localPosition + new Vector3(hAlign + distanceToMove, vPos);
             }
         }
 
         // wait for one frame for Odin to finish spawning the 'EquipmentBkg' object
-        internal static IEnumerator WaitAFrameToRepositionMiniButton(InventoryGui instance, Transform button, Transform weight, int existingMiniButtons)
+        internal static IEnumerator WaitAFrameToRepositionMiniButton(InventoryGui instance, Transform button, Transform weight, int existingMiniButtons, RandyStatus randyStatus)
         {
             yield return null;
-            RepositionMiniButton(instance, button, weight, existingMiniButtons);
+            RepositionMiniButton(instance, button, weight, existingMiniButtons, randyStatus);
         }
 
-        internal static void OnButtonRelevantSettingChanged(QuickStackStorePlugin plugin)
+        internal static void OnButtonRelevantSettingChanged(QuickStackStorePlugin plugin, bool includeTrashButton = false)
         {
             // reminder to never use ?. on monobehaviors
 
-            if (InventoryGui.instance != null && InventoryGui.instance.m_takeAllButton != null)
+            if (InventoryGui.instance != null && InventoryGui.instance.m_takeAllButton != null && !ShouldBlockChangesToTakeAllButton())
             {
                 InventoryGui.instance.m_takeAllButton.transform.localPosition = origButtonPosition;
             }
@@ -427,22 +500,36 @@ namespace QuickStackStore
                 Object.Destroy(restockAreaButton.gameObject);
             }
 
-            if (TrashModule.trashRoot != null)
+            if (favoritingTogglingButton != null)
             {
-                Object.Destroy(TrashModule.trashRoot.gameObject);
+                favoritingTogglingButtonText = null;
+                Object.Destroy(favoritingTogglingButton.gameObject);
             }
 
-            plugin.StartCoroutine(WaitAFrameToUpdateUIElements(InventoryGui.instance));
+            if (includeTrashButton)
+            {
+                if (TrashModule.trashRoot != null)
+                {
+                    Object.Destroy(TrashModule.trashRoot.gameObject);
+                }
+            }
+
+            plugin.StartCoroutine(WaitAFrameToUpdateUIElements(InventoryGui.instance, includeTrashButton));
         }
 
         /// <summary>
         /// Wait one frame for Destroy to finish, then reset UI
         /// </summary>
-        internal static IEnumerator WaitAFrameToUpdateUIElements(InventoryGui instance)
+        internal static IEnumerator WaitAFrameToUpdateUIElements(InventoryGui instance, bool includeTrashButton)
         {
             yield return null;
+
             PatchInventoryGui.Show_Postfix(instance);
-            TrashModule.TrashItemsPatches.Show_Postfix(instance);
+
+            if (includeTrashButton)
+            {
+                TrashModule.TrashItemsPatches.Show_Postfix(instance);
+            }
         }
     }
 }

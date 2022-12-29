@@ -1,4 +1,4 @@
-This mod attempts to be the one stop inventory management mod, combining various features into one coherent package, while adding UI elements in addition to hotkeys as well as extensive configurability, compatibility for Equipment and Quick Slot mods and localization.
+This mod attempts to be the one stop inventory management mod, combining various features into one cohesive package, while adding UI elements in addition to hotkeys as well as compatibility for Equipment and Quick Slot mods and localization.
 
 This mod allows you to
 - quickly stack your items into the current or nearby chests
@@ -14,7 +14,7 @@ There is also an extensive configuration system, that applies changes immediatel
 
 ## 1 - Favoriting
 
-Favoriting is the main draw to combine all these features into one mod. By holding the Favoriting Key (default: Alt) you can left click on an item to favorite it, or right click to favorite the slot it is in. This prevents most features of this mod from affecting it. No accidental quick stacking, sorting, storing or trashing. The favoriting state is shown with a custom colored border around the slot.
+Favoriting is the main draw to combine all these features into one mod. By holding the Favoriting Key (default: Alt) or by using a new button, you can left click on an item to favorite it, or right click to favorite the slot it is in. This prevents most features of this mod from affecting it. No accidental quick stacking, sorting, storing or trashing. The favoriting state is shown with a custom colored border around the slot.
 
 If you are actively using Favoriting, I recommend changing the config option 'OverrideHotkeyBarBehavior' in the 'General' section from 'NeverAffectHotkeyBar' to 'UseIndividualConfigOptions'.
 
@@ -48,16 +48,16 @@ The logic of the 'Take All' button of chests (excluding tomb stones for compatib
 
 ## 4 - Sorting
 
-This uses the popular mod [InventorySorting](https://valheim.thunderstore.io/package/end360/InventorySorting/) by [end360](https://valheim.thunderstore.io/package/end360/) (with permission) to add a 'sort inventory' and 'sort container' button that respects favoriting.
+Sorting is based on the popular mod [InventorySorting](https://valheim.thunderstore.io/package/end360/InventorySorting/) by [end360](https://valheim.thunderstore.io/package/end360/) (with permission). It adds a 'sort inventory' and 'sort container' button that respects favoriting.
 
-There are also now various different sort criteria to choose from:
+There are various different sort criteria to choose from:
 - category (bunches up similar item types into categories like armor, weapons, etc)
 - internal name
 - translated name
 - weight
 - value
 
-Ties are always broken by internal name, quality and stack size.
+Ties are always broken by internal name, quality and stack size. You can also sort automatically when opening the inventory or a container.
 
 ![image](https://staticdelivery.nexusmods.com/mods/3667/images/2094/2094-1671547329-2082520177.gif)
 
@@ -92,6 +92,10 @@ RandyKnapp's [Equipment and Quick Slots](https://www.nexusmods.com/valheim/mods/
 [Better Archery](https://www.nexusmods.com/valheim/mods/348):
 - My mod will respect the slots this mod reserves for the quiver feature (all 16 of them, even if it only uses 3), and intentionally allows restocking the arrows. Better Archery also changes how item adding, including 'Take All', works, so please be aware that that is not my doing.
 
+
+## Incompatibility
+
+As stated on their mod page, this mod, like every quick stacking mod, is incompatible with [MultiUserChest](https://valheim.thunderstore.io/package/MSchmoecker/MultiUserChest/) until they add a patch for my mod. This is in the very nature of this mod combination, so neither of our mods are bugged. I have contacted the author, so no need to message them or me about it.
 
 ## Localization
 

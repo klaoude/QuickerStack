@@ -45,8 +45,7 @@ namespace QuickStackStore
                 {
                     var cItem = container.m_inventory[j];
 
-                    // stackables can't have quality
-                    if (cItem.m_shared.m_name == pItem.m_shared.m_name)
+                    if (cItem.m_shared.m_name == pItem.m_shared.m_name && cItem.m_quality == pItem.m_quality)
                     {
                         int itemsToMove = Math.Min(pItem.m_shared.m_maxStackSize - pItem.m_stack, cItem.m_stack);
                         pItem.m_stack += itemsToMove;
@@ -123,7 +122,7 @@ namespace QuickStackStore
                     {
                         var pItem = secondItemList[j];
 
-                        // stackables can't have quality
+                        // don't check for quality, we want to quick stack anyway //cItem.m_quality == pItem.m_quality
                         if (cItem.m_shared.m_name == pItem.m_shared.m_name)
                         {
                             if (container.AddItem(pItem))
@@ -209,13 +208,29 @@ namespace QuickStackStore
                 return;
             }
 
-            InventoryGui.instance.SetupDragItem(null, null, 0);
-
             UserConfig playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
 
             var includeHotbar = GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && QuickStackConfig.QuickStackIncludesHotkeyBar.Value;
 
-            List<ItemData> quickStackables = player.m_inventory.m_inventory.Where((itm) => ShouldQuickStackItem(itm, playerConfig, player.m_inventory.GetHeight(), includeHotbar)).ToList();
+            List<ItemData> quickStackables;
+
+            var dragItem = InventoryGui.instance.m_dragItem;
+
+            if (dragItem != null && InventoryGui.instance.m_dragInventory == player.m_inventory)
+            {
+                quickStackables = new List<ItemData>();
+
+                if (ShouldQuickStackItem(dragItem, playerConfig, player.m_inventory.GetHeight(), includeHotbar))
+                {
+                    quickStackables.Add(dragItem);
+                }
+            }
+            else
+            {
+                quickStackables = player.m_inventory.m_inventory.Where((itm) => ShouldQuickStackItem(itm, playerConfig, player.m_inventory.GetHeight(), includeHotbar)).ToList();
+            }
+
+            InventoryGui.instance.SetupDragItem(null, null, 0);
 
             if (quickStackables.Count == 0 && QuickStackConfig.ShowQuickStackResultMessage.Value)
             {

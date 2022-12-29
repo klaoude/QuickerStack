@@ -3,6 +3,7 @@ using BepInEx.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using static QuickStackStore.QSSConfig;
 
 namespace QuickStackStore
 {
@@ -14,6 +15,7 @@ namespace QuickStackStore
         private static FieldInfo AedenAddEquipmentRow;
         private static FieldInfo OdinExAddEquipmentRow;
         private static FieldInfo OdinQOLAddEquipmentRow;
+        private static FieldInfo RandyQuickSlotsEnabled;
 
         public static Dictionary<string, bool> cache = null;
 
@@ -23,6 +25,8 @@ namespace QuickStackStore
         public const string odinExInv = "odinplusqol.OdinsExtendedInventory";
         public const string randy = "randyknapp.mods.equipmentandquickslots";
         public const string betterArchery = "ishid4.mods.betterarchery";
+        public const string smartContainers = "flueno.SmartContainers";
+        public const string backpacks = "org.bepinex.plugins.backpacks";
 
         public static string[] supportedPlugins = new string[]
         {
@@ -67,6 +71,47 @@ namespace QuickStackStore
             }
 
             return cache[guid];
+        }
+
+        public enum RandyStatus
+        {
+            Disabled,
+            EnabledWithoutQuickSlots,
+            EnabledWithQuickSlots
+        }
+
+        public static RandyStatus HasRandyPlugin()
+        {
+            if (!HasPlugin(randy))
+            {
+                return RandyStatus.Disabled;
+            }
+
+            var status = RandyStatus.EnabledWithQuickSlots;
+
+            if (RandyQuickSlotsEnabled == null)
+            {
+                var assembly = Assembly.Load("EquipmentAndQuickSlots");
+
+                if (assembly != null)
+                {
+                    var type = assembly.GetTypes().First(a => a.IsClass && a.Name == "EquipmentAndQuickSlots");
+                    var pubStaticFields = type.GetFields(BindingFlags.Public | BindingFlags.Static);
+                    RandyQuickSlotsEnabled = pubStaticFields.First(t => t.Name == "QuickSlotsEnabled");
+                }
+            }
+
+            if (RandyQuickSlotsEnabled?.GetValue(null) is ConfigEntry<bool> config && !config.Value)
+            {
+                status = RandyStatus.EnabledWithoutQuickSlots;
+            }
+
+            return status;
+        }
+
+        public static bool ShouldBlockChangesToTakeAllButton()
+        {
+            return StoreTakeAllConfig.NeverMoveTakeAllButton.Value || HasPlugin(smartContainers) || HasPlugin(backpacks);
         }
 
         public static bool HasPluginThatRequiresMiniButtonVMove()

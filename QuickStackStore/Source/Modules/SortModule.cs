@@ -129,8 +129,6 @@ namespace QuickStackStore
 
             bool includeHotbar = playerConfig == null || (GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && SortConfig.SortIncludesHotkeyBar.Value);
 
-            // TODO combine allowedSlots compatibility checks and toSort filter, for better maintainability
-
             var allowedSlots = GetAllowedSlots(inventory, includeHotbar, playerConfig);
 
             List<ItemDrop.ItemData> toSort;
@@ -230,7 +228,7 @@ namespace QuickStackStore
 
         internal static void MergeStacks(List<ItemDrop.ItemData> toMerge, Inventory inventory)
         {
-            var grouped = toMerge.Where(itm => itm.m_stack < itm.m_shared.m_maxStackSize).GroupBy(itm => itm.m_shared.m_name).Select(grouping => grouping.ToList()).ToList();
+            var grouped = toMerge.Where(itm => itm.m_stack < itm.m_shared.m_maxStackSize).GroupBy(itm => new { itm.m_shared.m_name, itm.m_quality }).Select(grouping => grouping.ToList()).ToList();
 
             foreach (var nonFullStacks in grouped)
             {
