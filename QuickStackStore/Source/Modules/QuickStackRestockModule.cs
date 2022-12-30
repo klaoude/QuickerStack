@@ -37,6 +37,8 @@ namespace QuickStackStore
                 return num;
             }
 
+            bool changedSomething = false;
+
             for (int i = firstItemList.Count - 1; i >= 0; i--)
             {
                 var pItem = firstItemList[i];
@@ -47,6 +49,8 @@ namespace QuickStackStore
 
                     if (cItem.m_shared.m_name == pItem.m_shared.m_name && cItem.m_quality == pItem.m_quality)
                     {
+                        changedSomething = true;
+
                         int itemsToMove = Math.Min(pItem.m_shared.m_maxStackSize - pItem.m_stack, cItem.m_stack);
                         pItem.m_stack += itemsToMove;
 
@@ -71,8 +75,11 @@ namespace QuickStackStore
                 }
             }
 
-            container.Changed();
-            playerInventory.Changed();
+            if (changedSomething)
+            {
+                container.Changed();
+                playerInventory.Changed();
+            }
 
             return num;
         }
@@ -82,6 +89,8 @@ namespace QuickStackStore
             int num = 0;
 
             Helper.Log($"Starting quick stack: inventory count: {playerInventory.m_inventory.Count}, container count: {container.m_inventory.Count}", DebugSeverity.Everything);
+
+            bool changedSomething = false;
 
             if (QuickStackConfig.QuickStackTrophiesIntoSameContainer.Value && firstItemList?.Count > 0)
             {
@@ -99,11 +108,19 @@ namespace QuickStackStore
                         {
                             var pItem = firstItemList[j];
 
+                            var stackSize = pItem.m_stack;
+
                             if (container.AddItem(pItem))
                             {
+                                pItem.m_stack = 0;
                                 playerInventory.m_inventory.Remove(pItem);
                                 firstItemList.RemoveAt(j);
                                 num++;
+                            }
+
+                            if (stackSize > pItem.m_stack)
+                            {
+                                changedSomething = true;
                             }
                         }
 
@@ -125,19 +142,30 @@ namespace QuickStackStore
                         // don't check for quality, we want to quick stack anyway //cItem.m_quality == pItem.m_quality
                         if (cItem.m_shared.m_name == pItem.m_shared.m_name)
                         {
+                            var stackSize = pItem.m_stack;
+
                             if (container.AddItem(pItem))
                             {
+                                pItem.m_stack = 0;
                                 playerInventory.m_inventory.Remove(pItem);
                                 secondItemList.RemoveAt(j);
                                 num++;
+                            }
+
+                            if (stackSize > pItem.m_stack)
+                            {
+                                changedSomething = true;
                             }
                         }
                     }
                 }
             }
 
-            container.Changed();
-            playerInventory.Changed();
+            if (changedSomething)
+            {
+                container.Changed();
+                playerInventory.Changed();
+            }
 
             Helper.Log($"Finished quick stack: Removed {num} stacks (remember that these merge with non full stacks in the container first). Inventory count: {playerInventory.m_inventory.Count}, container count: {container.m_inventory.Count}", DebugSeverity.Everything);
 

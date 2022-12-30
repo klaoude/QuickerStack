@@ -95,7 +95,8 @@ RandyKnapp's [Equipment and Quick Slots](https://www.nexusmods.com/valheim/mods/
 
 ## Incompatibility
 
-As stated on their mod page, this mod, like every quick stacking mod, is incompatible with [MultiUserChest](https://valheim.thunderstore.io/package/MSchmoecker/MultiUserChest/) until they add a patch for my mod. This is in the very nature of this mod combination, so neither of our mods are bugged. I have contacted the author, so no need to message them or me about it.
+As stated on their mod page, this mod, like every quick stacking mod, is incompatible with [MultiUserChest](https://valheim.thunderstore.io/package/MSchmoecker/MultiUserChest/) until they add a patch for my mod. This is in the very nature of this mod combination, so neither of our mods are bugged. I have contacted the author, so no need to message them or me about it.
+
 
 ## Localization
 
