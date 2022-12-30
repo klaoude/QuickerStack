@@ -112,13 +112,12 @@ namespace QuickStackStore
 
                             if (container.AddItem(pItem))
                             {
-                                pItem.m_stack = 0;
+                                changedSomething = true;
                                 playerInventory.m_inventory.Remove(pItem);
                                 firstItemList.RemoveAt(j);
                                 num++;
                             }
-
-                            if (stackSize > pItem.m_stack)
+                            else if (stackSize > pItem.m_stack)
                             {
                                 changedSomething = true;
                             }
@@ -146,13 +145,12 @@ namespace QuickStackStore
 
                             if (container.AddItem(pItem))
                             {
-                                pItem.m_stack = 0;
+                                changedSomething = true;
                                 playerInventory.m_inventory.Remove(pItem);
                                 secondItemList.RemoveAt(j);
                                 num++;
                             }
-
-                            if (stackSize > pItem.m_stack)
+                            else if (stackSize > pItem.m_stack)
                             {
                                 changedSomething = true;
                             }
