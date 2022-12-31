@@ -234,29 +234,13 @@ namespace QuickStackStore
                 return;
             }
 
+            InventoryGui.instance.SetupDragItem(null, null, 0);
+
             UserConfig playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
 
             var includeHotbar = GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && QuickStackConfig.QuickStackIncludesHotkeyBar.Value;
 
-            List<ItemData> quickStackables;
-
-            var dragItem = InventoryGui.instance.m_dragItem;
-
-            if (dragItem != null && InventoryGui.instance.m_dragInventory == player.m_inventory)
-            {
-                quickStackables = new List<ItemData>();
-
-                if (ShouldQuickStackItem(dragItem, playerConfig, player.m_inventory.GetHeight(), includeHotbar))
-                {
-                    quickStackables.Add(dragItem);
-                }
-            }
-            else
-            {
-                quickStackables = player.m_inventory.m_inventory.Where((itm) => ShouldQuickStackItem(itm, playerConfig, player.m_inventory.GetHeight(), includeHotbar)).ToList();
-            }
-
-            InventoryGui.instance.SetupDragItem(null, null, 0);
+            List<ItemData> quickStackables = player.m_inventory.m_inventory.Where((itm) => ShouldQuickStackItem(itm, playerConfig, player.m_inventory.GetHeight(), includeHotbar)).ToList();
 
             if (quickStackables.Count == 0 && QuickStackConfig.ShowQuickStackResultMessage.Value)
             {

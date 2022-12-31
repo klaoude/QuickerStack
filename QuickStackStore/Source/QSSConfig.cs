@@ -61,7 +61,6 @@ namespace QuickStackStore
             public static ConfigEntry<QuickStackBehavior> QuickStackHotkeyBehaviorWhenContainerOpen;
             public static ConfigEntry<bool> QuickStackIncludesHotkeyBar;
             public static ConfigEntry<KeyCode> QuickStackKey;
-            public static ConfigEntry<bool> QuickStackNonStackables;
             public static ConfigEntry<float> QuickStackToNearbyRange;
             public static ConfigEntry<bool> QuickStackTrophiesIntoSameContainer;
             public static ConfigEntry<bool> ShowQuickStackResultMessage;
