@@ -32,13 +32,13 @@ namespace QuickStackStore
             {
                 var color = ColorUtility.ToHtmlStringRGB(FavoriteConfig.BorderColorFavoritedItem.Value);
 
-                stringBuilder.Append($"\n<color=#{color}>{LocalizationConfig.FavoritedItemTooltip.Value}</color>");
+                stringBuilder.Append($"\n<color=#{color}>{LocalizationConfig.GetRelevantTranslation(LocalizationConfig.FavoritedItemTooltip, nameof(LocalizationConfig.FavoritedItemTooltip))}</color>");
             }
             else if (conf.IsItemNameConsideredTrashFlagged(item.m_shared))
             {
                 var color = ColorUtility.ToHtmlStringRGB(FavoriteConfig.BorderColorTrashFlaggedItem.Value);
 
-                stringBuilder.Append($"\n<color=#{color}>{LocalizationConfig.TrashFlaggedItemTooltip.Value}</color>");
+                stringBuilder.Append($"\n<color=#{color}>{LocalizationConfig.GetRelevantTranslation(LocalizationConfig.TrashFlaggedItemTooltip, nameof(LocalizationConfig.TrashFlaggedItemTooltip))}</color>");
             }
 
             __result = stringBuilder.ToString();

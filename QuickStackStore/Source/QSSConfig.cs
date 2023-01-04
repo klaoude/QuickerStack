@@ -4,9 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static QuickStackStore.LocalizationConfig;
 using static QuickStackStore.QSSConfig.FavoriteConfig;
 using static QuickStackStore.QSSConfig.GeneralConfig;
-using static QuickStackStore.QSSConfig.LocalizationConfig;
 using static QuickStackStore.QSSConfig.QuickStackConfig;
 using static QuickStackStore.QSSConfig.RestockConfig;
 using static QuickStackStore.QSSConfig.SortConfig;
@@ -116,45 +116,6 @@ namespace QuickStackStore
             public static ConfigEntry<Color> TrashLabelColor;
         }
 
-        internal class LocalizationConfig
-        {
-            public static ConfigEntry<string> RestockLabelCharacter;
-            public static ConfigEntry<string> QuickStackLabelCharacter;
-            public static ConfigEntry<string> SortLabelCharacter;
-
-            public static ConfigEntry<string> QuickStackResultMessageNothing;
-            public static ConfigEntry<string> QuickStackResultMessageNone;
-            public static ConfigEntry<string> QuickStackResultMessageOne;
-            public static ConfigEntry<string> QuickStackResultMessageMore;
-
-            public static ConfigEntry<string> RestockResultMessageNothing;
-            public static ConfigEntry<string> RestockResultMessageNone;
-            public static ConfigEntry<string> RestockResultMessagePartial;
-            public static ConfigEntry<string> RestockResultMessageFull;
-
-            public static ConfigEntry<string> QuickStackLabel;
-            public static ConfigEntry<string> StoreAllLabel;
-            public static ConfigEntry<string> SortLabel;
-            public static ConfigEntry<string> RestockLabel;
-            public static ConfigEntry<string> TrashLabel;
-
-            public static ConfigEntry<string> SortByInternalNameLabel;
-            public static ConfigEntry<string> SortByTranslatedNameLabel;
-            public static ConfigEntry<string> SortByValueLabel;
-            public static ConfigEntry<string> SortByWeightLabel;
-            public static ConfigEntry<string> SortByTypeLabel;
-
-            public static ConfigEntry<string> TrashConfirmationOkayButton;
-            public static ConfigEntry<string> QuickTrashConfirmation;
-            public static ConfigEntry<string> CantTrashFavoritedItemWarning;
-            public static ConfigEntry<string> CantTrashFlagFavoritedItemWarning;
-            public static ConfigEntry<string> CantTrashHotkeyBarItemWarning;
-            public static ConfigEntry<string> CantFavoriteTrashFlaggedItemWarning;
-
-            public static ConfigEntry<string> FavoritedItemTooltip;
-            public static ConfigEntry<string> TrashFlaggedItemTooltip;
-        }
-
         internal class DebugConfig
         {
             public static ConfigEntry<DebugLevel> ShowDebugLogs;
@@ -165,6 +126,8 @@ namespace QuickStackStore
         internal static void LoadConfig(QuickStackStorePlugin plugin)
         {
             Config = plugin.Config;
+
+            SetupTranslations();
 
             string sectionName;
 
@@ -319,64 +282,67 @@ namespace QuickStackStore
 
             sectionName = "9 - Localization";
 
-            TrashLabel = Config.Bind(sectionName, nameof(TrashLabel), "Trash", string.Empty);
-            TrashLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin, true);
+            TrashLabel = Config.Bind(sectionName, nameof(TrashLabel), string.Empty, string.Empty);
+            TrashLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            QuickStackLabel = Config.Bind(sectionName, nameof(QuickStackLabel), "Quick Stack", string.Empty);
-            QuickStackLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            QuickStackLabel = Config.Bind(sectionName, nameof(QuickStackLabel), string.Empty, string.Empty);
+            QuickStackLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            StoreAllLabel = Config.Bind(sectionName, nameof(StoreAllLabel), "Store All", string.Empty);
-            StoreAllLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            StoreAllLabel = Config.Bind(sectionName, nameof(StoreAllLabel), string.Empty, string.Empty);
+            StoreAllLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            RestockLabel = Config.Bind(sectionName, nameof(RestockLabel), "Restock", string.Empty);
-            RestockLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            TakeAllLabel = Config.Bind(sectionName, nameof(TakeAllLabel), string.Empty, string.Empty);
+            TakeAllLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            SortLabel = Config.Bind(sectionName, nameof(SortLabel), "Sort", string.Empty);
-            SortLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            RestockLabel = Config.Bind(sectionName, nameof(RestockLabel), string.Empty, string.Empty);
+            RestockLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            QuickStackLabelCharacter = Config.Bind(sectionName, nameof(QuickStackLabelCharacter), "Q", string.Empty);
-            QuickStackLabelCharacter.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            SortLabel = Config.Bind(sectionName, nameof(SortLabel), string.Empty, string.Empty);
+            SortLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            SortLabelCharacter = Config.Bind(sectionName, nameof(SortLabelCharacter), "S", string.Empty);
-            SortLabelCharacter.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            QuickStackLabelCharacter = Config.Bind(sectionName, nameof(QuickStackLabelCharacter), string.Empty, string.Empty);
+            QuickStackLabelCharacter.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            RestockLabelCharacter = Config.Bind(sectionName, nameof(RestockLabelCharacter), "R", string.Empty);
-            RestockLabelCharacter.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            SortLabelCharacter = Config.Bind(sectionName, nameof(SortLabelCharacter), string.Empty, string.Empty);
+            SortLabelCharacter.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            SortByInternalNameLabel = Config.Bind(sectionName, nameof(SortByInternalNameLabel), "i. name", string.Empty);
-            SortByInternalNameLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            RestockLabelCharacter = Config.Bind(sectionName, nameof(RestockLabelCharacter), string.Empty, string.Empty);
+            RestockLabelCharacter.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            SortByTranslatedNameLabel = Config.Bind(sectionName, nameof(SortByTranslatedNameLabel), "t. name", string.Empty);
-            SortByTranslatedNameLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            SortByInternalNameLabel = Config.Bind(sectionName, nameof(SortByInternalNameLabel), string.Empty, string.Empty);
+            SortByInternalNameLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            SortByValueLabel = Config.Bind(sectionName, nameof(SortByValueLabel), "value", string.Empty);
-            SortByValueLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            SortByTranslatedNameLabel = Config.Bind(sectionName, nameof(SortByTranslatedNameLabel), string.Empty, string.Empty);
+            SortByTranslatedNameLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            SortByWeightLabel = Config.Bind(sectionName, nameof(SortByWeightLabel), "weight", string.Empty);
-            SortByWeightLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            SortByValueLabel = Config.Bind(sectionName, nameof(SortByValueLabel), string.Empty, string.Empty);
+            SortByValueLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            SortByTypeLabel = Config.Bind(sectionName, nameof(SortByTypeLabel), "type", string.Empty);
-            SortByTypeLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+            SortByWeightLabel = Config.Bind(sectionName, nameof(SortByWeightLabel), string.Empty, string.Empty);
+            SortByWeightLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            QuickStackResultMessageNothing = Config.Bind(sectionName, nameof(QuickStackResultMessageNothing), "Nothing to quick stack", string.Empty);
-            QuickStackResultMessageNone = Config.Bind(sectionName, nameof(QuickStackResultMessageNone), "Stacked 0 items", string.Empty);
-            QuickStackResultMessageOne = Config.Bind(sectionName, nameof(QuickStackResultMessageOne), "Stacked 1 item", string.Empty);
-            QuickStackResultMessageMore = Config.Bind(sectionName, nameof(QuickStackResultMessageMore), "Stacked {0} items", string.Empty);
+            SortByTypeLabel = Config.Bind(sectionName, nameof(SortByTypeLabel), string.Empty, string.Empty);
+            SortByTypeLabel.SettingChanged += (a, b) => ButtonRenderer.OnButtonTextTranslationSettingChanged();
 
-            RestockResultMessageNothing = Config.Bind(sectionName, nameof(RestockResultMessageNothing), "Nothing to restock", string.Empty);
-            RestockResultMessageNone = Config.Bind(sectionName, nameof(RestockResultMessageNone), "Couldn't restock (0/{0})", string.Empty);
-            RestockResultMessagePartial = Config.Bind(sectionName, nameof(RestockResultMessagePartial), "Partially restocked ({0}/{1})", string.Empty);
-            RestockResultMessageFull = Config.Bind(sectionName, nameof(RestockResultMessageFull), "Fully restocked (total: {0})", string.Empty);
+            QuickStackResultMessageNothing = Config.Bind(sectionName, nameof(QuickStackResultMessageNothing), string.Empty, string.Empty);
+            QuickStackResultMessageNone = Config.Bind(sectionName, nameof(QuickStackResultMessageNone), string.Empty, string.Empty);
+            QuickStackResultMessageOne = Config.Bind(sectionName, nameof(QuickStackResultMessageOne), string.Empty, string.Empty);
+            QuickStackResultMessageMore = Config.Bind(sectionName, nameof(QuickStackResultMessageMore), string.Empty, string.Empty);
 
-            TrashConfirmationOkayButton = Config.Bind(sectionName, nameof(TrashConfirmationOkayButton), "Trash", string.Empty);
-            QuickTrashConfirmation = Config.Bind(sectionName, nameof(QuickTrashConfirmation), "Quick trash?", string.Empty);
-            CantTrashFavoritedItemWarning = Config.Bind(sectionName, nameof(CantTrashFavoritedItemWarning), "Can't trash favorited item!", string.Empty);
-            CantTrashHotkeyBarItemWarning = Config.Bind(sectionName, nameof(CantTrashHotkeyBarItemWarning), "Settings disallow trashing of item in hotkey bar!", string.Empty);
-            CantTrashFlagFavoritedItemWarning = Config.Bind(sectionName, nameof(CantTrashFlagFavoritedItemWarning), "Can't trash flag a favorited item!", string.Empty);
-            CantFavoriteTrashFlaggedItemWarning = Config.Bind(sectionName, nameof(CantFavoriteTrashFlaggedItemWarning), "Can't favorite a trash flagged item!", string.Empty);
+            RestockResultMessageNothing = Config.Bind(sectionName, nameof(RestockResultMessageNothing), string.Empty, string.Empty);
+            RestockResultMessageNone = Config.Bind(sectionName, nameof(RestockResultMessageNone), string.Empty, string.Empty);
+            RestockResultMessagePartial = Config.Bind(sectionName, nameof(RestockResultMessagePartial), string.Empty, string.Empty);
+            RestockResultMessageFull = Config.Bind(sectionName, nameof(RestockResultMessageFull), string.Empty, string.Empty);
 
-            FavoritedItemTooltip = Config.Bind(sectionName, nameof(FavoritedItemTooltip), "Will not be quick stacked, sorted,\nstore all'd or trashed", string.Empty);
-            TrashFlaggedItemTooltip = Config.Bind(sectionName, nameof(TrashFlaggedItemTooltip), "Can be quick trashed", string.Empty);
+            TrashConfirmationOkayButton = Config.Bind(sectionName, nameof(TrashConfirmationOkayButton), string.Empty, string.Empty);
+            QuickTrashConfirmation = Config.Bind(sectionName, nameof(QuickTrashConfirmation), string.Empty, string.Empty);
+            CantTrashFavoritedItemWarning = Config.Bind(sectionName, nameof(CantTrashFavoritedItemWarning), string.Empty, string.Empty);
+            CantTrashHotkeyBarItemWarning = Config.Bind(sectionName, nameof(CantTrashHotkeyBarItemWarning), string.Empty, string.Empty);
+            CantTrashFlagFavoritedItemWarning = Config.Bind(sectionName, nameof(CantTrashFlagFavoritedItemWarning), string.Empty, string.Empty);
+            CantFavoriteTrashFlaggedItemWarning = Config.Bind(sectionName, nameof(CantFavoriteTrashFlaggedItemWarning), string.Empty, string.Empty);
+
+            FavoritedItemTooltip = Config.Bind(sectionName, nameof(FavoritedItemTooltip), string.Empty, string.Empty);
+            TrashFlaggedItemTooltip = Config.Bind(sectionName, nameof(TrashFlaggedItemTooltip), string.Empty, string.Empty);
         }
 
         internal static void ResetAllFavoritingData_SettingChanged(object sender, EventArgs e)

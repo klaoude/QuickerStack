@@ -24,7 +24,7 @@ namespace QuickStackStore
         {
             if (TrashConfig.ShowConfirmDialogForQuickTrash.Value)
             {
-                ShowBaseConfirmDialog(null, LocalizationConfig.QuickTrashConfirmation.Value, string.Empty, QuickTrash);
+                ShowBaseConfirmDialog(null, LocalizationConfig.GetRelevantTranslation(LocalizationConfig.QuickTrashConfirmation, nameof(LocalizationConfig.QuickTrashConfirmation)), string.Empty, QuickTrash);
             }
             else
             {
@@ -155,7 +155,7 @@ namespace QuickStackStore
 
                     if (!didFlagSuccessfully)
                     {
-                        player.Message(MessageHud.MessageType.Center, LocalizationConfig.CantTrashFlagFavoritedItemWarning.Value, 0, null);
+                        player.Message(MessageHud.MessageType.Center, LocalizationConfig.GetRelevantTranslation(LocalizationConfig.CantTrashFlagFavoritedItemWarning, nameof(LocalizationConfig.CantTrashFlagFavoritedItemWarning)), 0, null);
                     }
 
                     clickState = 0;
@@ -166,14 +166,14 @@ namespace QuickStackStore
                 {
                     if (player.m_inventory == ___m_dragInventory && ___m_dragItem.m_gridPos.y == 0 && (GeneralConfig.OverrideHotkeyBarBehavior.Value == OverrideHotkeyBarBehavior.NeverAffectHotkeyBar || !TrashConfig.TrashingCanAffectHotkeyBar.Value))
                     {
-                        player.Message(MessageHud.MessageType.Center, LocalizationConfig.CantTrashHotkeyBarItemWarning.Value, 0, null);
+                        player.Message(MessageHud.MessageType.Center, LocalizationConfig.GetRelevantTranslation(LocalizationConfig.CantTrashHotkeyBarItemWarning, nameof(LocalizationConfig.CantTrashHotkeyBarItemWarning)), 0, null);
                         clickState = 0;
                         return;
                     }
 
                     if ((player.m_inventory == ___m_dragInventory && playerConfig.IsSlotFavorited(___m_dragItem.m_gridPos)) || playerConfig.IsItemNameFavorited(___m_dragItem.m_shared))
                     {
-                        player.Message(MessageHud.MessageType.Center, LocalizationConfig.CantTrashFavoritedItemWarning.Value, 0, null);
+                        player.Message(MessageHud.MessageType.Center, LocalizationConfig.GetRelevantTranslation(LocalizationConfig.CantTrashFavoritedItemWarning, nameof(LocalizationConfig.CantTrashFavoritedItemWarning)), 0, null);
                         clickState = 0;
                         return;
                     }
@@ -229,12 +229,12 @@ namespace QuickStackStore
                         Helper.LogO("armor_icon not found!", DebugLevel.Warning);
                     }
 
-                    Helper.LogO("If you are using Better UI Reforged, this happens the moment you edit the config to either reenable the trash can UI or change its label text while already ingame. A simple log out to main menu and log back in will fix this, don't worry about it. If not, please report this on the mod page or github.", DebugLevel.Warning);
+                    Helper.LogO("If you are using Better UI Reforged, this happens the moment you edit the config to reenable the trash can UI while already ingame. A simple log out to main menu and log back in will fix this, don't worry about it. If not, please report this on the mod page or on github.", DebugLevel.Warning);
 
                     return;
                 }
 
-                tText.GetComponent<Text>().text = LocalizationConfig.TrashLabel.Value;
+                tText.GetComponent<Text>().text = LocalizationConfig.GetRelevantTranslation(LocalizationConfig.TrashLabel, nameof(LocalizationConfig.TrashLabel));
                 tText.GetComponent<Text>().color = TrashConfig.TrashLabelColor.Value;
 
                 // Replace armor with trash icon
@@ -317,7 +317,7 @@ namespace QuickStackStore
             okButton.onClick.RemoveAllListeners();
             okButton.onClick.AddListener(new UnityAction(OnChoice));
             okButton.onClick.AddListener(onConfirm);
-            okButton.GetComponentInChildren<Text>().text = LocalizationConfig.TrashConfirmationOkayButton.Value;
+            okButton.GetComponentInChildren<Text>().text = LocalizationConfig.GetRelevantTranslation(LocalizationConfig.TrashConfirmationOkayButton, nameof(LocalizationConfig.TrashConfirmationOkayButton));
             okButton.GetComponentInChildren<Text>().color = new Color(1, 0.2f, 0.1f);
 
             var cancelButton = dialog.transform.Find("win_bkg/Button_cancel").GetComponent<Button>();

@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following
@@ -28,5 +29,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.2.4.0")]
-[assembly: AssemblyFileVersion("1.2.4.0")]
+[assembly: AssemblyVersion(QuickStackStore.QuickStackStorePlugin.VERSION + ".0")]
+[assembly: AssemblyFileVersion(QuickStackStore.QuickStackStorePlugin.VERSION + ".0")]

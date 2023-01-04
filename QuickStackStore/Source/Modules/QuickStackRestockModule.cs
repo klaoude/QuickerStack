@@ -14,6 +14,7 @@ namespace QuickStackStore
             var type = item.m_shared.m_itemType;
 
             return maxStack > 1 && maxStack > item.m_stack
+                && (item.m_customData == null || item.m_customData.Count == 0)
                 && (item.m_gridPos.y > 0 || includeHotbar)
                 && (!RestockConfig.RestockOnlyAmmoAndConsumables.Value || type == ItemData.ItemType.Ammo || type == ItemData.ItemType.Consumable)
                 && (!RestockConfig.RestockOnlyFavoritedItems.Value || playerConfig.IsItemNameOrSlotFavorited(item))
@@ -46,6 +47,11 @@ namespace QuickStackStore
                 for (int j = container.m_inventory.Count - 1; j >= 0; j--)
                 {
                     var cItem = container.m_inventory[j];
+
+                    if (cItem.m_customData != null && cItem.m_customData.Count > 0)
+                    {
+                        continue;
+                    }
 
                     if (cItem.m_shared.m_name == pItem.m_shared.m_name && cItem.m_quality == pItem.m_quality)
                     {
@@ -138,7 +144,7 @@ namespace QuickStackStore
                     {
                         var pItem = secondItemList[j];
 
-                        // don't check for quality, we want to quick stack anyway //cItem.m_quality == pItem.m_quality
+                        // don't check for quality or custom data, we want to quick stack solely based on name, and AddItem will figure out the rest
                         if (cItem.m_shared.m_name == pItem.m_shared.m_name)
                         {
                             var stackSize = pItem.m_stack;
@@ -189,7 +195,7 @@ namespace QuickStackStore
 
             if (totalCount == 0 && RestockConfig.ShowRestockResultMessage.Value)
             {
-                player.Message(MessageHud.MessageType.Center, LocalizationConfig.RestockResultMessageNothing.Value, 0, null);
+                player.Message(MessageHud.MessageType.Center, LocalizationConfig.GetRelevantTranslation(LocalizationConfig.RestockResultMessageNothing, nameof(LocalizationConfig.RestockResultMessageNothing)), 0, null);
                 return;
             }
 
@@ -244,7 +250,7 @@ namespace QuickStackStore
 
             if (quickStackables.Count == 0 && QuickStackConfig.ShowQuickStackResultMessage.Value)
             {
-                player.Message(MessageHud.MessageType.Center, LocalizationConfig.QuickStackResultMessageNothing.Value, 0, null);
+                player.Message(MessageHud.MessageType.Center, LocalizationConfig.GetRelevantTranslation(LocalizationConfig.QuickStackResultMessageNothing, nameof(LocalizationConfig.QuickStackResultMessageNothing)), 0, null);
                 return;
             }
 
@@ -311,15 +317,15 @@ namespace QuickStackStore
 
             if (movedCount == 0 && partiallyFilledCount == 0)
             {
-                message = string.Format(LocalizationConfig.RestockResultMessageNone.Value, totalCount);
+                message = string.Format(LocalizationConfig.GetRelevantTranslation(LocalizationConfig.RestockResultMessageNone, nameof(LocalizationConfig.RestockResultMessageNone)), totalCount);
             }
             else if (movedCount < totalCount)
             {
-                message = string.Format(LocalizationConfig.RestockResultMessagePartial.Value, partiallyFilledCount, totalCount);
+                message = string.Format(LocalizationConfig.GetRelevantTranslation(LocalizationConfig.RestockResultMessagePartial, nameof(LocalizationConfig.RestockResultMessagePartial)), partiallyFilledCount, totalCount);
             }
             else if (movedCount == totalCount)
             {
-                message = string.Format(LocalizationConfig.RestockResultMessageFull.Value, totalCount);
+                message = string.Format(LocalizationConfig.GetRelevantTranslation(LocalizationConfig.RestockResultMessageFull, nameof(LocalizationConfig.RestockResultMessageFull)), totalCount);
             }
             else
             {
@@ -341,15 +347,15 @@ namespace QuickStackStore
 
             if (movedCount == 0)
             {
-                message = LocalizationConfig.QuickStackResultMessageNone.Value;
+                message = LocalizationConfig.GetRelevantTranslation(LocalizationConfig.QuickStackResultMessageNone, nameof(LocalizationConfig.QuickStackResultMessageNone));
             }
             else if (movedCount == 1)
             {
-                message = LocalizationConfig.QuickStackResultMessageOne.Value;
+                message = LocalizationConfig.GetRelevantTranslation(LocalizationConfig.QuickStackResultMessageOne, nameof(LocalizationConfig.QuickStackResultMessageOne));
             }
             else
             {
-                message = string.Format(LocalizationConfig.QuickStackResultMessageMore.Value, movedCount);
+                message = string.Format(LocalizationConfig.GetRelevantTranslation(LocalizationConfig.QuickStackResultMessageMore, nameof(LocalizationConfig.QuickStackResultMessageMore)), movedCount);
             }
 
             player.Message(MessageHud.MessageType.Center, message, 0, null);

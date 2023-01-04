@@ -1,4 +1,6 @@
-﻿using HarmonyLib;
+﻿using BepInEx;
+using BepInEx.Configuration;
+using HarmonyLib;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
@@ -21,7 +23,7 @@ namespace QuickStackStore
         private static Button restockAreaButton;
 
         private static Button quickStackToContainerButton;
-        private static Button depositAllButton;
+        private static Button storeAllButton;
         private static Button sortContainerButton;
         private static Button restockFromContainerButton;
 
@@ -149,7 +151,7 @@ namespace QuickStackStore
 
                     if (sortInventoryButton == null)
                     {
-                        sortInventoryButton = CreateMiniButton(__instance, nameof(sortInventoryButton), LocalizationConfig.SortLabelCharacter.Value);
+                        sortInventoryButton = CreateMiniButton(__instance, nameof(sortInventoryButton));
                         sortInventoryButton.gameObject.SetActive(shouldShow);
 
                         if (shouldShow)
@@ -174,7 +176,7 @@ namespace QuickStackStore
 
                     if (restockAreaButton == null)
                     {
-                        restockAreaButton = CreateMiniButton(__instance, nameof(restockAreaButton), LocalizationConfig.RestockLabelCharacter.Value);
+                        restockAreaButton = CreateMiniButton(__instance, nameof(restockAreaButton));
                         restockAreaButton.gameObject.SetActive(!shouldntShow);
 
                         if (!shouldntShow)
@@ -204,7 +206,7 @@ namespace QuickStackStore
 
                     if (quickStackAreaButton == null)
                     {
-                        quickStackAreaButton = CreateMiniButton(__instance, nameof(quickStackAreaButton), LocalizationConfig.QuickStackLabelCharacter.Value);
+                        quickStackAreaButton = CreateMiniButton(__instance, nameof(quickStackAreaButton));
                         quickStackAreaButton.gameObject.SetActive(!shouldntShow);
 
                         if (!shouldntShow)
@@ -241,12 +243,12 @@ namespace QuickStackStore
                     else
                     {
                         index = -1;
-                        parent = __instance.m_player.transform.Find("Armor"); // TODO don't use this because of better ui reforged
+                        parent = __instance.m_player.transform.Find("Armor");
                     }
 
                     if (favoritingTogglingButton == null)
                     {
-                        favoritingTogglingButton = CreateMiniButton(__instance, nameof(favoritingTogglingButton), "\u2605");
+                        favoritingTogglingButton = CreateMiniButton(__instance, nameof(favoritingTogglingButton));
                         favoritingTogglingButton.gameObject.SetActive(true);
 
                         favoritingTogglingButtonText = favoritingTogglingButton.transform.Find("Text").GetComponent<Text>();
@@ -290,8 +292,6 @@ namespace QuickStackStore
 
                         quickStackToContainerButton.onClick.RemoveAllListeners();
                         quickStackToContainerButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoQuickStack(Player.m_localPlayer, true)));
-
-                        quickStackToContainerButton.GetComponentInChildren<Text>().text = LocalizationConfig.QuickStackLabel.Value;
                     }
 
                     quickStackToContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
@@ -299,18 +299,16 @@ namespace QuickStackStore
 
                 if (StoreTakeAllConfig.DisplayStoreAllButton.Value)
                 {
-                    if (depositAllButton == null)
+                    if (storeAllButton == null)
                     {
-                        depositAllButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
-                        MoveButtonToIndex(ref depositAllButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
+                        storeAllButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
+                        MoveButtonToIndex(ref storeAllButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
-                        depositAllButton.onClick.RemoveAllListeners();
-                        depositAllButton.onClick.AddListener(new UnityAction(() => StoreTakeAllModule.StoreAllItemsInOrder(Player.m_localPlayer)));
-
-                        depositAllButton.GetComponentInChildren<Text>().text = LocalizationConfig.StoreAllLabel.Value;
+                        storeAllButton.onClick.RemoveAllListeners();
+                        storeAllButton.onClick.AddListener(new UnityAction(() => StoreTakeAllModule.StoreAllItemsInOrder(Player.m_localPlayer)));
                     }
 
-                    depositAllButton.gameObject.SetActive(__instance.m_currentContainer != null);
+                    storeAllButton.gameObject.SetActive(__instance.m_currentContainer != null);
                 }
 
                 if (RestockConfig.DisplayRestockButtons.Value != ShowTwoButtons.OnlyInventoryButton)
@@ -322,8 +320,6 @@ namespace QuickStackStore
 
                         restockFromContainerButton.onClick.RemoveAllListeners();
                         restockFromContainerButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoRestock(Player.m_localPlayer, true)));
-
-                        restockFromContainerButton.GetComponentInChildren<Text>().text = LocalizationConfig.RestockLabel.Value;
                     }
 
                     restockFromContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
@@ -338,15 +334,6 @@ namespace QuickStackStore
 
                         sortContainerButton.onClick.RemoveAllListeners();
                         sortContainerButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(__instance.m_currentContainer.m_inventory)));
-
-                        var label = LocalizationConfig.SortLabel.Value;
-
-                        if (SortConfig.DisplaySortCriteriaInLabel.Value)
-                        {
-                            label += $" ({SortCriteriaToShortHumanReadableString(SortConfig.SortCriteria.Value)})";
-                        }
-
-                        sortContainerButton.GetComponentInChildren<Text>().text = label;
                     }
 
                     sortContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
@@ -356,6 +343,8 @@ namespace QuickStackStore
                 {
                     takeAllButtonRect.gameObject.SetActive(__instance.m_currentContainer != null);
                 }
+
+                OnButtonTextTranslationSettingChanged(false);
             }
         }
 
@@ -384,19 +373,19 @@ namespace QuickStackStore
             switch (sortingCriteria)
             {
                 case SortCriteriaEnum.InternalName:
-                    return LocalizationConfig.SortByInternalNameLabel.Value;
+                    return LocalizationConfig.GetRelevantTranslation(LocalizationConfig.SortByInternalNameLabel, nameof(LocalizationConfig.SortByInternalNameLabel));
 
                 case SortCriteriaEnum.TranslatedName:
-                    return LocalizationConfig.SortByTranslatedNameLabel.Value;
+                    return LocalizationConfig.GetRelevantTranslation(LocalizationConfig.SortByTranslatedNameLabel, nameof(LocalizationConfig.SortByTranslatedNameLabel));
 
                 case SortCriteriaEnum.Value:
-                    return LocalizationConfig.SortByValueLabel.Value;
+                    return LocalizationConfig.GetRelevantTranslation(LocalizationConfig.SortByValueLabel, nameof(LocalizationConfig.SortByValueLabel));
 
                 case SortCriteriaEnum.Weight:
-                    return LocalizationConfig.SortByWeightLabel.Value;
+                    return LocalizationConfig.GetRelevantTranslation(LocalizationConfig.SortByWeightLabel, nameof(LocalizationConfig.SortByWeightLabel));
 
                 case SortCriteriaEnum.Type:
-                    return LocalizationConfig.SortByTypeLabel.Value;
+                    return LocalizationConfig.GetRelevantTranslation(LocalizationConfig.SortByTypeLabel, nameof(LocalizationConfig.SortByTypeLabel));
 
                 default:
                     return "invalid";
@@ -408,7 +397,7 @@ namespace QuickStackStore
         private const float normalMiniButtonVOffset = -56f;
         private const float lowerMiniButtonVOffset = -75f;
 
-        private static Button CreateMiniButton(InventoryGui instance, string name, string buttonText)
+        private static Button CreateMiniButton(InventoryGui instance, string name)
         {
             var playerInventory = instance.m_player.transform;
 
@@ -420,7 +409,6 @@ namespace QuickStackStore
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, miniButtonSize);
 
             Text text = rect.Find("Text").GetComponent<Text>();
-            text.text = buttonText;
             text.resizeTextForBestFit = true;
 
             return rect.GetComponent<Button>();
@@ -449,72 +437,13 @@ namespace QuickStackStore
             }
         }
 
-        // wait for one frame for Odin to finish spawning the 'EquipmentBkg' object
+        /// <summary>
+        /// Wait for one frame, so the two Odin equipment slot mods can finish spawning the 'EquipmentBkg' object
+        /// </summary>
         internal static IEnumerator WaitAFrameToRepositionMiniButton(InventoryGui instance, Transform button, Transform weight, int existingMiniButtons, RandyStatus randyStatus)
         {
             yield return null;
             RepositionMiniButton(instance, button, weight, existingMiniButtons, randyStatus);
-        }
-
-        internal static void OnButtonRelevantSettingChanged(QuickStackStorePlugin plugin, bool includeTrashButton = false)
-        {
-            // reminder to never use ?. on monobehaviors
-
-            if (InventoryGui.instance != null && InventoryGui.instance.m_takeAllButton != null && !ShouldBlockChangesToTakeAllButton())
-            {
-                InventoryGui.instance.m_takeAllButton.transform.localPosition = origButtonPosition;
-            }
-
-            if (depositAllButton != null)
-            {
-                Object.Destroy(depositAllButton.gameObject);
-            }
-
-            if (quickStackAreaButton != null)
-            {
-                Object.Destroy(quickStackAreaButton.gameObject);
-            }
-
-            if (quickStackToContainerButton != null)
-            {
-                Object.Destroy(quickStackToContainerButton.gameObject);
-            }
-
-            if (sortContainerButton != null)
-            {
-                Object.Destroy(sortContainerButton.gameObject);
-            }
-
-            if (sortInventoryButton != null)
-            {
-                Object.Destroy(sortInventoryButton.gameObject);
-            }
-
-            if (restockFromContainerButton != null)
-            {
-                Object.Destroy(restockFromContainerButton.gameObject);
-            }
-
-            if (restockAreaButton != null)
-            {
-                Object.Destroy(restockAreaButton.gameObject);
-            }
-
-            if (favoritingTogglingButton != null)
-            {
-                favoritingTogglingButtonText = null;
-                Object.Destroy(favoritingTogglingButton.gameObject);
-            }
-
-            if (includeTrashButton)
-            {
-                if (TrashModule.trashRoot != null)
-                {
-                    Object.Destroy(TrashModule.trashRoot.gameObject);
-                }
-            }
-
-            plugin.StartCoroutine(WaitAFrameToUpdateUIElements(InventoryGui.instance, includeTrashButton));
         }
 
         /// <summary>
@@ -529,6 +458,113 @@ namespace QuickStackStore
             if (includeTrashButton)
             {
                 TrashModule.TrashItemsPatches.Show_Postfix(instance);
+            }
+        }
+
+        internal static void OnButtonRelevantSettingChanged(QuickStackStorePlugin plugin, bool includeTrashButton = false)
+        {
+            // reminder to never use ?. on monobehaviors
+
+            if (InventoryGui.instance != null)
+            {
+                var takeAllButton = InventoryGui.instance.m_takeAllButton;
+
+                if (takeAllButton != null)
+                {
+                    if (!ShouldBlockChangesToTakeAllButton())
+                    {
+                        takeAllButton.transform.localPosition = origButtonPosition;
+                    }
+                }
+            }
+
+            var buttons = new Button[] { storeAllButton, quickStackToContainerButton, sortContainerButton, restockFromContainerButton, sortInventoryButton, quickStackAreaButton, restockAreaButton, favoritingTogglingButton };
+
+            foreach (var button in buttons)
+            {
+                if (button != null)
+                {
+                    Object.Destroy(button.gameObject);
+                }
+            }
+
+            favoritingTogglingButtonText = null;
+
+            if (includeTrashButton)
+            {
+                if (TrashModule.trashRoot != null)
+                {
+                    Object.Destroy(TrashModule.trashRoot.gameObject);
+                }
+            }
+
+            plugin.StartCoroutine(WaitAFrameToUpdateUIElements(InventoryGui.instance, includeTrashButton));
+        }
+
+        private static void UpdateButtonTextTranslation(Button button, ConfigEntry<string> overrideConfig, string configName)
+        {
+            if (button != null)
+            {
+                var text = button.GetComponentInChildren<Text>();
+
+                if (text != null)
+                {
+                    text.text = LocalizationConfig.GetRelevantTranslation(overrideConfig, configName);
+                }
+            }
+        }
+
+        internal static void OnButtonTextTranslationSettingChanged(bool includeTrashButton = true)
+        {
+            // reminder to never use ?. on monobehaviors
+
+            if (InventoryGui.instance != null)
+            {
+                var takeAllButton = InventoryGui.instance.m_takeAllButton;
+
+                if (takeAllButton != null)
+                {
+                    var text = takeAllButton.GetComponentInChildren<Text>();
+
+                    if (text != null)
+                    {
+                        text.text = !LocalizationConfig.TakeAllLabel.Value.IsNullOrWhiteSpace() ? LocalizationConfig.TakeAllLabel.Value : Localization.instance.Translate("inventory_takeall");
+                    }
+                }
+            }
+
+            UpdateButtonTextTranslation(storeAllButton, LocalizationConfig.StoreAllLabel, nameof(LocalizationConfig.StoreAllLabel));
+            UpdateButtonTextTranslation(quickStackToContainerButton, LocalizationConfig.QuickStackLabel, nameof(LocalizationConfig.QuickStackLabel));
+            UpdateButtonTextTranslation(restockFromContainerButton, LocalizationConfig.RestockLabel, nameof(LocalizationConfig.RestockLabel));
+            UpdateButtonTextTranslation(sortInventoryButton, LocalizationConfig.SortLabelCharacter, nameof(LocalizationConfig.SortLabelCharacter));
+            UpdateButtonTextTranslation(quickStackAreaButton, LocalizationConfig.QuickStackLabelCharacter, nameof(LocalizationConfig.QuickStackLabelCharacter));
+            UpdateButtonTextTranslation(restockAreaButton, LocalizationConfig.RestockLabelCharacter, nameof(LocalizationConfig.RestockLabelCharacter));
+
+            if (sortContainerButton != null)
+            {
+                var text = sortContainerButton.GetComponentInChildren<Text>();
+
+                if (text != null)
+                {
+                    var label = LocalizationConfig.GetRelevantTranslation(LocalizationConfig.SortLabel, nameof(LocalizationConfig.SortLabel));
+
+                    if (SortConfig.DisplaySortCriteriaInLabel.Value)
+                    {
+                        label += $" ({SortCriteriaToShortHumanReadableString(SortConfig.SortCriteria.Value)})";
+                    }
+
+                    text.text = label;
+                }
+            }
+
+            if (includeTrashButton && TrashModule.trashButton != null)
+            {
+                var text = TrashModule.trashButton.GetComponentInChildren<Text>();
+
+                if (text != null)
+                {
+                    text.text = LocalizationConfig.GetRelevantTranslation(LocalizationConfig.TrashLabel, nameof(LocalizationConfig.TrashLabel));
+                }
             }
         }
     }

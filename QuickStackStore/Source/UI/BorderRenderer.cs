@@ -174,7 +174,7 @@ namespace QuickStackStore
 
                 if (!wasToggleSuccessful)
                 {
-                    localPlayer.Message(MessageHud.MessageType.Center, LocalizationConfig.CantFavoriteTrashFlaggedItemWarning.Value, 0, null);
+                    localPlayer.Message(MessageHud.MessageType.Center, LocalizationConfig.GetRelevantTranslation(LocalizationConfig.CantFavoriteTrashFlaggedItemWarning, nameof(LocalizationConfig.CantFavoriteTrashFlaggedItemWarning)), 0, null);
                 }
             }
 

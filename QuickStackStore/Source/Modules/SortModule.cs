@@ -228,7 +228,10 @@ namespace QuickStackStore
 
         internal static void MergeStacks(List<ItemDrop.ItemData> toMerge, Inventory inventory)
         {
-            var grouped = toMerge.Where(itm => itm.m_stack < itm.m_shared.m_maxStackSize).GroupBy(itm => new { itm.m_shared.m_name, itm.m_quality }).Select(grouping => grouping.ToList()).ToList();
+            var grouped = toMerge
+                .Where(itm => itm.m_stack < itm.m_shared.m_maxStackSize && (itm.m_customData == null || itm.m_customData.Count == 0))
+                .GroupBy(itm => new { itm.m_shared.m_name, itm.m_quality })
+                .Select(grouping => grouping.ToList()).ToList();
 
             foreach (var nonFullStacks in grouped)
             {

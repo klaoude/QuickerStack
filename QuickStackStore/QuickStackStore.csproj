@@ -90,6 +90,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuickStackStorePlugin.cs" />
+    <Compile Include="Source\LocalizationConfig.cs" />
     <Compile Include="Source\Modules\CompatibilitySupport.cs" />
     <Compile Include="Source\ContainerFinder.cs" />
     <Compile Include="Source\Helper.cs" />

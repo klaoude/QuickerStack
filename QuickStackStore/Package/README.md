@@ -86,10 +86,10 @@ This mod has explicit compatibility for the following Equipment and Quick Slot m
 Aedenthorn's [Extended Player Inventory](https://www.nexusmods.com/valheim/mods/1356):
 - This mod behaves identically to OdinsQOL and OdinsExtendedInventory, because they used Aeden's work as a base. If you use this, be sure to download this mod from Nexus and not from Thunderstore, as those are unofficial irregularly updated versions.
 
-RandyKnapp's [Equipment and Quick Slots](https://www.nexusmods.com/valheim/mods/92):
+RandyKnapp's [Equipment and Quick Slots](https://valheim.thunderstore.io/package/RandyKnapp/EquipmentAndQuickSlots/):
 - The slots from this mod are not actual inventory slot, so my mod cannot affect them in any way (which is good). Due to that, restocking the quick slots is not possible though. The buttons from my mod will move to not overlap with the equipment slot UI and while using a chest the small Quick Stack and Restock buttons are hidden.
 
-[Better Archery](https://www.nexusmods.com/valheim/mods/348):
+[Better Archery](https://valheim.thunderstore.io/package/ishid4/BetterArchery/):
 - My mod will respect the slots this mod reserves for the quiver feature (all 16 of them, even if it only uses 3), and intentionally allows restocking the arrows. Better Archery also changes how item adding, including 'Take All', works, so please be aware that that is not my doing.
 
 
@@ -97,10 +97,16 @@ RandyKnapp's [Equipment and Quick Slots](https://www.nexusmods.com/valheim/mods/
 
 As stated on their mod page, this mod, like every quick stacking mod, is incompatible with [MultiUserChest](https://valheim.thunderstore.io/package/MSchmoecker/MultiUserChest/) until they add a patch for my mod. This is in the very nature of this mod combination, so neither of our mods are bugged. I have contacted the author, so no need to message them or me about it.
 
+Stacks of items with custom data, like from [Jewelcrafting](https://valheim.thunderstore.io/package/Smoothbrain/Jewelcrafting/), [Blacksmithing](https://valheim.thunderstore.io/package/Smoothbrain/Blacksmithing/) or [Cooking](https://valheim.thunderstore.io/package/Smoothbrain/Cooking/) by [Smoothbrain](https://valheim.thunderstore.io/package/Smoothbrain/), are excluded from getting merged by sorting or getting restocked, but otherwise behave normally.
+
+This mod is incompatible with [Trash Items](https://valheim.thunderstore.io/package/virtuaCode/TrashItems/) because it is included in this mod.
+
 
 ## Localization
 
-Every text element can be translated in the config menu. If you want to provide some default language options please message me in private Nexus message and we can talk about sending them in an appropriate format.
+This mod includes a translation system for all ingame display texts (not the config menu). Currently English and Chinese are supported. For minor edits, you can override any display text in the config. If you are translating all display texts to your native language, please reach out to me, so I can add it to the mod as an automatic translation.
+
+The Chinese translation was provided by [Tiomer](https://www.nexusmods.com/users/114839878).
 
 
 Source code available on github: https://github.com/Goldenrevolver/QuickStackStore
