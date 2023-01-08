@@ -6,6 +6,36 @@ using static QuickStackStore.QSSConfig;
 
 namespace QuickStackStore
 {
+    [HarmonyPatch(typeof(Container))]
+    public static class ContainerPatch
+    {
+        internal const string rpc_requestSort = "QuickStackStore_RequestSort";
+
+        [HarmonyPatch(nameof(Container.Awake)), HarmonyPostfix]
+        public static void ContainerAwakePatch(Container __instance)
+        {
+            if (!__instance.m_nview)
+            {
+                __instance.m_nview = __instance.m_rootObjectOverride ? __instance.m_rootObjectOverride.GetComponent<ZNetView>() : __instance.GetComponent<ZNetView>();
+            }
+
+            if (!__instance.m_nview)
+            {
+                return;
+            }
+
+            __instance.m_nview.Register(rpc_requestSort, (l) => RPC_RequestSort(l, __instance));
+        }
+
+        public static void RPC_RequestSort(long _, Container container)
+        {
+            if (container.m_nview.IsOwner())
+            {
+                SortModule.SortInternal(container.m_inventory, null);
+            }
+        }
+    }
+
     public static class SortModule
     {
         /* Categories:
@@ -123,32 +153,6 @@ namespace QuickStackStore
             return comp;
         }
 
-        private const string rpc_requestSort = "QuickStackStore_RequestSort";
-
-        [HarmonyPatch(typeof(Container), nameof(Container.Awake)), HarmonyPostfix]
-        public static void ContainerAwakePatch(Container __instance)
-        {
-            if (!__instance.m_nview)
-            {
-                __instance.m_nview = __instance.m_rootObjectOverride ? __instance.m_rootObjectOverride.GetComponent<ZNetView>() : __instance.GetComponent<ZNetView>();
-            }
-
-            if (!__instance.m_nview)
-            {
-                return;
-            }
-
-            __instance.m_nview.Register(rpc_requestSort, (l) => RPC_RequestSort(l, __instance));
-        }
-
-        public static void RPC_RequestSort(long _, Container container)
-        {
-            if (container.m_nview.IsOwner())
-            {
-                SortInternal(container.m_inventory, null);
-            }
-        }
-
         public static void SortContainer(Container container)
         {
             // this should be the case while not using something like MultiUserChest
@@ -158,7 +162,7 @@ namespace QuickStackStore
             }
             else
             {
-                container.m_nview.InvokeRPC(rpc_requestSort);
+                container.m_nview.InvokeRPC(ContainerPatch.rpc_requestSort);
             }
         }
 
@@ -167,7 +171,7 @@ namespace QuickStackStore
             SortInternal(inventory, playerConfig);
         }
 
-        private static void SortInternal(Inventory inventory, UserConfig playerConfig = null)
+        internal static void SortInternal(Inventory inventory, UserConfig playerConfig = null)
         {
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();
