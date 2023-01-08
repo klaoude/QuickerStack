@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static QuickStackStore.QSSConfig;
@@ -49,18 +50,18 @@ namespace QuickStackStore
                 switch (SortConfig.SortHotkeyBehaviorWhenContainerOpen.Value)
                 {
                     case SortBehavior.OnlySortContainer:
-                        Sort(InventoryGui.instance.m_currentContainer.m_inventory);
+                        SortContainer(InventoryGui.instance.m_currentContainer);
                         break;
 
                     case SortBehavior.SortBoth:
-                        Sort(InventoryGui.instance.m_currentContainer.m_inventory);
-                        Sort(player.m_inventory, playerConfig);
+                        SortContainer(InventoryGui.instance.m_currentContainer);
+                        SortPlayerInv(player.m_inventory, playerConfig);
                         break;
                 }
             }
             else
             {
-                Sort(player.m_inventory, playerConfig);
+                SortPlayerInv(player.m_inventory, playerConfig);
             }
         }
 
@@ -122,7 +123,51 @@ namespace QuickStackStore
             return comp;
         }
 
-        public static void Sort(Inventory inventory, UserConfig playerConfig = null)
+        private const string rpc_requestSort = "QuickStackStore_RequestSort";
+
+        [HarmonyPatch(typeof(Container), nameof(Container.Awake)), HarmonyPostfix]
+        public static void ContainerAwakePatch(Container __instance)
+        {
+            if (!__instance.m_nview)
+            {
+                __instance.m_nview = __instance.m_rootObjectOverride ? __instance.m_rootObjectOverride.GetComponent<ZNetView>() : __instance.GetComponent<ZNetView>();
+            }
+
+            if (!__instance.m_nview)
+            {
+                return;
+            }
+
+            __instance.m_nview.Register(rpc_requestSort, (l) => RPC_RequestSort(l, __instance));
+        }
+
+        public static void RPC_RequestSort(long _, Container container)
+        {
+            if (container.m_nview.IsOwner())
+            {
+                SortInternal(container.m_inventory, null);
+            }
+        }
+
+        public static void SortContainer(Container container)
+        {
+            // this should be the case while not using something like MultiUserChest
+            if (container.m_nview.IsOwner())
+            {
+                SortInternal(container.m_inventory, null);
+            }
+            else
+            {
+                container.m_nview.InvokeRPC(rpc_requestSort);
+            }
+        }
+
+        public static void SortPlayerInv(Inventory inventory, UserConfig playerConfig)
+        {
+            SortInternal(inventory, playerConfig);
+        }
+
+        private static void SortInternal(Inventory inventory, UserConfig playerConfig = null)
         {
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();

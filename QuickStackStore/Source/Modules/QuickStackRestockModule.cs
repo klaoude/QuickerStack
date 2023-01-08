@@ -53,30 +53,30 @@ namespace QuickStackStore
                         continue;
                     }
 
-                    if (cItem.m_shared.m_name == pItem.m_shared.m_name && cItem.m_quality == pItem.m_quality)
+                    if (cItem.m_shared.m_name != pItem.m_shared.m_name || cItem.m_quality != pItem.m_quality)
                     {
-                        changedSomething = true;
+                        continue;
+                    }
 
-                        int itemsToMove = Math.Min(pItem.m_shared.m_maxStackSize - pItem.m_stack, cItem.m_stack);
-                        pItem.m_stack += itemsToMove;
+                    int itemsToMove = Math.Min(pItem.m_shared.m_maxStackSize - pItem.m_stack, cItem.m_stack);
 
-                        partialStackCounter.Add(pItem.m_gridPos);
+                    var stackSize = pItem.m_stack;
 
-                        if (cItem.m_stack == itemsToMove)
-                        {
-                            container.m_inventory.Remove(cItem);
-                        }
-                        else
-                        {
-                            cItem.m_stack -= itemsToMove;
-                        }
+                    playerInventory.MoveItemToThis(container, cItem, itemsToMove, pItem.m_gridPos.x, pItem.m_gridPos.y);
 
-                        if (pItem.m_stack == pItem.m_shared.m_maxStackSize)
-                        {
-                            firstItemList.RemoveAt(i);
-                            num++;
-                            break;
-                        }
+                    if (pItem.m_stack <= stackSize)
+                    {
+                        continue;
+                    }
+
+                    changedSomething = true;
+                    partialStackCounter.Add(pItem.m_gridPos);
+
+                    if (pItem.m_stack == pItem.m_shared.m_maxStackSize)
+                    {
+                        firstItemList.RemoveAt(i);
+                        num++;
+                        break;
                     }
                 }
             }

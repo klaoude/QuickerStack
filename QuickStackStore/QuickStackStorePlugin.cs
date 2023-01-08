@@ -5,13 +5,12 @@ using UnityEngine;
 
 namespace QuickStackStore
 {
-    [BepInIncompatibility("com.maxsch.valheim.MultiUserChest")]
     [BepInIncompatibility("virtuacode.valheim.trashitems")]
     [BepInPlugin("goldenrevolver.quick_stack_store", NAME, VERSION)]
     public class QuickStackStorePlugin : BaseUnityPlugin
     {
         public const string NAME = "Quick Stack - Store - Sort - Trash - Restock";
-        public const string VERSION = "1.2.5";
+        public const string VERSION = "1.3.0";
 
         // TODO controller support
         protected void Awake()

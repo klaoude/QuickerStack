@@ -64,7 +64,7 @@ Ties are always broken by internal name, quality and stack size. You can also so
 
 ## 5 - Trashing and Quick Trashing
 
-Trashing is based on the amazing mod [Trash Items](https://www.nexusmods.com/valheim/mods/441) mod by [virtuaCode](https://www.nexusmods.com/valheim/users/111195808) (with permission). It adds a trash can UI element to the inventory screen to quickly trash any non favorited item.
+Trashing is based on the amazing mod [Trash Items](https://valheim.thunderstore.io/package/virtuaCode/TrashItems/) by [virtuaCode](https://valheim.thunderstore.io/package/virtuaCode/) (with permission). It adds a trash can UI element to the inventory screen to quickly trash any non favorited item.
 
 This mod also adds Quick Trashing. By holding the Favoriting Key while you attempt to trash an item, you instead 'trash flag' this kind of item, similar to favoriting. When you click on the trash can without holding an item, an option to Quick Trash will appear allowing to trash all trash flagged items in your inventory.
 
@@ -87,15 +87,16 @@ Aedenthorn's [Extended Player Inventory](https://www.nexusmods.com/valheim/mods/
 - This mod behaves identically to OdinsQOL and OdinsExtendedInventory, because they used Aeden's work as a base. If you use this, be sure to download this mod from Nexus and not from Thunderstore, as those are unofficial irregularly updated versions.
 
 RandyKnapp's [Equipment and Quick Slots](https://valheim.thunderstore.io/package/RandyKnapp/EquipmentAndQuickSlots/):
-- The slots from this mod are not actual inventory slot, so my mod cannot affect them in any way (which is good). Due to that, restocking the quick slots is not possible though. The buttons from my mod will move to not overlap with the equipment slot UI and while using a chest the small Quick Stack and Restock buttons are hidden.
+- The slots from this mod are not actual inventory slot, so my mod cannot affect them in any way (which is good). Due to that, restocking the quick slots is not possible﻿ though. The buttons from my mod will move to not overlap with the equipment slot UI and while using a chest the small Quick Stack and Restock buttons are hidden if you have quickslots enabled (because there is no room for them).
 
 [Better Archery](https://valheim.thunderstore.io/package/ishid4/BetterArchery/):
 - My mod will respect the slots this mod reserves for the quiver feature (all 16 of them, even if it only uses 3), and intentionally allows restocking the arrows. Better Archery also changes how item adding, including 'Take All', works, so please be aware that that is not my doing.
 
+[MultiUserChest](https://valheim.thunderstore.io/package/MSchmoecker/MultiUserChest/):
+- Due to the continued efforts of the author [MSchmoecker](https://valheim.thunderstore.io/package/MSchmoecker/), the newest version of MultiUserChest and my mod are now compatible. Be aware that sorting a container, that someone else was already using at that point, requires that that user also has my mod installed. In general, everyone on the same server should always use the same mods anyway.
+
 
 ## Incompatibility
-
-As stated on their mod page, this mod, like every quick stacking mod, is incompatible with [MultiUserChest](https://valheim.thunderstore.io/package/MSchmoecker/MultiUserChest/) until they add a patch for my mod. This is in the very nature of this mod combination, so neither of our mods are bugged. I have contacted the author, so no need to message them or me about it.
 
 Stacks of items with custom data, like from [Jewelcrafting](https://valheim.thunderstore.io/package/Smoothbrain/Jewelcrafting/), [Blacksmithing](https://valheim.thunderstore.io/package/Smoothbrain/Blacksmithing/) or [Cooking](https://valheim.thunderstore.io/package/Smoothbrain/Cooking/) by [Smoothbrain](https://valheim.thunderstore.io/package/Smoothbrain/), are excluded from getting merged by sorting or getting restocked, but otherwise behave normally.
 

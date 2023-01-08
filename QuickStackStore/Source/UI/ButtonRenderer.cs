@@ -55,12 +55,12 @@ namespace QuickStackStore
 
                     if (conf == AutoSortBehavior.SortPlayerInventoryOnOpen || conf == AutoSortBehavior.Both)
                     {
-                        SortModule.Sort(Player.m_localPlayer.m_inventory, UserConfig.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()));
+                        SortModule.SortPlayerInv(Player.m_localPlayer.m_inventory, UserConfig.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()));
                     }
 
                     if (__instance.m_currentContainer && (conf == AutoSortBehavior.SortContainerOnOpen || conf == AutoSortBehavior.Both))
                     {
-                        SortModule.Sort(__instance.m_currentContainer.m_inventory);
+                        SortModule.SortContainer(__instance.m_currentContainer);
                     }
                 }
 
@@ -160,7 +160,7 @@ namespace QuickStackStore
                         }
 
                         sortInventoryButton.onClick.RemoveAllListeners();
-                        sortInventoryButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(Player.m_localPlayer.m_inventory, UserConfig.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()))));
+                        sortInventoryButton.onClick.AddListener(new UnityAction(() => SortModule.SortPlayerInv(Player.m_localPlayer.m_inventory, UserConfig.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()))));
                     }
                     else
                     {
@@ -333,7 +333,7 @@ namespace QuickStackStore
                         MoveButtonToIndex(ref sortContainerButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
                         sortContainerButton.onClick.RemoveAllListeners();
-                        sortContainerButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(__instance.m_currentContainer.m_inventory)));
+                        sortContainerButton.onClick.AddListener(new UnityAction(() => SortModule.SortContainer(__instance.m_currentContainer)));
                     }
 
                     sortContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
