@@ -14,7 +14,6 @@ namespace QuickStackStore
 
         // TODO controller support
         // TODO json based translation system
-        // TODO switch from KeyCode to KeyboardShortcut (including backwards compatibility)
         // TODO star display enum
         protected void Awake()
         {

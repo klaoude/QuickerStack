@@ -50,8 +50,8 @@ namespace QuickStackStore
             public static ConfigEntry<Color> BorderColorTrashFlaggedItem;
             public static ConfigEntry<Color> BorderColorTrashFlaggedItemOnFavoritedSlot;
             public static ConfigEntry<bool> DisplayTooltipHint;
-            public static ConfigEntry<KeyCode> FavoritingModifierKey1;
-            public static ConfigEntry<KeyCode> FavoritingModifierKey2;
+            public static ConfigEntry<KeyboardShortcut> FavoritingModifierKeybind1;
+            public static ConfigEntry<KeyboardShortcut> FavoritingModifierKeybind2;
             public static ConfigEntry<FavoritingToggling> DisplayFavoriteToggleButton;
         }
 
@@ -66,7 +66,7 @@ namespace QuickStackStore
             public static ConfigEntry<ShowTwoButtons> DisplayQuickStackButtons;
             public static ConfigEntry<QuickStackBehavior> QuickStackHotkeyBehaviorWhenContainerOpen;
             public static ConfigEntry<bool> QuickStackIncludesHotkeyBar;
-            public static ConfigEntry<KeyCode> QuickStackKey;
+            public static ConfigEntry<KeyboardShortcut> QuickStackKeybind;
             public static ConfigEntry<float> QuickStackToNearbyRange;
             public static ConfigEntry<bool> QuickStackTrophiesIntoSameContainer;
             public static ConfigEntry<bool> ShowQuickStackResultMessage;
@@ -78,7 +78,7 @@ namespace QuickStackStore
             public static ConfigEntry<float> RestockFromNearbyRange;
             public static ConfigEntry<RestockBehavior> RestockHotkeyBehaviorWhenContainerOpen;
             public static ConfigEntry<bool> RestockIncludesHotkeyBar;
-            public static ConfigEntry<KeyCode> RestockKey;
+            public static ConfigEntry<KeyboardShortcut> RestockKeybind;
             public static ConfigEntry<bool> RestockOnlyAmmoAndConsumables;
             public static ConfigEntry<bool> RestockOnlyFavoritedItems;
 
@@ -109,7 +109,7 @@ namespace QuickStackStore
             public static ConfigEntry<SortBehavior> SortHotkeyBehaviorWhenContainerOpen;
             public static ConfigEntry<bool> SortInAscendingOrder;
             public static ConfigEntry<bool> SortIncludesHotkeyBar;
-            public static ConfigEntry<KeyCode> SortKey;
+            public static ConfigEntry<KeyboardShortcut> SortKeybind;
             public static ConfigEntry<bool> SortLeavesEmptyFavoritedSlotsEmpty;
             public static ConfigEntry<bool> SortMergesStacks;
         }
@@ -119,11 +119,11 @@ namespace QuickStackStore
             public static ConfigEntry<bool> AlwaysConsiderTrophiesTrashFlagged;
             public static ConfigEntry<bool> DisplayTrashCanUI;
             public static ConfigEntry<bool> EnableQuickTrash;
-            public static ConfigEntry<KeyCode> QuickTrashHotkey;
+            public static ConfigEntry<KeyboardShortcut> QuickTrashKeybind;
             public static ConfigEntry<ShowConfirmDialogOption> ShowConfirmDialogForNormalItem;
             public static ConfigEntry<bool> ShowConfirmDialogForQuickTrash;
-            public static ConfigEntry<KeyCode> TrashHotkey;
             public static ConfigEntry<bool> TrashingCanAffectHotkeyBar;
+            public static ConfigEntry<KeyboardShortcut> TrashKeybind;
             public static ConfigEntry<Color> TrashLabelColor;
         }
 
@@ -203,8 +203,11 @@ namespace QuickStackStore
 
             DisplayTooltipHint = Config.Bind(sectionName, nameof(DisplayTooltipHint), true, "Whether to add additional info the item tooltip of a favorited or trash flagged item.");
 
-            FavoritingModifierKey1 = Config.Bind(sectionName, nameof(FavoritingModifierKey1), KeyCode.LeftAlt, $"{favoritingKey} Identical to {nameof(FavoritingModifierKey2)}.");
-            FavoritingModifierKey2 = Config.Bind(sectionName, nameof(FavoritingModifierKey2), KeyCode.RightAlt, $"{favoritingKey} Identical to {nameof(FavoritingModifierKey1)}.");
+            FavoritingModifierKeybind1 = Config.Bind(sectionName, nameof(FavoritingModifierKeybind1), new KeyboardShortcut(KeyCode.LeftAlt), $"{favoritingKey} Identical to {nameof(FavoritingModifierKeybind2)}.");
+            FavoritingModifierKeybind2 = Config.Bind(sectionName, nameof(FavoritingModifierKeybind2), new KeyboardShortcut(KeyCode.RightAlt), $"{favoritingKey} Identical to {nameof(FavoritingModifierKeybind1)}.");
+
+            KeyCodeBackwardsCompatibility(FavoritingModifierKeybind1, sectionName, "FavoritingModifierKey1");
+            KeyCodeBackwardsCompatibility(FavoritingModifierKeybind2, sectionName, "FavoritingModifierKey2");
 
             sectionName = "2 - Quick Stacking and Restocking";
 
@@ -220,7 +223,9 @@ namespace QuickStackStore
 
             QuickStackHotkeyBehaviorWhenContainerOpen = Config.Bind(sectionName, nameof(QuickStackHotkeyBehaviorWhenContainerOpen), QuickStackBehavior.QuickStackOnlyToCurrentContainer, hotkey);
             QuickStackIncludesHotkeyBar = Config.Bind(sectionName, nameof(QuickStackIncludesHotkeyBar), true, $"Whether to also quick stack items from the hotkey bar ({overrideHotkeyBar}).");
-            QuickStackKey = Config.Bind(sectionName, nameof(QuickStackKey), KeyCode.P, $"The hotkey to start quick stacking to the current or nearby containers (depending on {nameof(QuickStackHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
+
+            QuickStackKeybind = Config.Bind(sectionName, nameof(QuickStackKeybind), new KeyboardShortcut(KeyCode.P), $"The hotkey to start quick stacking to the current or nearby containers (depending on {nameof(QuickStackHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
+            KeyCodeBackwardsCompatibility(QuickStackKeybind, sectionName, "QuickStackKey");
 
             QuickStackToNearbyRange = Config.Bind(sectionName, nameof(QuickStackToNearbyRange), 10f, range);
             QuickStackTrophiesIntoSameContainer = Config.Bind(sectionName, nameof(QuickStackTrophiesIntoSameContainer), false, "Whether to put all types of trophies in the container if any trophy is found in that container.");
@@ -235,7 +240,10 @@ namespace QuickStackStore
             RestockFromNearbyRange = Config.Bind(sectionName, nameof(RestockFromNearbyRange), 10f, range);
             RestockHotkeyBehaviorWhenContainerOpen = Config.Bind(sectionName, nameof(RestockHotkeyBehaviorWhenContainerOpen), RestockBehavior.RestockOnlyFromCurrentContainer, hotkey);
             RestockIncludesHotkeyBar = Config.Bind(sectionName, nameof(RestockIncludesHotkeyBar), true, $"Whether to also try to restock items currently in the hotkey bar ({overrideHotkeyBar}).");
-            RestockKey = Config.Bind(sectionName, nameof(RestockKey), KeyCode.L, $"The hotkey to start restocking from the current or nearby containers (depending on {nameof(RestockHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
+
+            RestockKeybind = Config.Bind(sectionName, nameof(RestockKeybind), new KeyboardShortcut(KeyCode.L), $"The hotkey to start restocking from the current or nearby containers (depending on {nameof(RestockHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
+            KeyCodeBackwardsCompatibility(RestockKeybind, sectionName, "RestockKey");
+
             RestockOnlyAmmoAndConsumables = Config.Bind(sectionName, nameof(RestockOnlyAmmoAndConsumables), true, $"Whether restocking should only restock ammo and consumable or every stackable item (like materials). Also affected by {nameof(RestockOnlyFavoritedItems)}.");
             RestockOnlyFavoritedItems = Config.Bind(sectionName, nameof(RestockOnlyFavoritedItems), false, $"Whether restocking should only restock favorited items or items on favorited slots or every stackable item. Also affected by {nameof(RestockOnlyAmmoAndConsumables)}.");
 
@@ -271,7 +279,10 @@ namespace QuickStackStore
             SortHotkeyBehaviorWhenContainerOpen = Config.Bind(sectionName, nameof(SortHotkeyBehaviorWhenContainerOpen), SortBehavior.OnlySortContainer, hotkey);
             SortInAscendingOrder = Config.Bind(sectionName, nameof(SortInAscendingOrder), true, "Whether the current first sort criteria should be used in ascending or descending order.");
             SortIncludesHotkeyBar = Config.Bind(sectionName, nameof(SortIncludesHotkeyBar), true, $"Whether to also sort non favorited items from the hotkey bar ({overrideHotkeyBar}).");
-            SortKey = Config.Bind(sectionName, nameof(SortKey), KeyCode.O, $"The hotkey to sort the inventory or the current container or both (depending on {nameof(SortHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
+
+            SortKeybind = Config.Bind(sectionName, nameof(SortKeybind), new KeyboardShortcut(KeyCode.O), $"The hotkey to sort the inventory or the current container or both (depending on {nameof(SortHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
+            KeyCodeBackwardsCompatibility(SortKeybind, sectionName, "SortKey");
+
             SortLeavesEmptyFavoritedSlotsEmpty = Config.Bind(sectionName, nameof(SortLeavesEmptyFavoritedSlotsEmpty), true, "Whether sort treats empty favorited slots as occupied and leaves them empty, so you don't accidentally put items on them.");
             SortMergesStacks = Config.Bind(sectionName, nameof(SortMergesStacks), true, "Whether to merge stacks after sorting or keep them as separate non full stacks.");
 
@@ -283,11 +294,17 @@ namespace QuickStackStore
             DisplayTrashCanUI.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin, true);
 
             EnableQuickTrash = Config.Bind(sectionName, nameof(EnableQuickTrash), true, "Whether quick trashing can be called with the hotkey or be clicking on the trash can while not holding anything.");
-            QuickTrashHotkey = Config.Bind(sectionName, nameof(QuickTrashHotkey), KeyCode.None, $"The hotkey to perform a quick trash on the player inventory, deleting all trash flagged items ({overrideHotkey}).");
+
+            QuickTrashKeybind = Config.Bind(sectionName, nameof(QuickTrashKeybind), new KeyboardShortcut(KeyCode.None), $"The hotkey to perform a quick trash on the player inventory, deleting all trash flagged items ({overrideHotkey}).");
+            KeyCodeBackwardsCompatibility(QuickTrashKeybind, sectionName, "QuickTrashHotkey");
+
             ShowConfirmDialogForNormalItem = Config.Bind(sectionName, nameof(ShowConfirmDialogForNormalItem), ShowConfirmDialogOption.WhenNotTrashFlagged, "When to show a confirmation dialog while doing a non quick trash.");
             ShowConfirmDialogForQuickTrash = Config.Bind(sectionName, nameof(ShowConfirmDialogForQuickTrash), true, "Whether to show a confirmation dialog while doing a quick trash.");
-            TrashHotkey = Config.Bind(sectionName, nameof(TrashHotkey), KeyCode.Delete, $"The hotkey to trash the currently held item ({overrideHotkey}).");
+
             TrashingCanAffectHotkeyBar = Config.Bind(sectionName, nameof(TrashingCanAffectHotkeyBar), true, $"Whether trashing and quick trashing can trash items that are currently in the hotkey bar ({overrideHotkeyBar}).");
+
+            TrashKeybind = Config.Bind(sectionName, nameof(TrashKeybind), new KeyboardShortcut(KeyCode.Delete), $"The hotkey to trash the currently held item ({overrideHotkey}).");
+            KeyCodeBackwardsCompatibility(TrashKeybind, sectionName, "TrashHotkey");
 
             TrashLabelColor = Config.Bind(sectionName, nameof(TrashLabelColor), new Color(1f, 0.8482759f, 0), "The color of the text below the trash can in the player inventory.");
 
@@ -416,6 +433,16 @@ namespace QuickStackStore
             }
 
             return false;
+        }
+
+        public static void KeyCodeBackwardsCompatibility(ConfigEntry<KeyboardShortcut> configEntry, string sectionName, string oldEntry)
+        {
+            KeyCode oldKeyValue = KeyCode.None;
+
+            if (TryGetOldConfigValue(new ConfigDefinition(sectionName, oldEntry), ref oldKeyValue))
+            {
+                configEntry.Value = new KeyboardShortcut(oldKeyValue);
+            }
         }
 
         public enum OverrideButtonDisplay

@@ -29,8 +29,8 @@ namespace QuickStackStore
         internal static bool IsInFavoritingMode()
         {
             return HasCurrentlyToggledFavoriting
-                || Input.GetKey(FavoriteConfig.FavoritingModifierKey1.Value)
-                || Input.GetKey(FavoriteConfig.FavoritingModifierKey2.Value);
+                || HotkeyListener.IsKeyHeld(FavoriteConfig.FavoritingModifierKeybind1.Value)
+                || HotkeyListener.IsKeyHeld(FavoriteConfig.FavoritingModifierKeybind2.Value);
         }
     }
 }
