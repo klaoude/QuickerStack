@@ -1,4 +1,4 @@
-﻿using BepInEx;
+﻿using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,49 +28,9 @@ namespace QuickStackStore
         public const string smartContainers = "flueno.SmartContainers";
         public const string backpacks = "org.bepinex.plugins.backpacks";
 
-        public static string[] supportedPlugins = new string[]
-        {
-            aeden,
-            comfy,
-            odinPlus,
-            odinExInv,
-            randy,
-            betterArchery,
-        };
-
-        public static void RegenerateCache()
-        {
-            cache = new Dictionary<string, bool>();
-
-            var plugins = UnityEngine.Object.FindObjectsOfType<BaseUnityPlugin>();
-
-            foreach (var guid in supportedPlugins)
-            {
-                var found = plugins.Any(plugin => plugin.Info.Metadata.GUID == guid);
-
-                if (found)
-                {
-                    Helper.Log($"Found supported plugin {guid}. Enabling compatibility for it.");
-                }
-
-                cache[guid] = found;
-            }
-        }
-
         public static bool HasPlugin(string guid)
         {
-            if (cache == null)
-            {
-                RegenerateCache();
-            }
-
-            if (!cache.ContainsKey(guid))
-            {
-                var plugins = UnityEngine.Object.FindObjectsOfType<BaseUnityPlugin>();
-                cache[guid] = plugins.Any(plugin => plugin.Info.Metadata.GUID == guid);
-            }
-
-            return cache[guid];
+            return Chainloader.PluginInfos.ContainsKey(guid);
         }
 
         public enum RandyStatus
