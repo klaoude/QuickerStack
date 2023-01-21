@@ -127,8 +127,6 @@ namespace QuickStackStore
         {
             Config = plugin.Config;
 
-            SetupTranslations();
-
             string sectionName;
 
             // keep the entries within a section in alphabetical order for the r2modman config manager

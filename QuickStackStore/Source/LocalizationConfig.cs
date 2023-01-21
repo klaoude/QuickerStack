@@ -1,8 +1,35 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using HarmonyLib;
 
 namespace QuickStackStore
 {
+    [HarmonyPatch(typeof(Localization))]
+    internal class LocalizationPatch
+    {
+        [HarmonyPatch(nameof(Localization.SetupLanguage)), HarmonyPostfix]
+        private static void SetupLanguagePatch(Localization __instance, string language)
+        {
+            if (language == "English")
+            {
+                if (__instance.m_translations.ContainsKey("inventory_takeall"))
+                {
+                    __instance.m_translations["inventory_takeall"] = "Take All";
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(FejdStartup))]
+    internal class FejdStartupPatch
+    {
+        [HarmonyPatch(nameof(FejdStartup.Awake)), HarmonyPostfix]
+        private static void FejdStartupAwakePatch()
+        {
+            LocalizationConfig.SetupTranslations();
+        }
+    }
+
     internal class LocalizationConfig
     {
         private const string keyPrefix = "quickstackstore_";
