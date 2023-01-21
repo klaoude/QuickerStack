@@ -369,7 +369,7 @@ namespace QuickStackStore
 
             if (InventoryGui.instance.m_dragGo != null)
             {
-                if (Helper.IsInFavoritingMode())
+                if (FavoritingMode.IsInFavoritingMode())
                 {
                     clickState = ClickState.ClickedTrashFlagging;
                 }
@@ -380,7 +380,7 @@ namespace QuickStackStore
             }
             else
             {
-                if (!usedFromHotkey && TrashConfig.EnableQuickTrash.Value && !Helper.IsInFavoritingMode())
+                if (!usedFromHotkey && TrashConfig.EnableQuickTrash.Value && !FavoritingMode.IsInFavoritingMode())
                 {
                     clickState = ClickState.ClickedQuickTrash;
                 }
@@ -396,7 +396,7 @@ namespace QuickStackStore
                 return;
             }
 
-            if (TrashConfig.EnableQuickTrash.Value && !Helper.IsInFavoritingMode())
+            if (TrashConfig.EnableQuickTrash.Value && !FavoritingMode.IsInFavoritingMode())
             {
                 clickState = ClickState.ClickedQuickTrash;
             }
