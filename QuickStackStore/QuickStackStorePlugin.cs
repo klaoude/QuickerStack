@@ -13,8 +13,18 @@ namespace QuickStackStore
         public const string VERSION = "1.3.0";
 
         // TODO controller support
+        // TODO json based translation system
+        // TODO switch from KeyCode to KeyboardShortcut (including backwards compatibility)
+        // TODO star display enum
         protected void Awake()
         {
+            // TODO add back in after testing
+            //if (CompatibilitySupport.HasOutdatedMUCPlugin())
+            //{
+            //    Helper.LogO("This mod is not compatible with versions of Multi User Chest earlier than 0.4.0, aborting start", QSSConfig.DebugLevel.Warning);
+            //    return;
+            //}
+
             var path = "QuickStackStore.Resources";
 
             BorderRenderer.border = Helper.LoadSprite($"{path}.border.png", new Rect(0, 0, 1024, 1024), new Vector2(512, 512));

@@ -168,9 +168,11 @@ namespace QuickStackStore
                     }
                 }
 
+                var allowAreaButtons = AllowAreaStackingRestocking();
+
                 var displayRestockButtons = RestockConfig.DisplayRestockButtons.Value;
 
-                if (displayRestockButtons != ShowTwoButtons.OnlyContainerButton)
+                if (allowAreaButtons && displayRestockButtons != ShowTwoButtons.OnlyContainerButton)
                 {
                     bool shouldntShow = __instance.m_currentContainer != null && (displayRestockButtons == ShowTwoButtons.BothButDependingOnContext || randyStatus == RandyStatus.EnabledWithQuickSlots);
 
@@ -185,7 +187,7 @@ namespace QuickStackStore
                         }
 
                         restockAreaButton.onClick.RemoveAllListeners();
-                        restockAreaButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoRestock(Player.m_localPlayer)));
+                        restockAreaButton.onClick.AddListener(new UnityAction(() => RestockModule.DoRestock(Player.m_localPlayer)));
                     }
                     else
                     {
@@ -200,7 +202,7 @@ namespace QuickStackStore
 
                 var displayQuickStackButtons = QuickStackConfig.DisplayQuickStackButtons.Value;
 
-                if (displayQuickStackButtons != ShowTwoButtons.OnlyContainerButton)
+                if (allowAreaButtons && displayQuickStackButtons != ShowTwoButtons.OnlyContainerButton)
                 {
                     bool shouldntShow = __instance.m_currentContainer != null && (displayQuickStackButtons == ShowTwoButtons.BothButDependingOnContext || randyStatus == RandyStatus.EnabledWithQuickSlots);
 
@@ -215,7 +217,7 @@ namespace QuickStackStore
                         }
 
                         quickStackAreaButton.onClick.RemoveAllListeners();
-                        quickStackAreaButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoQuickStack(Player.m_localPlayer)));
+                        quickStackAreaButton.onClick.AddListener(new UnityAction(() => QuickStackModule.DoQuickStack(Player.m_localPlayer)));
                     }
                     else
                     {
@@ -291,7 +293,7 @@ namespace QuickStackStore
                         }
 
                         quickStackToContainerButton.onClick.RemoveAllListeners();
-                        quickStackToContainerButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoQuickStack(Player.m_localPlayer, true)));
+                        quickStackToContainerButton.onClick.AddListener(new UnityAction(() => QuickStackModule.DoQuickStack(Player.m_localPlayer, true)));
                     }
 
                     quickStackToContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
@@ -319,7 +321,7 @@ namespace QuickStackStore
                         MoveButtonToIndex(ref restockFromContainerButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
                         restockFromContainerButton.onClick.RemoveAllListeners();
-                        restockFromContainerButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoRestock(Player.m_localPlayer, true)));
+                        restockFromContainerButton.onClick.AddListener(new UnityAction(() => RestockModule.DoRestock(Player.m_localPlayer, true)));
                     }
 
                     restockFromContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);

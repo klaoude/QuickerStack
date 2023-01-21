@@ -93,10 +93,12 @@
     <Compile Include="Source\Controls\FavoritingMode.cs" />
     <Compile Include="Source\Controls\HotkeyListener.cs" />
     <Compile Include="Source\LocalizationConfig.cs" />
+    <Compile Include="Source\Modules\AreaStackRestockHelper.cs" />
     <Compile Include="Source\Modules\CompatibilitySupport.cs" />
     <Compile Include="Source\ContainerFinder.cs" />
     <Compile Include="Source\Helper.cs" />
-    <Compile Include="Source\Modules\QuickStackRestockModule.cs" />
+    <Compile Include="Source\Modules\QuickStackModule.cs" />
+    <Compile Include="Source\Modules\RestockModule.cs" />
     <Compile Include="Source\Modules\StoreTakeAllModule.cs" />
     <Compile Include="Source\Modules\SortModule.cs" />
     <Compile Include="Source\QSSConfig.cs" />

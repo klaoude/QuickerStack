@@ -8,6 +8,7 @@ using static QuickStackStore.LocalizationConfig;
 using static QuickStackStore.QSSConfig.FavoriteConfig;
 using static QuickStackStore.QSSConfig.GeneralConfig;
 using static QuickStackStore.QSSConfig.QuickStackConfig;
+using static QuickStackStore.QSSConfig.QuickStackRestockConfig;
 using static QuickStackStore.QSSConfig.RestockConfig;
 using static QuickStackStore.QSSConfig.SortConfig;
 using static QuickStackStore.QSSConfig.StoreTakeAllConfig;
@@ -38,7 +39,6 @@ namespace QuickStackStore
             internal static ConfigEntry<OverrideButtonDisplay> OverrideButtonDisplay;
             internal static ConfigEntry<OverrideKeybindBehavior> OverrideKeybindBehavior;
             internal static ConfigEntry<OverrideHotkeyBarBehavior> OverrideHotkeyBarBehavior;
-            internal static ConfigEntry<bool> SuppressContainerSoundAndVisuals;
             internal static ConfigEntry<bool> UseTopDownLogicForEverything;
         }
 
@@ -53,6 +53,12 @@ namespace QuickStackStore
             public static ConfigEntry<KeyCode> FavoritingModifierKey1;
             public static ConfigEntry<KeyCode> FavoritingModifierKey2;
             public static ConfigEntry<FavoritingToggling> DisplayFavoriteToggleButton;
+        }
+
+        internal class QuickStackRestockConfig
+        {
+            internal static ConfigEntry<bool> AllowAreaStackingInMultiplayerWithoutMUC;
+            internal static ConfigEntry<bool> SuppressContainerSoundAndVisuals;
         }
 
         internal class QuickStackConfig
@@ -75,6 +81,11 @@ namespace QuickStackStore
             public static ConfigEntry<KeyCode> RestockKey;
             public static ConfigEntry<bool> RestockOnlyAmmoAndConsumables;
             public static ConfigEntry<bool> RestockOnlyFavoritedItems;
+
+            public static ConfigEntry<int> RestockStackSizeLimitAmmo;
+            public static ConfigEntry<int> RestockStackSizeLimitConsumables;
+            public static ConfigEntry<int> RestockStackSizeLimitGeneral;
+
             public static ConfigEntry<bool> ShowRestockResultMessage;
         }
 
@@ -138,6 +149,8 @@ namespace QuickStackStore
             string twoButtons = $"Which of the two buttons to display ({overrideButton}). Selecting {nameof(ShowTwoButtons.BothButDependingOnContext)} will hide the mini button while a container is open. The hotkey works independently.";
             string range = "How close the searched through containers have to be.";
             string favoriteFunction = "disallowing quick stacking, storing, sorting and trashing";
+            string favoritingKey = $"While holding this, left clicking on items or right clicking on slots favorites them, {favoriteFunction}, or trash flags them if you are hovering an item on the trash can.";
+            string restockLimitText = "Allows to set a custom stack size limit for {0} items in case you don't want them to restock to their maximum stack size. Use zero or negative numbers disable this.";
 
             sectionName = "0 - General";
 
@@ -190,11 +203,13 @@ namespace QuickStackStore
 
             DisplayTooltipHint = Config.Bind(sectionName, nameof(DisplayTooltipHint), true, "Whether to add additional info the item tooltip of a favorited or trash flagged item.");
 
-            string favoritingKey = $"While holding this, left clicking on items or right clicking on slots favorites them, {favoriteFunction}, or trash flags them if you are hovering an item on the trash can.";
             FavoritingModifierKey1 = Config.Bind(sectionName, nameof(FavoritingModifierKey1), KeyCode.LeftAlt, $"{favoritingKey} Identical to {nameof(FavoritingModifierKey2)}.");
             FavoritingModifierKey2 = Config.Bind(sectionName, nameof(FavoritingModifierKey2), KeyCode.RightAlt, $"{favoritingKey} Identical to {nameof(FavoritingModifierKey1)}.");
 
             sectionName = "2 - Quick Stacking and Restocking";
+
+            AllowAreaStackingInMultiplayerWithoutMUC = Config.Bind(sectionName, nameof(AllowAreaStackingInMultiplayerWithoutMUC), false, "Whether you can use area quick stacking and area restocking in multiplayer while 'Multi User Chest' is not installed. While this is almost always safe, it can fail because no actual network requests are getting sent. Ship containers are inherently especially vulnerable and are therefore disabled.");
+            AllowAreaStackingInMultiplayerWithoutMUC.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
             SuppressContainerSoundAndVisuals = Config.Bind(sectionName, nameof(SuppressContainerSoundAndVisuals), true, "Whether when a feature checks multiple containers in an area, they actually play opening sounds and visuals. Disable if the suppression causes incompatibilities.");
 
@@ -220,9 +235,14 @@ namespace QuickStackStore
             RestockFromNearbyRange = Config.Bind(sectionName, nameof(RestockFromNearbyRange), 10f, range);
             RestockHotkeyBehaviorWhenContainerOpen = Config.Bind(sectionName, nameof(RestockHotkeyBehaviorWhenContainerOpen), RestockBehavior.RestockOnlyFromCurrentContainer, hotkey);
             RestockIncludesHotkeyBar = Config.Bind(sectionName, nameof(RestockIncludesHotkeyBar), true, $"Whether to also try to restock items currently in the hotkey bar ({overrideHotkeyBar}).");
-            RestockKey = Config.Bind(sectionName, nameof(RestockKey), KeyCode.R, $"The hotkey to start restocking from the current or nearby containers (depending on {nameof(RestockHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
+            RestockKey = Config.Bind(sectionName, nameof(RestockKey), KeyCode.L, $"The hotkey to start restocking from the current or nearby containers (depending on {nameof(RestockHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
             RestockOnlyAmmoAndConsumables = Config.Bind(sectionName, nameof(RestockOnlyAmmoAndConsumables), true, $"Whether restocking should only restock ammo and consumable or every stackable item (like materials). Also affected by {nameof(RestockOnlyFavoritedItems)}.");
             RestockOnlyFavoritedItems = Config.Bind(sectionName, nameof(RestockOnlyFavoritedItems), false, $"Whether restocking should only restock favorited items or items on favorited slots or every stackable item. Also affected by {nameof(RestockOnlyAmmoAndConsumables)}.");
+
+            RestockStackSizeLimitAmmo = Config.Bind(sectionName, nameof(RestockStackSizeLimitAmmo), 0, string.Format(restockLimitText, "ammo"));
+            RestockStackSizeLimitConsumables = Config.Bind(sectionName, nameof(RestockStackSizeLimitConsumables), 0, string.Format(restockLimitText, "consumable"));
+            RestockStackSizeLimitGeneral = Config.Bind(sectionName, nameof(RestockStackSizeLimitGeneral), 0, string.Format(restockLimitText, "all") + $" The stack size limits for ammo or consumables from their respective config setting ({nameof(RestockStackSizeLimitAmmo)} and {nameof(RestockStackSizeLimitConsumables)}) take priority if they are also enabled.");
+
             ShowRestockResultMessage = Config.Bind(sectionName, nameof(ShowRestockResultMessage), true, "Whether to show the central screen report message after restocking.");
 
             sectionName = "3 - Store and Take All";
@@ -268,6 +288,7 @@ namespace QuickStackStore
             ShowConfirmDialogForQuickTrash = Config.Bind(sectionName, nameof(ShowConfirmDialogForQuickTrash), true, "Whether to show a confirmation dialog while doing a quick trash.");
             TrashHotkey = Config.Bind(sectionName, nameof(TrashHotkey), KeyCode.Delete, $"The hotkey to trash the currently held item ({overrideHotkey}).");
             TrashingCanAffectHotkeyBar = Config.Bind(sectionName, nameof(TrashingCanAffectHotkeyBar), true, $"Whether trashing and quick trashing can trash items that are currently in the hotkey bar ({overrideHotkeyBar}).");
+
             TrashLabelColor = Config.Bind(sectionName, nameof(TrashLabelColor), new Color(1f, 0.8482759f, 0), "The color of the text below the trash can in the player inventory.");
 
             sectionName = "8 - Debugging";

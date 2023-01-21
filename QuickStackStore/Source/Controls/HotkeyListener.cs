@@ -33,11 +33,11 @@ namespace QuickStackStore
 
             if (Input.GetKeyDown(QuickStackConfig.QuickStackKey.Value))
             {
-                QuickStackRestockModule.DoQuickStack(__instance);
+                QuickStackModule.DoQuickStack(__instance);
             }
             else if (Input.GetKeyDown(RestockConfig.RestockKey.Value))
             {
-                QuickStackRestockModule.DoRestock(__instance);
+                RestockModule.DoRestock(__instance);
             }
 
             if (!InventoryGui.IsVisible())

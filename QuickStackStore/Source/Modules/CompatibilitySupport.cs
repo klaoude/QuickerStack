@@ -27,6 +27,28 @@ namespace QuickStackStore
         public const string betterArchery = "ishid4.mods.betterarchery";
         public const string smartContainers = "flueno.SmartContainers";
         public const string backpacks = "org.bepinex.plugins.backpacks";
+        public const string multiUserChest = "com.maxsch.valheim.MultiUserChest";
+
+        public static System.Version mucUpdateVersion = new System.Version(0, 4, 0);
+
+        public static bool AllowAreaStackingRestocking()
+        {
+            return AreaStackRestockHelper.IsTrueSingleplayer() || HasPlugin(multiUserChest) || QuickStackRestockConfig.AllowAreaStackingInMultiplayerWithoutMUC.Value;
+        }
+
+        public static bool HasOutdatedMUCPlugin()
+        {
+            if (Chainloader.PluginInfos.ContainsKey(multiUserChest))
+            {
+                var info = Chainloader.PluginInfos[multiUserChest];
+
+                return info.Metadata.Version < mucUpdateVersion;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         public static bool HasPlugin(string guid)
         {
