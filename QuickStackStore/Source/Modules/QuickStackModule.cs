@@ -98,7 +98,7 @@ namespace QuickStackStore
             ReportQuickStackResult(player, movedCount);
         }
 
-        private static int QuickStackIntoThisContainer(List<ItemData> trophies, List<ItemData> nonTrophies, Inventory playerInventory, Inventory container)
+        private static int QuickStackIntoThisContainer(List<ItemData> trophies, List<ItemData> nonTrophies, Inventory playerInventory, Inventory container, bool callPlayerInvChanged = true)
         {
             int movedStackCount = 0;
 
@@ -159,6 +159,11 @@ namespace QuickStackStore
 
             Helper.Log($"Finished quick stack: Removed {movedStackCount} stacks (remember that these merge with non full stacks in the container first). Inventory count: {playerInventory.m_inventory.Count}, container count: {container.m_inventory.Count}", DebugSeverity.Everything);
 
+            if (callPlayerInvChanged)
+            {
+                playerInventory.Changed();
+            }
+
             return movedStackCount;
         }
 
@@ -175,7 +180,7 @@ namespace QuickStackStore
 
                 if (CompatibilitySupport.HasPlugin(CompatibilitySupport.multiUserChest))
                 {
-                    movedStackCount += QuickStackIntoThisContainer(trophies, nonTrophies, player.m_inventory, container.m_inventory);
+                    movedStackCount += QuickStackIntoThisContainer(trophies, nonTrophies, player.m_inventory, container.m_inventory, false);
                 }
                 else
                 {
@@ -183,7 +188,7 @@ namespace QuickStackStore
 
                     AreaStackRestockHelper.SetNonMUCContainerInUse(container, true);
 
-                    movedStackCount += QuickStackIntoThisContainer(trophies, nonTrophies, player.m_inventory, container.m_inventory);
+                    movedStackCount += QuickStackIntoThisContainer(trophies, nonTrophies, player.m_inventory, container.m_inventory, false);
 
                     AreaStackRestockHelper.SetNonMUCContainerInUse(container, false);
                 }

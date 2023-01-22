@@ -133,7 +133,7 @@ namespace QuickStackStore
             ReportRestockResult(player, restockedStackCount, partiallyFilledStacks.Count, totalRestockableCount);
         }
 
-        private static int RestockFromThisContainer(List<RestockData> itemsToRestock, Inventory playerInventory, Inventory container, HashSet<Vector2i> partiallyFilledStacks)
+        private static int RestockFromThisContainer(List<RestockData> itemsToRestock, Inventory playerInventory, Inventory container, HashSet<Vector2i> partiallyFilledStacks, bool callPlayerInvChanged = true)
         {
             if (itemsToRestock?.Count <= 0)
             {
@@ -179,6 +179,11 @@ namespace QuickStackStore
                 }
             }
 
+            if (callPlayerInvChanged)
+            {
+                playerInventory.Changed();
+            }
+
             return restockedStackCount;
         }
 
@@ -195,7 +200,7 @@ namespace QuickStackStore
 
                 if (CompatibilitySupport.HasPlugin(CompatibilitySupport.multiUserChest))
                 {
-                    restockedStackCount += RestockFromThisContainer(itemsToRestock, player.m_inventory, container.m_inventory, partialRestockCounter);
+                    restockedStackCount += RestockFromThisContainer(itemsToRestock, player.m_inventory, container.m_inventory, partialRestockCounter, false);
                 }
                 else
                 {
@@ -203,7 +208,7 @@ namespace QuickStackStore
 
                     AreaStackRestockHelper.SetNonMUCContainerInUse(container, true);
 
-                    restockedStackCount += RestockFromThisContainer(itemsToRestock, player.m_inventory, container.m_inventory, partialRestockCounter);
+                    restockedStackCount += RestockFromThisContainer(itemsToRestock, player.m_inventory, container.m_inventory, partialRestockCounter, false);
 
                     AreaStackRestockHelper.SetNonMUCContainerInUse(container, false);
                 }
