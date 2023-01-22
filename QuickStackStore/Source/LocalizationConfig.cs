@@ -1,6 +1,12 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using YamlDotNet.Serialization;
 
 namespace QuickStackStore
 {
@@ -76,9 +82,21 @@ namespace QuickStackStore
             return !(config?.Value).IsNullOrWhiteSpace() ? config.Value : Localization.instance.Translate($"quickstackstore_{configName.ToLower()}");
         }
 
+        // don't put English in here, it gets checked separately
+        public static string[] supportedEmbeddedLanguages = new[] { "Chinese" };
+
+        private const string embeddedLanguagePathFormat = "QuickStackStore.Translations.QuickStackStore.{0}.json";
+
+        private const string loadingLog = "Loading {0} translation file for language: {1}";
+        private const string failedLoadLog = "Loading {0} translation file for language: {1}";
+        private const string external = "external";
+        private const string embedded = "embedded";
+
         internal static void SetupTranslations()
         {
-            if (Localization.instance.GetSelectedLanguage() == "English")
+            var currentLanguage = Localization.instance.GetSelectedLanguage();
+
+            if (currentLanguage == "English")
             {
                 if (Localization.instance.m_translations.ContainsKey("inventory_takeall"))
                 {
@@ -86,89 +104,120 @@ namespace QuickStackStore
                 }
             }
 
-            Chinese(nameof(TrashLabel).ToLower(), "废纸篓");
-            Chinese(nameof(QuickStackLabel).ToLower(), "快速堆叠(Q)");
-            Chinese(nameof(StoreAllLabel).ToLower(), "全部存进");
-            Chinese(nameof(RestockLabel).ToLower(), "补货(R)");
-            Chinese(nameof(SortLabel).ToLower(), "整理(S)");
+            var languageFilesFound = Directory.GetFiles(Path.GetDirectoryName(Paths.PluginPath), "QuickStackStore.*.json", SearchOption.AllDirectories);
 
-            Chinese(nameof(SortByInternalNameLabel).ToLower(), "内部名称");
-            Chinese(nameof(SortByTranslatedNameLabel).ToLower(), "翻译名称");
-            Chinese(nameof(SortByValueLabel).ToLower(), "价值");
-            Chinese(nameof(SortByWeightLabel).ToLower(), "重量");
-            Chinese(nameof(SortByTypeLabel).ToLower(), "类型");
+            bool externalFileLoaded = false;
 
-            Chinese(nameof(QuickStackResultMessageNothing).ToLower(), "无需快速堆叠");
-            Chinese(nameof(QuickStackResultMessageNone).ToLower(), "存入 0 个物品");
-            Chinese(nameof(QuickStackResultMessageOne).ToLower(), "存入 1 个物品");
-            Chinese(nameof(QuickStackResultMessageMore).ToLower(), "存入 {0} 个物品");
+            foreach (var languageFilePath in languageFilesFound)
+            {
+                var languageKey = Path.GetFileNameWithoutExtension(languageFilePath).Split('.')[1];
 
-            Chinese(nameof(RestockResultMessageNothing).ToLower(), "无需补货");
-            Chinese(nameof(RestockResultMessageNone).ToLower(), "无法补货 (0/{0})");
-            Chinese(nameof(RestockResultMessagePartial).ToLower(), "已部分补货 ({0}/{1})");
-            Chinese(nameof(RestockResultMessageFull).ToLower(), "已补货 (共: {0})");
+                if (languageKey == currentLanguage)
+                {
+                    Helper.Log(string.Format(loadingLog, external, currentLanguage), QSSConfig.DebugSeverity.Everything);
 
-            Chinese(nameof(TrashConfirmationOkayButton).ToLower(), "废纸篓");
-            Chinese(nameof(QuickTrashConfirmation).ToLower(), "快速丢弃?");
-            Chinese(nameof(CantTrashFavoritedItemWarning).ToLower(), "不能丢弃收藏的物品!");
-            Chinese(nameof(CantTrashHotkeyBarItemWarning).ToLower(), "无法将收藏物品标记为垃圾!");
-            Chinese(nameof(CantTrashFlagFavoritedItemWarning).ToLower(), "设为不允许丢弃在快速热键栏中的项目!");
-            Chinese(nameof(CantFavoriteTrashFlaggedItemWarning).ToLower(), "无法收藏被标记为垃圾的项目!");
+                    if (!LoadExternalLanguageFile(currentLanguage, languageFilePath))
+                    {
+                        Helper.LogO(string.Format(failedLoadLog, external, currentLanguage), QSSConfig.DebugLevel.Warning);
+                    }
+                    else
+                    {
+                        externalFileLoaded = true;
+                    }
 
-            Chinese(nameof(FavoritedItemTooltip).ToLower(), "不会被快速堆叠、分类、存放或丢弃");
-            Chinese(nameof(TrashFlaggedItemTooltip).ToLower(), "可以快速丢弃");
+                    break;
+                }
+            }
 
-            English(nameof(QuickStackLabelCharacter).ToLower(), "Q");
-            English(nameof(SortLabelCharacter).ToLower(), "S");
-            English(nameof(RestockLabelCharacter).ToLower(), "R");
+            if (!externalFileLoaded && supportedEmbeddedLanguages.Contains(currentLanguage))
+            {
+                Helper.Log(string.Format(loadingLog, embedded, currentLanguage), QSSConfig.DebugSeverity.Everything);
 
-            English(nameof(TrashLabel).ToLower(), "Trash");
-            English(nameof(QuickStackLabel).ToLower(), "Quick Stack");
-            English(nameof(StoreAllLabel).ToLower(), "Store All");
-            English(nameof(RestockLabel).ToLower(), "Restock");
-            English(nameof(SortLabel).ToLower(), "Sort");
+                if (!LoadEmbeddedLanguageFile(currentLanguage))
+                {
+                    Helper.LogO(string.Format(failedLoadLog, embedded, currentLanguage), QSSConfig.DebugLevel.Warning);
+                }
+            }
 
-            English(nameof(SortByInternalNameLabel).ToLower(), "i. name");
-            English(nameof(SortByTranslatedNameLabel).ToLower(), "t. name");
-            English(nameof(SortByValueLabel).ToLower(), "value");
-            English(nameof(SortByWeightLabel).ToLower(), "weight");
-            English(nameof(SortByTypeLabel).ToLower(), "type");
+            Helper.Log(string.Format(loadingLog, embedded, "English"), QSSConfig.DebugSeverity.Everything);
 
-            English(nameof(QuickStackResultMessageNothing).ToLower(), "Nothing to quick stack");
-            English(nameof(QuickStackResultMessageNone).ToLower(), "Stacked 0 items");
-            English(nameof(QuickStackResultMessageOne).ToLower(), "Stacked 1 item");
-            English(nameof(QuickStackResultMessageMore).ToLower(), "Stacked {0} items");
-
-            English(nameof(RestockResultMessageNothing).ToLower(), "Nothing to restock");
-            English(nameof(RestockResultMessageNone).ToLower(), "Couldn't restock (0/{0})");
-            English(nameof(RestockResultMessagePartial).ToLower(), "Partially restocked ({0}/{1})");
-            English(nameof(RestockResultMessageFull).ToLower(), "Fully restocked (total: {0})");
-
-            English(nameof(TrashConfirmationOkayButton).ToLower(), "Trash");
-            English(nameof(QuickTrashConfirmation).ToLower(), "Quick trash?");
-            English(nameof(CantTrashFavoritedItemWarning).ToLower(), "Can't trash favorited item!");
-            English(nameof(CantTrashHotkeyBarItemWarning).ToLower(), "Settings disallow trashing of item in hotkey bar!");
-            English(nameof(CantTrashFlagFavoritedItemWarning).ToLower(), "Can't trash flag a favorited item!");
-            English(nameof(CantFavoriteTrashFlaggedItemWarning).ToLower(), "Can't favorite a trash flagged item!");
-
-            English(nameof(FavoritedItemTooltip).ToLower(), "Will not be quick stacked, sorted,\nstore all'd or trashed");
-            English(nameof(TrashFlaggedItemTooltip).ToLower(), "Can be quick trashed");
+            // always load embedded english at the end to fill potential missing translations
+            if (!LoadEmbeddedLanguageFile("English"))
+            {
+                Helper.LogO(string.Format(failedLoadLog, embedded, "English"), QSSConfig.DebugLevel.Warning);
+            }
         }
 
-        internal static void AddForLang(string lang, string key, string value)
+        internal static bool LoadExternalLanguageFile(string language, string path)
         {
-            if (Localization.instance.GetSelectedLanguage() == lang)
+            string translationAsString = File.ReadAllText(path);
+
+            if (translationAsString == null)
             {
-                Localization.instance.AddWord(key, value);
+                return false;
             }
-            else if (lang == "English" && !Localization.instance.m_translations.ContainsKey(key))
+
+            return ParseStringToLanguage(language, translationAsString);
+        }
+
+        internal static bool LoadEmbeddedLanguageFile(string language)
+        {
+            string translationAsString = ReadEmbeddedTextFile(string.Format(embeddedLanguagePathFormat, language));
+
+            if (translationAsString == null)
             {
-                Localization.instance.AddWord(key, value);
+                return false;
+            }
+
+            return ParseStringToLanguage(language, translationAsString);
+        }
+
+        internal static bool ParseStringToLanguage(string language, string translationAsString)
+        {
+            Dictionary<string, string> parsedTranslationDict = new DeserializerBuilder().IgnoreFields().Build().Deserialize<Dictionary<string, string>>(translationAsString);
+
+            if (parsedTranslationDict == null || parsedTranslationDict.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (var pair in parsedTranslationDict)
+            {
+                AddForLanguage(language, pair.Key, pair.Value);
+            }
+
+            return true;
+        }
+
+        internal static void AddForLanguage(string language, string key, string value)
+        {
+            bool isCurrentLanguage = Localization.instance.GetSelectedLanguage() == language;
+            bool isDefaultLanguageAndNotYetSet = language == "English" && !Localization.instance.m_translations.ContainsKey(key);
+
+            if (isCurrentLanguage || isDefaultLanguageAndNotYetSet)
+            {
+                Localization.instance.AddWord(keyPrefix + key.ToLower(), value);
             }
         }
 
-        internal static void English(string key, string value) => AddForLang("English", keyPrefix + key, value);
+        public static string ReadEmbeddedTextFile(string path)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            Stream stream = assembly.GetManifestResourceStream(path);
 
-        internal static void Chinese(string key, string value) => AddForLang("Chinese", keyPrefix + key, value);
+            if (stream == null)
+            {
+                return null;
+            }
+
+            using (MemoryStream memStream = new MemoryStream())
+            {
+                stream.CopyTo(memStream);
+
+                var bytes = memStream.Length > 0 ? memStream.ToArray() : null;
+
+                return bytes != null ? Encoding.UTF8.GetString(bytes) : null;
+            }
+        }
     }
 }

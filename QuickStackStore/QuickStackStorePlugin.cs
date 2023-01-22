@@ -13,7 +13,6 @@ namespace QuickStackStore
         public const string VERSION = "1.3.0";
 
         // TODO controller support
-        // TODO json based translation system
         // TODO star display enum
         protected void Awake()
         {

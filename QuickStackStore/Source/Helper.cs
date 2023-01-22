@@ -59,17 +59,17 @@ namespace QuickStackStore
         // https://github.com/virtuaCode/valheim-mods/tree/main/TrashItems
         public static Sprite LoadSprite(string path, Rect size, Vector2 pivot, int units = 100)
         {
-            Assembly asm = Assembly.GetExecutingAssembly();
-            Stream img = asm.GetManifestResourceStream(path);
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            Stream imageStream = assembly.GetManifestResourceStream(path);
 
-            Texture2D tex = new Texture2D((int)size.width, (int)size.height, TextureFormat.RGBA32, false, true);
+            Texture2D texture = new Texture2D((int)size.width, (int)size.height, TextureFormat.RGBA32, false, true);
 
             using (MemoryStream mStream = new MemoryStream())
             {
-                img.CopyTo(mStream);
-                tex.LoadImage(mStream.ToArray());
-                tex.Apply();
-                return Sprite.Create(tex, size, pivot, units);
+                imageStream.CopyTo(mStream);
+                texture.LoadImage(mStream.ToArray());
+                texture.Apply();
+                return Sprite.Create(texture, size, pivot, units);
             }
         }
     }
