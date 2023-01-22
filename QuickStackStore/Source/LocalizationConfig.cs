@@ -191,12 +191,14 @@ namespace QuickStackStore
 
         internal static void AddForLanguage(string language, string key, string value)
         {
+            string actualKey = keyPrefix + key.ToLower();
+
             bool isCurrentLanguage = Localization.instance.GetSelectedLanguage() == language;
-            bool isDefaultLanguageAndNotYetSet = language == "English" && !Localization.instance.m_translations.ContainsKey(key);
+            bool isDefaultLanguageAndNotYetSet = language == "English" && !Localization.instance.m_translations.ContainsKey(actualKey);
 
             if (isCurrentLanguage || isDefaultLanguageAndNotYetSet)
             {
-                Localization.instance.AddWord(keyPrefix + key.ToLower(), value);
+                Localization.instance.AddWord(actualKey, value);
             }
         }
 
