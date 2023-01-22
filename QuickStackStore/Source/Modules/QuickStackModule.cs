@@ -171,9 +171,11 @@ namespace QuickStackStore
         {
             int movedStackCount = 0;
 
+            bool isSinglePlayer = AreaStackRestockHelper.IsTrueSingleplayer();
+
             foreach (Container container in containers)
             {
-                if (!AreaStackRestockHelper.ShouldAffectNonOwnerContainer(container, player.GetPlayerID()))
+                if (!AreaStackRestockHelper.ShouldAffectNonOwnerContainer(container, player.GetPlayerID(), isSinglePlayer))
                 {
                     continue;
                 }

@@ -49,10 +49,11 @@ namespace QuickStackStore
             public static ConfigEntry<Color> BorderColorFavoritedSlot;
             public static ConfigEntry<Color> BorderColorTrashFlaggedItem;
             public static ConfigEntry<Color> BorderColorTrashFlaggedItemOnFavoritedSlot;
+            public static ConfigEntry<FavoritingToggling> DisplayFavoriteToggleButton;
             public static ConfigEntry<bool> DisplayTooltipHint;
             public static ConfigEntry<KeyboardShortcut> FavoritingModifierKeybind1;
             public static ConfigEntry<KeyboardShortcut> FavoritingModifierKeybind2;
-            public static ConfigEntry<FavoritingToggling> DisplayFavoriteToggleButton;
+            public static ConfigEntry<FavoriteToggleButtonStyle> FavoriteToggleButtonStyle;
         }
 
         internal class QuickStackRestockConfig
@@ -183,6 +184,8 @@ namespace QuickStackStore
 
             // valheim yellow/ orange-ish
             BorderColorFavoritedItem = Config.Bind(sectionName, nameof(BorderColorFavoritedItem), new Color(1f, 0.8482759f, 0f), "Color of the border for slots containing favorited items.");
+            BorderColorFavoritedItem.SettingChanged += (a, b) => FavoritingMode.HasCurrentlyToggledFavoriting |= false;
+
             // dark-ish green
             BorderColorFavoritedItemOnFavoritedSlot = Config.Bind(sectionName, nameof(BorderColorFavoritedItemOnFavoritedSlot), new Color(0.5f, 0.67413795f, 0.5f), "Color of the border of a favorited slot that also contains a favorited item.");
 
@@ -193,7 +196,7 @@ namespace QuickStackStore
             // black
             BorderColorTrashFlaggedItemOnFavoritedSlot = Config.Bind(sectionName, nameof(BorderColorTrashFlaggedItemOnFavoritedSlot), Color.black, "Color of the border of a favorited slot that also contains a trash flagged item.");
 
-            DisplayFavoriteToggleButton = Config.Bind(sectionName, nameof(DisplayFavoriteToggleButton), FavoritingToggling.Disabled, $"Whether to display a button to toggle favoriting mode on or off, allowing to favorite without holding any hotkey ({overrideButton}). This can also be used to trash flag. The hotkeys work independently.");
+            DisplayFavoriteToggleButton = Config.Bind(sectionName, nameof(DisplayFavoriteToggleButton), FavoritingToggling.EnabledTopButton, $"Whether to display a button to toggle favoriting mode on or off, allowing to favorite without holding any hotkey ({overrideButton}). This can also be used to trash flag. The hotkeys work independently.");
             DisplayFavoriteToggleButton.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
             if (TryGetOldConfigValue(new ConfigDefinition(sectionName, "FavoritingModifierToggles"), ref oldValue))
@@ -208,6 +211,9 @@ namespace QuickStackStore
 
             KeyCodeBackwardsCompatibility(FavoritingModifierKeybind1, sectionName, "FavoritingModifierKey1");
             KeyCodeBackwardsCompatibility(FavoritingModifierKeybind2, sectionName, "FavoritingModifierKey2");
+
+            FavoriteConfig.FavoriteToggleButtonStyle = Config.Bind(sectionName, nameof(FavoriteConfig.FavoriteToggleButtonStyle), FavoriteToggleButtonStyle.DefaultTextStar, $"The style of the favorite toggling button enabled with {nameof(DisplayFavoriteToggleButton)}.");
+            FavoriteConfig.FavoriteToggleButtonStyle.SettingChanged += (a, b) => FavoritingMode.HasCurrentlyToggledFavoriting |= false;
 
             sectionName = "2 - Quick Stacking and Restocking";
 
@@ -538,6 +544,12 @@ namespace QuickStackStore
             Disabled = 0,
             EnabledTopButton = 1,
             EnabledBottomButton = 2
+        }
+
+        internal enum FavoriteToggleButtonStyle
+        {
+            DefaultTextStar = 0,
+            TextStarInItemFavoriteColor = 1,
         }
     }
 }

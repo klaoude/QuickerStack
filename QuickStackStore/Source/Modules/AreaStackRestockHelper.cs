@@ -55,7 +55,7 @@ namespace QuickStackStore
 
         // ownership is useless since every container always has an owner (its last user)
         // based on Container.Interact
-        internal static bool ShouldAffectNonOwnerContainer(Container container, long playerID)
+        internal static bool ShouldAffectNonOwnerContainer(Container container, long playerID, bool isSinglePlayer)
         {
             bool basicCheck = !IsExcludedContainer(container) && CheckContainerPrivacy(container, playerID) && CheckWard(container);
 
@@ -64,7 +64,7 @@ namespace QuickStackStore
                 return basicCheck;
             }
 
-            if (!IsTrueSingleplayer() && IsNonMUCExcludedContainer(container))
+            if (!isSinglePlayer && IsNonMUCExcludedContainer(container))
             {
                 return false;
             }

@@ -17,11 +17,20 @@ namespace QuickStackStore
             {
                 hasCurrentlyToggledFavoriting = value;
 
-                if (ButtonRenderer.favoritingTogglingButtonText != null)
+                if (!ButtonRenderer.favoritingTogglingButtonText)
+                {
+                    return;
+                }
+
+                if (FavoriteConfig.FavoriteToggleButtonStyle.Value == FavoriteToggleButtonStyle.TextStarInItemFavoriteColor)
                 {
                     var color = ColorUtility.ToHtmlStringRGB(FavoriteConfig.BorderColorFavoritedItem.Value);
 
                     ButtonRenderer.favoritingTogglingButtonText.text = $"<color=#{color}>{(value ? blackStar : whiteStar)}</color>";
+                }
+                else
+                {
+                    ButtonRenderer.favoritingTogglingButtonText.text = value ? blackStar : whiteStar;
                 }
             }
         }
