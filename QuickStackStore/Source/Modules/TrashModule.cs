@@ -237,6 +237,9 @@ namespace QuickStackStore
                 tText.GetComponent<Text>().text = LocalizationConfig.GetRelevantTranslation(LocalizationConfig.TrashLabel, nameof(LocalizationConfig.TrashLabel));
                 tText.GetComponent<Text>().color = TrashConfig.TrashLabelColor.Value;
 
+                // this fixes that the left most letter wants to go below the inventory wood panel if the label text is too long
+                tText.GetComponent<RectTransform>().sizeDelta -= new Vector2(9, 0);
+
                 // Replace armor with trash icon
                 tArmor.GetComponent<Image>().sprite = trashSprite;
 

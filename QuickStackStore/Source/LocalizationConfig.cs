@@ -16,13 +16,7 @@ namespace QuickStackStore
         [HarmonyPatch(nameof(Localization.SetupLanguage)), HarmonyPostfix]
         private static void SetupLanguagePatch(Localization __instance, string language)
         {
-            if (language == "English")
-            {
-                if (__instance.m_translations.ContainsKey("inventory_takeall"))
-                {
-                    __instance.m_translations["inventory_takeall"] = "Take All";
-                }
-            }
+            LocalizationConfig.FixTakeAllDefaultText(__instance, language);
         }
     }
 
@@ -77,13 +71,8 @@ namespace QuickStackStore
         public static ConfigEntry<string> FavoritedItemTooltip;
         public static ConfigEntry<string> TrashFlaggedItemTooltip;
 
-        internal static string GetRelevantTranslation(ConfigEntry<string> config, string configName)
-        {
-            return !(config?.Value).IsNullOrWhiteSpace() ? config.Value : Localization.instance.Translate($"quickstackstore_{configName.ToLower()}");
-        }
-
         // don't put English in here, it gets checked separately
-        public static string[] supportedEmbeddedLanguages = new[] { "Chinese" };
+        public static string[] supportedEmbeddedLanguages = new[] { "Chinese", "Russian" };
 
         private const string embeddedLanguagePathFormat = "QuickStackStore.Translations.QuickStackStore.{0}.json";
 
@@ -92,17 +81,33 @@ namespace QuickStackStore
         private const string external = "external";
         private const string embedded = "embedded";
 
+        public const string takeAllKey = "inventory_takeall";
+
+        internal static string GetRelevantTranslation(ConfigEntry<string> config, string configName)
+        {
+            return !(config?.Value).IsNullOrWhiteSpace() ? config.Value : Localization.instance.Translate($"quickstackstore_{configName.ToLower()}");
+        }
+
+        internal static void FixTakeAllDefaultText(Localization localization, string language)
+        {
+            if (localization.m_translations.ContainsKey(takeAllKey))
+            {
+                if (language == "English")
+                {
+                    localization.m_translations[takeAllKey] = "Take All";
+                }
+                else if (language == "Russian")
+                {
+                    localization.m_translations[takeAllKey] = "взять всё";
+                }
+            }
+        }
+
         internal static void SetupTranslations()
         {
             var currentLanguage = Localization.instance.GetSelectedLanguage();
 
-            if (currentLanguage == "English")
-            {
-                if (Localization.instance.m_translations.ContainsKey("inventory_takeall"))
-                {
-                    Localization.instance.m_translations["inventory_takeall"] = "Take All";
-                }
-            }
+            FixTakeAllDefaultText(Localization.instance, currentLanguage);
 
             var languageFilesFound = Directory.GetFiles(Path.GetDirectoryName(Paths.PluginPath), "QuickStackStore.*.json", SearchOption.AllDirectories);
 

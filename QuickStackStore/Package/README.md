@@ -105,9 +105,14 @@ This mod is incompatible with [Trash Items](https://valheim.thunderstore.io/pack
 
 ## Localization
 
-This mod includes a translation system for all ingame display texts (not the config menu). Currently English and Chinese are supported. For minor edits, you can override any display text in the config. If you are translating all display texts to your native language, please reach out to me, so I can add it to the mod as an automatic translation.
+This mod includes a translation system for all ingame display texts (not the config menu). Currently English, Chinese and Russian are supported.
+
+For minor edits, you can override any display text in the config. If you want to translate everything to your native language, you can take the `QuickStackStore.English.json` as a template and name your file `QuickStackStore.<language>.json`, where `<language>` needs to be the [folder name of the base game for your language](https://valheim-modding.github.io/Jotunn/data/localization/language-list.html). When you are done or need help, please reach out to me, so I can add it to the mod for everyone.
+
+Thank you to everyone who provided a translation:
 
 The Chinese translation was provided by [Tiomer](https://www.nexusmods.com/users/114839878).
+The Russian translation was provided by [Opik7](https://www.nexusmods.com/users/82796113).
 
 
 Source code available on github: https://github.com/Goldenrevolver/QuickStackStore

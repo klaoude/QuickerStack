@@ -70,9 +70,6 @@ namespace QuickStackStore
                 {
                     origButtonLength = takeAllButtonRect.sizeDelta.x;
                     origButtonPosition = takeAllButtonRect.localPosition;
-
-                    takeAllButtonRect.GetComponent<Button>().onClick.RemoveAllListeners();
-                    takeAllButtonRect.GetComponent<Button>().onClick.AddListener(new UnityAction(() => StoreTakeAllModule.ContextSensitiveTakeAll(__instance)));
                 }
 
                 // intentionally not checking "ShouldBlockChangesToTakeAllButton", because then everything would look stupid
@@ -530,7 +527,7 @@ namespace QuickStackStore
 
                     if (text != null)
                     {
-                        text.text = !LocalizationConfig.TakeAllLabel.Value.IsNullOrWhiteSpace() ? LocalizationConfig.TakeAllLabel.Value : Localization.instance.Translate("inventory_takeall");
+                        text.text = !LocalizationConfig.TakeAllLabel.Value.IsNullOrWhiteSpace() ? LocalizationConfig.TakeAllLabel.Value : Localization.instance.Translate(LocalizationConfig.takeAllKey);
                     }
                 }
             }

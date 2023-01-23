@@ -212,12 +212,12 @@ namespace QuickStackStore
             KeyCodeBackwardsCompatibility(FavoritingModifierKeybind1, sectionName, "FavoritingModifierKey1");
             KeyCodeBackwardsCompatibility(FavoritingModifierKeybind2, sectionName, "FavoritingModifierKey2");
 
-            FavoriteConfig.FavoriteToggleButtonStyle = Config.Bind(sectionName, nameof(FavoriteConfig.FavoriteToggleButtonStyle), FavoriteToggleButtonStyle.DefaultTextStar, $"The style of the favorite toggling button enabled with {nameof(DisplayFavoriteToggleButton)}.");
+            FavoriteConfig.FavoriteToggleButtonStyle = Config.Bind(sectionName, nameof(FavoriteConfig.FavoriteToggleButtonStyle), FavoriteToggleButtonStyle.TextStarInItemFavoriteColor, $"The style of the favorite toggling button enabled with {nameof(DisplayFavoriteToggleButton)}.");
             FavoriteConfig.FavoriteToggleButtonStyle.SettingChanged += (a, b) => FavoritingMode.HasCurrentlyToggledFavoriting |= false;
 
             sectionName = "2 - Quick Stacking and Restocking";
 
-            AllowAreaStackingInMultiplayerWithoutMUC = Config.Bind(sectionName, nameof(AllowAreaStackingInMultiplayerWithoutMUC), false, "Whether you can use area quick stacking and area restocking in multiplayer while 'Multi User Chest' is not installed. While this is almost always safe, it can fail because no actual network requests are getting sent. Ship containers are inherently especially vulnerable and are therefore disabled.");
+            AllowAreaStackingInMultiplayerWithoutMUC = Config.Bind(sectionName, nameof(AllowAreaStackingInMultiplayerWithoutMUC), false, "Whether you can use area quick stacking and area restocking in multiplayer while 'Multi User Chest' is not installed. While this is almost always safe, it can fail because no actual network requests are getting sent. Ship containers are inherently especially vulnerable and are therefore excluded.");
             AllowAreaStackingInMultiplayerWithoutMUC.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
             SuppressContainerSoundAndVisuals = Config.Bind(sectionName, nameof(SuppressContainerSoundAndVisuals), true, "Whether when a feature checks multiple containers in an area, they actually play opening sounds and visuals. Disable if the suppression causes incompatibilities.");

@@ -10,7 +10,7 @@ namespace QuickStackStore
     public class QuickStackStorePlugin : BaseUnityPlugin
     {
         public const string NAME = "Quick Stack - Store - Sort - Trash - Restock";
-        public const string VERSION = "1.3.0";
+        public const string VERSION = "1.3.1";
 
         // TODO controller support
         protected void Awake()

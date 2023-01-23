@@ -28,6 +28,7 @@ namespace QuickStackStore
         public const string smartContainers = "flueno.SmartContainers";
         public const string backpacks = "org.bepinex.plugins.backpacks";
         public const string multiUserChest = "com.maxsch.valheim.MultiUserChest";
+        public const string jewelCrafting = "org.bepinex.plugins.jewelcrafting";
 
         public static System.Version mucUpdateVersion = new System.Version(0, 4, 0);
 
@@ -93,7 +94,7 @@ namespace QuickStackStore
 
         public static bool ShouldBlockChangesToTakeAllButton()
         {
-            return StoreTakeAllConfig.NeverMoveTakeAllButton.Value || HasPlugin(smartContainers) || HasPlugin(backpacks);
+            return StoreTakeAllConfig.NeverMoveTakeAllButton.Value || HasPlugin(smartContainers) || HasPlugin(backpacks) || HasPlugin(jewelCrafting);
         }
 
         public static bool HasPluginThatRequiresMiniButtonVMove()
