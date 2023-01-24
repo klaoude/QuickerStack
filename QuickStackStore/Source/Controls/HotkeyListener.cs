@@ -6,14 +6,31 @@ using static QuickStackStore.QSSConfig;
 
 namespace QuickStackStore
 {
-    [HarmonyPatch(typeof(Player), nameof(Player.Update))]
+    [HarmonyPatch]
     public static class HotkeyListener
     {
-        // taken from https://github.com/aedenthorn/ValheimMods AedenthornUtils.IgnoreKeyPresses, public domain
         public static bool IgnoreKeyPresses()
         {
-            // removed InventoryGui.IsVisible() because we specifically want that to be the case
-            return ZNetScene.instance == null || Player.m_localPlayer == null || Minimap.IsOpen() || Console.IsVisible() || TextInput.IsVisible() || ZNet.instance.InPasswordDialog() || Chat.instance == null || Chat.instance.HasFocus() || StoreGui.IsVisible() || Menu.IsVisible() || TextViewer.instance == null || TextViewer.instance.IsVisible();
+            // removed InventoryGui.IsVisible() because we specifically want to allow that
+            return IgnoreKeyPressesDueToPlayer(Player.m_localPlayer)
+                || !ZNetScene.instance
+                || Minimap.IsOpen()
+                || Menu.IsVisible()
+                || Console.IsVisible()
+                || StoreGui.IsVisible()
+                || TextInput.IsVisible()
+                || (Chat.instance && Chat.instance.HasFocus())
+                || (ZNet.instance && ZNet.instance.InPasswordDialog())
+                || (TextViewer.instance && TextViewer.instance.IsVisible());
+        }
+
+        private static bool IgnoreKeyPressesDueToPlayer(Player player)
+        {
+            return !player
+                || player.InCutscene()
+                || player.IsTeleporting()
+                || player.IsDead()
+                || player.InPlaceMode();
         }
 
         // thank you to 'Margmas' for giving me this snippet from VNEI https://github.com/MSchmoecker/VNEI/blob/master/VNEI/Logic/BepInExExtensions.cs#L21
@@ -28,48 +45,52 @@ namespace QuickStackStore
             return shortcut.MainKey != KeyCode.None && Input.GetKey(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
         }
 
-        public static void Postfix(Player __instance)
+        [HarmonyPatch(typeof(Player), nameof(Player.Update))]
+        public static class Player_Update_Patch
         {
-            if (GeneralConfig.OverrideKeybindBehavior.Value == OverrideKeybindBehavior.DisableAllNewHotkeys)
+            public static void Postfix(Player __instance)
             {
-                return;
-            }
+                if (GeneralConfig.OverrideKeybindBehavior.Value == OverrideKeybindBehavior.DisableAllNewHotkeys)
+                {
+                    return;
+                }
 
-            if (Player.m_localPlayer != __instance)
-            {
-                return;
-            }
+                if (Player.m_localPlayer != __instance)
+                {
+                    return;
+                }
 
-            if (IgnoreKeyPresses())
-            {
-                return;
-            }
+                if (IgnoreKeyPresses())
+                {
+                    return;
+                }
 
-            if (IsKeyDown(QuickStackConfig.QuickStackKeybind.Value))
-            {
-                QuickStackModule.DoQuickStack(__instance);
-            }
-            else if (IsKeyDown(RestockConfig.RestockKeybind.Value))
-            {
-                RestockModule.DoRestock(__instance);
-            }
+                if (IsKeyDown(QuickStackConfig.QuickStackKeybind.Value))
+                {
+                    QuickStackModule.DoQuickStack(__instance);
+                }
+                else if (IsKeyDown(RestockConfig.RestockKeybind.Value))
+                {
+                    RestockModule.DoRestock(__instance);
+                }
 
-            if (!InventoryGui.IsVisible())
-            {
-                return;
-            }
+                if (!InventoryGui.IsVisible())
+                {
+                    return;
+                }
 
-            if (IsKeyDown(SortConfig.SortKeybind.Value))
-            {
-                SortModule.DoSort(__instance);
-            }
-            else if (IsKeyDown(TrashConfig.QuickTrashKeybind.Value))
-            {
-                TrashModule.TrashOrTrashFlagItem(true);
-            }
-            else if (IsKeyDown(TrashConfig.TrashKeybind.Value))
-            {
-                TrashModule.AttemptQuickTrash();
+                if (IsKeyDown(SortConfig.SortKeybind.Value))
+                {
+                    SortModule.DoSort(__instance);
+                }
+                else if (IsKeyDown(TrashConfig.QuickTrashKeybind.Value))
+                {
+                    TrashModule.TrashOrTrashFlagItem(true);
+                }
+                else if (IsKeyDown(TrashConfig.TrashKeybind.Value))
+                {
+                    TrashModule.AttemptQuickTrash();
+                }
             }
         }
     }
