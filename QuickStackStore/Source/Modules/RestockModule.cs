@@ -63,16 +63,18 @@ namespace QuickStackStore
             return maxStack;
         }
 
+        private static bool ShouldAreaRestock(Container currentContainer)
+        {
+            return RestockConfig.RestockFromNearbyRange.Value > 0
+                && (currentContainer == null || RestockConfig.RestockHotkeyBehaviorWhenContainerOpen.Value != RestockBehavior.RestockOnlyFromCurrentContainer)
+                && CompatibilitySupport.AllowAreaStackingRestocking();
+        }
+
         internal static void DoRestock(Player player, bool RestockOnlyFromCurrentContainerOverride = false)
         {
             if (player.IsTeleporting() || !InventoryGui.instance.m_container)
             {
                 return;
-            }
-
-            if (!CompatibilitySupport.AllowAreaStackingRestocking())
-            {
-                RestockOnlyFromCurrentContainerOverride = true;
             }
 
             InventoryGui.instance.SetupDragItem(null, null, 0);
@@ -99,21 +101,16 @@ namespace QuickStackStore
 
             int restockedStackCount = 0;
             var partiallyFilledStacks = new HashSet<Vector2i>();
-            Container container = InventoryGui.instance.m_currentContainer;
+            Container currentContainer = InventoryGui.instance.m_currentContainer;
 
-            if (container != null)
+            if (currentContainer != null)
             {
-                restockedStackCount = RestockFromThisContainer(restockables, player.m_inventory, container.m_inventory, partiallyFilledStacks);
-
-                if (RestockConfig.RestockHotkeyBehaviorWhenContainerOpen.Value == RestockBehavior.RestockOnlyFromCurrentContainer || RestockOnlyFromCurrentContainerOverride)
-                {
-                    ReportRestockResult(player, restockedStackCount, partiallyFilledStacks.Count, totalRestockableCount);
-                    return;
-                }
+                restockedStackCount = RestockFromThisContainer(restockables, player.m_inventory, currentContainer.m_inventory, partiallyFilledStacks);
             }
-            else if (RestockOnlyFromCurrentContainerOverride)
+
+            if (RestockOnlyFromCurrentContainerOverride || !ShouldAreaRestock(currentContainer))
             {
-                ReportRestockResult(player, 0, 0, totalRestockableCount);
+                ReportRestockResult(player, restockedStackCount, partiallyFilledStacks.Count, totalRestockableCount);
                 return;
             }
 

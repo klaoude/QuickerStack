@@ -6,9 +6,10 @@ using UnityEngine;
 namespace QuickStackStore
 {
     [BepInIncompatibility("virtuacode.valheim.trashitems")]
-    [BepInPlugin("goldenrevolver.quick_stack_store", NAME, VERSION)]
+    [BepInPlugin(GUID, NAME, VERSION)]
     public class QuickStackStorePlugin : BaseUnityPlugin
     {
+        public const string GUID = "goldenrevolver.quick_stack_store";
         public const string NAME = "Quick Stack - Store - Sort - Trash - Restock";
         public const string VERSION = "1.3.1";
 

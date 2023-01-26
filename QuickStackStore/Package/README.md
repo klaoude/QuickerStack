@@ -23,20 +23,27 @@ If you are actively using Favoriting, I recommend changing the config option 'Ov
 
 ## 2.1 - Quick Stacking
 
-You are probably already familiar with Quick Stacking. With one button press every non favorited item possible is put into the current or nearby chests that already contain this kind of item.
+You are probably already familiar with Quick Stacking. With one button press, every non favorited item possible is put into the current or nearby chests that already contain this kind of item.
 
 This implementation is based on the original [Quick Stack](https://www.nexusmods.com/valheim/mods/29) mod by [damnsneaker](https://www.nexusmods.com/valheim/users/52080261), who gave me permission. This mod has a smarter algorithm for accessing multiple containers than the original (even if it's not threaded like [Quicker Stack](https://www.nexusmods.com/valheim/mods/2049), but that prevents the issues that mod is currently facing).
-
-I have also improved the checks for multiplayer, so you can't quick stack into chests that are currently open anymore. I have tested this a lot with a friend and situations that would delete items with other Quick Stack mods are no longer an issue.
 
 ![image](https://staticdelivery.nexusmods.com/mods/3667/images/2094/2094-1671547317-1324456515.gif)
 
 
 ## 2.2 - Restocking
 
-Restocking is like Quick Stacking but in reverse. Quickly refill your arrows, your food or your one emergency stack of wood from the current or nearby chests. Restocking tops off the stack for each item you need (configurable).
+Restocking is like Quick Stacking but in reverse. Quickly refill your arrows, your food or your one emergency stack of wood from the current or nearby chests. With one button press, restocking tops off (or optionally partially refills) the stack size for each item in your inventory that you want to restock, which can easily be configured (for example based on item type or favoriting status).
 
 ![image](https://staticdelivery.nexusmods.com/mods/3667/images/2094/2094-1671547324-1045740202.gif)
+
+
+## 2.3 - Area Quick Stacking and Restocking
+
+This mod uses improved checks for multiplayer compared to most Quick Stack mods, so you can't quick stack into or restock out of chests that are currently opened by someone else. Still, this mod cannot wait for network requests when blocking chests as in use (then everyone would need the mod installed), so it does have its limitations, especially with high latency. The ship container has even been excluded from area stacking as a precaution, as lots of players open and close it in rapid succession while they wait for their friends to set sail.
+
+If you want to get rid of those limitations, this mod is compatible with the mod [MultiUserChest](https://valheim.thunderstore.io/package/MSchmoecker/MultiUserChest/). If you are not using it, then area quick stacking and restocking in multiplayer is disabled by default, but you can simply enable the config setting 'AllowAreaStackingInMultiplayerWithoutMUC' if you are comfortable with it.
+
+All area quick stacking and restocking config settings are also server synced, but it is not required for every user to have the mod installed.
 
 
 ## 3 - Store and Take All
@@ -75,7 +82,11 @@ If you are scared of trashing the one stack of an item that you usually consider
 
 ## Compatibility
 
-This mod has explicit compatibility for the following Equipment and Quick Slot mods
+[MultiUserChest](https://valheim.thunderstore.io/package/MSchmoecker/MultiUserChest/):
+- Due to the continued efforts of the author [MSchmoecker](https://valheim.thunderstore.io/package/MSchmoecker/), the newest version of MultiUserChest and my mod are now compatible. Be aware that sorting a container, that someone else is already using, only works if that user also has my mod installed.
+
+
+This mod has explicit compatibility for the following Equipment and Quick Slot mods:
 
 [ComfyQuickSlots](https://valheim.thunderstore.io/package/ComfyMods/ComfyQuickSlots/):
 - My mod will respect both the equipment slots and the quick slots, and intentionally allows restocking the quick slots. 'Take All' will put items into the quick slots though, but that is intended functionality of ComfyQuickSlots.
@@ -92,15 +103,14 @@ RandyKnapp's [Equipment and Quick Slots](https://valheim.thunderstore.io/package
 [Better Archery](https://valheim.thunderstore.io/package/ishid4/BetterArchery/):
 - My mod will respect the slots this mod reserves for the quiver feature (all 16 of them, even if it only uses 3), and intentionally allows restocking the arrows. Better Archery also changes how item adding, including 'Take All', works, so please be aware that that is not my doing.
 
-[MultiUserChest](https://valheim.thunderstore.io/package/MSchmoecker/MultiUserChest/):
-- Due to the continued efforts of the author [MSchmoecker](https://valheim.thunderstore.io/package/MSchmoecker/), the newest version of MultiUserChest and my mod are now compatible. Be aware that sorting a container, that someone else was already using at that point, requires that that user also has my mod installed. In general, everyone on the same server should always use the same mods anyway.
-
 
 ## Incompatibility
 
 Stacks of items with custom data, like from [Jewelcrafting](https://valheim.thunderstore.io/package/Smoothbrain/Jewelcrafting/), [Blacksmithing](https://valheim.thunderstore.io/package/Smoothbrain/Blacksmithing/) or [Cooking](https://valheim.thunderstore.io/package/Smoothbrain/Cooking/) by [Smoothbrain](https://valheim.thunderstore.io/package/Smoothbrain/), are excluded from getting merged by sorting or getting restocked, but otherwise behave normally.
 
 This mod is incompatible with [Trash Items](https://valheim.thunderstore.io/package/virtuaCode/TrashItems/) because it is included in this mod.
+
+This mod is currently incompatible with [Project AUGA](https://www.nexusmods.com/valheim/mods/1413), but compatibility is being worked on.
 
 
 ## Localization

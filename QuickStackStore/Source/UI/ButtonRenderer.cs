@@ -169,7 +169,7 @@ namespace QuickStackStore
 
                 var displayRestockButtons = RestockConfig.DisplayRestockButtons.Value;
 
-                if (allowAreaButtons && displayRestockButtons != ShowTwoButtons.OnlyContainerButton)
+                if (allowAreaButtons && displayRestockButtons != ShowTwoButtons.OnlyContainerButton && RestockConfig.RestockFromNearbyRange.Value > 0)
                 {
                     bool shouldntShow = __instance.m_currentContainer != null && (displayRestockButtons == ShowTwoButtons.BothButDependingOnContext || randyStatus == RandyStatus.EnabledWithQuickSlots);
 
@@ -199,7 +199,7 @@ namespace QuickStackStore
 
                 var displayQuickStackButtons = QuickStackConfig.DisplayQuickStackButtons.Value;
 
-                if (allowAreaButtons && displayQuickStackButtons != ShowTwoButtons.OnlyContainerButton)
+                if (allowAreaButtons && displayQuickStackButtons != ShowTwoButtons.OnlyContainerButton && QuickStackConfig.QuickStackToNearbyRange.Value > 0)
                 {
                     bool shouldntShow = __instance.m_currentContainer != null && (displayQuickStackButtons == ShowTwoButtons.BothButDependingOnContext || randyStatus == RandyStatus.EnabledWithQuickSlots);
 

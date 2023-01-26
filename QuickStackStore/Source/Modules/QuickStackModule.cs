@@ -15,16 +15,18 @@ namespace QuickStackStore
                 && !CompatibilitySupport.IsEquipOrQuickSlot(inventoryHeight, item.m_gridPos);
         }
 
+        private static bool ShouldAreaQuickStack(Container currentContainer)
+        {
+            return QuickStackConfig.QuickStackToNearbyRange.Value > 0
+                && (currentContainer == null || QuickStackConfig.QuickStackHotkeyBehaviorWhenContainerOpen.Value != QuickStackBehavior.QuickStackOnlyToCurrentContainer)
+                && CompatibilitySupport.AllowAreaStackingRestocking();
+        }
+
         internal static void DoQuickStack(Player player, bool QuickStackOnlyToCurrentContainerOverride = false)
         {
             if (player.IsTeleporting() || !InventoryGui.instance.m_container)
             {
                 return;
-            }
-
-            if (!CompatibilitySupport.AllowAreaStackingRestocking())
-            {
-                QuickStackOnlyToCurrentContainerOverride = true;
             }
 
             InventoryGui.instance.SetupDragItem(null, null, 0);
@@ -64,21 +66,16 @@ namespace QuickStackStore
             }
 
             int movedCount = 0;
-            Container container = InventoryGui.instance.m_currentContainer;
+            Container currentContainer = InventoryGui.instance.m_currentContainer;
 
-            if (container != null)
+            if (currentContainer != null)
             {
-                movedCount = QuickStackIntoThisContainer(trophies, quickStackables, player.m_inventory, container.m_inventory);
-
-                if (QuickStackConfig.QuickStackHotkeyBehaviorWhenContainerOpen.Value == QuickStackBehavior.QuickStackOnlyToCurrentContainer || QuickStackOnlyToCurrentContainerOverride)
-                {
-                    ReportQuickStackResult(player, movedCount);
-                    return;
-                }
+                movedCount = QuickStackIntoThisContainer(trophies, quickStackables, player.m_inventory, currentContainer.m_inventory);
             }
-            else if (QuickStackOnlyToCurrentContainerOverride)
+
+            if (QuickStackOnlyToCurrentContainerOverride || !ShouldAreaQuickStack(currentContainer))
             {
-                ReportQuickStackResult(player, 0);
+                ReportQuickStackResult(player, movedCount);
                 return;
             }
 

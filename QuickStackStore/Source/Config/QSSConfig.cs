@@ -1,9 +1,11 @@
 ﻿using BepInEx.Configuration;
 using HarmonyLib;
+using ServerSync;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static QuickStackStore.ConfigurationManagerAttributes;
 using static QuickStackStore.LocalizationConfig;
 using static QuickStackStore.QSSConfig.FavoriteConfig;
 using static QuickStackStore.QSSConfig.GeneralConfig;
@@ -36,10 +38,10 @@ namespace QuickStackStore
 
         internal class GeneralConfig
         {
-            internal static ConfigEntry<OverrideButtonDisplay> OverrideButtonDisplay;
-            internal static ConfigEntry<OverrideKeybindBehavior> OverrideKeybindBehavior;
-            internal static ConfigEntry<OverrideHotkeyBarBehavior> OverrideHotkeyBarBehavior;
-            internal static ConfigEntry<bool> UseTopDownLogicForEverything;
+            public static ConfigEntry<OverrideButtonDisplay> OverrideButtonDisplay;
+            public static ConfigEntry<OverrideKeybindBehavior> OverrideKeybindBehavior;
+            public static ConfigEntry<OverrideHotkeyBarBehavior> OverrideHotkeyBarBehavior;
+            public static ConfigEntry<bool> UseTopDownLogicForEverything;
         }
 
         internal class FavoriteConfig
@@ -58,8 +60,10 @@ namespace QuickStackStore
 
         internal class QuickStackRestockConfig
         {
-            internal static ConfigEntry<bool> AllowAreaStackingInMultiplayerWithoutMUC;
-            internal static ConfigEntry<bool> SuppressContainerSoundAndVisuals;
+            public static ConfigSync AreaStackRestockServerSync;
+            public static ConfigEntry<bool> AllowAreaStackingInMultiplayerWithoutMUC;
+            public static ConfigEntry<bool> SuppressContainerSoundAndVisuals;
+            public static ConfigEntry<bool> ToggleAreaStackRestockConfigServerSync;
         }
 
         internal class QuickStackConfig
@@ -139,6 +143,8 @@ namespace QuickStackStore
         {
             Config = plugin.Config;
 
+            Config.SaveOnConfigSet = false;
+
             string sectionName;
 
             // keep the entries within a section in alphabetical order for the r2modman config manager
@@ -216,11 +222,16 @@ namespace QuickStackStore
             FavoriteConfig.FavoriteToggleButtonStyle.SettingChanged += (a, b) => FavoritingMode.HasCurrentlyToggledFavoriting |= false;
 
             sectionName = "2 - Quick Stacking and Restocking";
+            string areaStackSectionDisplayName = "2.0 - Area Quick Stacking and Restocking";
 
-            AllowAreaStackingInMultiplayerWithoutMUC = Config.Bind(sectionName, nameof(AllowAreaStackingInMultiplayerWithoutMUC), false, "Whether you can use area quick stacking and area restocking in multiplayer while 'Multi User Chest' is not installed. While this is almost always safe, it can fail because no actual network requests are getting sent. Ship containers are inherently especially vulnerable and are therefore excluded.");
+            AreaStackRestockServerSync = new ConfigSync(QuickStackStorePlugin.GUID) { DisplayName = QuickStackStorePlugin.NAME, CurrentVersion = QuickStackStorePlugin.VERSION, MinimumRequiredVersion = QuickStackStorePlugin.VERSION, ModRequired = false };
+
+            AllowAreaStackingInMultiplayerWithoutMUC = Config.BindSynced(AreaStackRestockServerSync, sectionName, nameof(AllowAreaStackingInMultiplayerWithoutMUC), false, CustomCategoryWithDescription(areaStackSectionDisplayName, "Whether you can use area quick stacking and area restocking in multiplayer while 'Multi User Chest' is not installed. While this is almost always safe, it can fail because no actual network requests are getting sent. Ship containers are inherently especially vulnerable and are therefore excluded."));
             AllowAreaStackingInMultiplayerWithoutMUC.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
-            SuppressContainerSoundAndVisuals = Config.Bind(sectionName, nameof(SuppressContainerSoundAndVisuals), true, "Whether when a feature checks multiple containers in an area, they actually play opening sounds and visuals. Disable if the suppression causes incompatibilities.");
+            SuppressContainerSoundAndVisuals = Config.BindSynced(AreaStackRestockServerSync, sectionName, nameof(SuppressContainerSoundAndVisuals), true, CustomCategoryWithDescription(areaStackSectionDisplayName, "Whether when a feature checks multiple containers in an area, they actually play opening sounds and visuals. Disable if the suppression causes incompatibilities."));
+
+            ToggleAreaStackRestockConfigServerSync = Config.BindSyncLocker(AreaStackRestockServerSync, sectionName, nameof(ToggleAreaStackRestockConfigServerSync), true, CustomCategoryWithDescription(areaStackSectionDisplayName, "Whether the config settings about area quick stacking and area restocking (including range) of the host/ server get applied to all other users using this mod. Does nothing if the host/ server does not have this mod installed."));
 
             sectionName = "2.1 - Quick Stacking";
 
@@ -233,7 +244,9 @@ namespace QuickStackStore
             QuickStackKeybind = Config.Bind(sectionName, nameof(QuickStackKeybind), new KeyboardShortcut(KeyCode.P), $"The hotkey to start quick stacking to the current or nearby containers (depending on {nameof(QuickStackHotkeyBehaviorWhenContainerOpen)}, {overrideHotkey}).");
             KeyCodeBackwardsCompatibility(QuickStackKeybind, sectionName, "QuickStackKey");
 
-            QuickStackToNearbyRange = Config.Bind(sectionName, nameof(QuickStackToNearbyRange), 10f, range);
+            QuickStackToNearbyRange = Config.BindSynced(AreaStackRestockServerSync, sectionName, nameof(QuickStackToNearbyRange), 10f, CustomCategoryWithDescription(areaStackSectionDisplayName, range));
+            QuickStackToNearbyRange.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+
             QuickStackTrophiesIntoSameContainer = Config.Bind(sectionName, nameof(QuickStackTrophiesIntoSameContainer), false, "Whether to put all types of trophies in the container if any trophy is found in that container.");
 
             ShowQuickStackResultMessage = Config.Bind(sectionName, nameof(ShowQuickStackResultMessage), true, "Whether to show the central screen report message after quick stacking.");
@@ -243,7 +256,9 @@ namespace QuickStackStore
             DisplayRestockButtons = Config.Bind(sectionName, nameof(DisplayRestockButtons), ShowTwoButtons.BothButDependingOnContext, twoButtons);
             DisplayRestockButtons.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
-            RestockFromNearbyRange = Config.Bind(sectionName, nameof(RestockFromNearbyRange), 10f, range);
+            RestockFromNearbyRange = Config.BindSynced(AreaStackRestockServerSync, sectionName, nameof(RestockFromNearbyRange), 10f, CustomCategoryWithDescription(areaStackSectionDisplayName, range));
+            RestockFromNearbyRange.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+
             RestockHotkeyBehaviorWhenContainerOpen = Config.Bind(sectionName, nameof(RestockHotkeyBehaviorWhenContainerOpen), RestockBehavior.RestockOnlyFromCurrentContainer, hotkey);
             RestockIncludesHotkeyBar = Config.Bind(sectionName, nameof(RestockIncludesHotkeyBar), true, $"Whether to also try to restock items currently in the hotkey bar ({overrideHotkeyBar}).");
 
@@ -385,6 +400,9 @@ namespace QuickStackStore
 
             FavoritedItemTooltip = Config.Bind(sectionName, nameof(FavoritedItemTooltip), string.Empty, string.Empty);
             TrashFlaggedItemTooltip = Config.Bind(sectionName, nameof(TrashFlaggedItemTooltip), string.Empty, string.Empty);
+
+            Config.Save();
+            Config.SaveOnConfigSet = true;
         }
 
         internal static void ResetAllFavoritingData_SettingChanged(object sender, EventArgs e)
