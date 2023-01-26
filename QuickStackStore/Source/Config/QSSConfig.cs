@@ -143,7 +143,19 @@ namespace QuickStackStore
         {
             Config = plugin.Config;
 
+            // disable saving while we add config values, so it doesn't save to file on every change, then enable it again
+            // this massively cuts down startup time by about 300%
             Config.SaveOnConfigSet = false;
+
+            LoadConfigInternal(plugin);
+
+            Config.Save();
+            Config.SaveOnConfigSet = true;
+        }
+
+        private static void LoadConfigInternal(QuickStackStorePlugin plugin)
+        {
+            Config = plugin.Config;
 
             string sectionName;
 
@@ -400,9 +412,6 @@ namespace QuickStackStore
 
             FavoritedItemTooltip = Config.Bind(sectionName, nameof(FavoritedItemTooltip), string.Empty, string.Empty);
             TrashFlaggedItemTooltip = Config.Bind(sectionName, nameof(TrashFlaggedItemTooltip), string.Empty, string.Empty);
-
-            Config.Save();
-            Config.SaveOnConfigSet = true;
         }
 
         internal static void ResetAllFavoritingData_SettingChanged(object sender, EventArgs e)

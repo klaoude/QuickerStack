@@ -475,6 +475,11 @@ namespace QuickStackStore
         {
             yield return null;
 
+            if (instance == null)
+            {
+                yield break;
+            }
+
             PatchInventoryGui.Show_Postfix(instance);
 
             if (includeTrashButton)
