@@ -362,10 +362,12 @@ namespace QuickStackStore
                 {
                     // hide the buttons when the current container gets closed instead of relying on getting hidden when the container panel gets hidden
                     // in case a mod uses the container panel to add a custom container (like jewelcrafting) that my buttons don't work with anyway
-                    if (button != null)
+                    if (button == null)
                     {
-                        button.gameObject.SetActive(false);
+                        continue;
                     }
+
+                    button.gameObject.SetActive(false);
                 }
             }
         }
@@ -488,7 +490,7 @@ namespace QuickStackStore
             }
         }
 
-        internal static void OnButtonRelevantSettingChanged(QuickStackStorePlugin plugin, bool includeTrashButton = false)
+        internal static void OnButtonRelevantSettingChanged(BaseUnityPlugin plugin, bool includeTrashButton = false)
         {
             // reminder to never use ?. on monobehaviors
 

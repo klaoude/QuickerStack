@@ -1,4 +1,5 @@
-﻿using BepInEx.Configuration;
+﻿using BepInEx;
+using BepInEx.Configuration;
 using HarmonyLib;
 using ServerSync;
 using System;
@@ -139,7 +140,7 @@ namespace QuickStackStore
             public static ConfigEntry<ResetFavoritingData> ResetAllFavoritingData;
         }
 
-        internal static void LoadConfig(QuickStackStorePlugin plugin)
+        internal static void LoadConfig(BaseUnityPlugin plugin)
         {
             Config = plugin.Config;
 
@@ -153,9 +154,13 @@ namespace QuickStackStore
             Config.SaveOnConfigSet = true;
         }
 
-        private static void LoadConfigInternal(QuickStackStorePlugin plugin)
+        private static void LoadConfigInternal(BaseUnityPlugin plugin)
         {
-            Config = plugin.Config;
+            if (Config == null)
+            {
+                Helper.LogO("Internal config load was called without its wrapper. This is slower but still works.", DebugLevel.Warning);
+                Config = plugin.Config;
+            }
 
             string sectionName;
 
