@@ -71,11 +71,11 @@ namespace QuickStackStore
 
         public static void DoSort(Player player)
         {
-            Container container = InventoryGui.instance.m_currentContainer;
+            Container currentContainer = InventoryGui.instance.m_currentContainer;
 
             var playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
 
-            if (container != null)
+            if (currentContainer != null)
             {
                 switch (SortConfig.SortHotkeyBehaviorWhenContainerOpen.Value)
                 {

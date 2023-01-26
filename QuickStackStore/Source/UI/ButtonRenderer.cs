@@ -345,6 +345,29 @@ namespace QuickStackStore
 
                 OnButtonTextTranslationSettingChanged(false);
             }
+
+            [HarmonyPriority(Priority.LowerThanNormal)]
+            [HarmonyPatch(nameof(InventoryGui.CloseContainer))]
+            [HarmonyPostfix]
+            public static void CloseContainer_Postfix(InventoryGui __instance)
+            {
+                if (__instance.m_currentContainer != null)
+                {
+                    return;
+                }
+
+                var buttons = new Button[] { storeAllButton, quickStackToContainerButton, sortContainerButton, restockFromContainerButton };
+
+                foreach (var button in buttons)
+                {
+                    // hide the buttons when the current container gets closed instead of relying on getting hidden when the container panel gets hidden
+                    // in case a mod uses the container panel to add a custom container (like jewelcrafting) that my buttons don't work with anyway
+                    if (button != null)
+                    {
+                        button.gameObject.SetActive(false);
+                    }
+                }
+            }
         }
 
         private static void MoveButtonToIndex(ref Button buttonToMove, Vector3 startVector, float vOffset, int visibleExtraButtons, int buttonsBelowTakeAll)

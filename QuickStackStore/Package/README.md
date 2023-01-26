@@ -106,11 +106,13 @@ RandyKnapp's [Equipment and Quick Slots](https://valheim.thunderstore.io/package
 
 ## Incompatibility
 
-Stacks of items with custom data, like from [Jewelcrafting](https://valheim.thunderstore.io/package/Smoothbrain/Jewelcrafting/), [Blacksmithing](https://valheim.thunderstore.io/package/Smoothbrain/Blacksmithing/) or [Cooking](https://valheim.thunderstore.io/package/Smoothbrain/Cooking/) by [Smoothbrain](https://valheim.thunderstore.io/package/Smoothbrain/), are excluded from getting merged by sorting or getting restocked, but otherwise behave normally.
+Stacks of items with custom data, like from [Jewelcrafting](https://valheim.thunderstore.io/package/Smoothbrain/Jewelcrafting/), [Blacksmithing](https://valheim.thunderstore.io/package/Smoothbrain/Blacksmithing/) or [Cooking](https://valheim.thunderstore.io/package/Smoothbrain/Cooking/), are excluded from getting merged by sorting or getting restocked, but otherwise behave normally.
+
+The container buttons from this mod are intentionally hidden when using certain custom containers (like the jewelry bag from [Jewelcrafting](https://valheim.thunderstore.io/package/Smoothbrain/Jewelcrafting/)), because my mod cannot affect them anyway.
+
+The UI from this mod is currently incompatible with [Project AUGA](https://www.nexusmods.com/valheim/mods/1413), but compatibility is being worked on. Hotkeys should work though.
 
 This mod is incompatible with [Trash Items](https://valheim.thunderstore.io/package/virtuaCode/TrashItems/) because it is included in this mod.
-
-This mod is currently incompatible with [Project AUGA](https://www.nexusmods.com/valheim/mods/1413), but compatibility is being worked on.
 
 
 ## Localization
