@@ -1,6 +1,5 @@
 ﻿using BepInEx.Bootstrap;
 using BepInEx.Configuration;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using static QuickStackStore.QSSConfig;
@@ -16,8 +15,6 @@ namespace QuickStackStore
         private static FieldInfo OdinExAddEquipmentRow;
         private static FieldInfo OdinQOLAddEquipmentRow;
         private static FieldInfo RandyQuickSlotsEnabled;
-
-        public static Dictionary<string, bool> cache = null;
 
         public const string aeden = "aedenthorn.ExtendedPlayerInventory";
         public const string comfy = "com.bruce.valheim.comfyquickslots";

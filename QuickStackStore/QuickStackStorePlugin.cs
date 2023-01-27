@@ -6,6 +6,7 @@ using UnityEngine;
 namespace QuickStackStore
 {
     [BepInIncompatibility("virtuacode.valheim.trashitems")]
+    [BepInDependency(CompatibilitySupport.multiUserChest, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(GUID, NAME, VERSION)]
     public class QuickStackStorePlugin : BaseUnityPlugin
     {
