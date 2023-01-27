@@ -5,17 +5,24 @@ using UnityEngine;
 
 namespace QuickStackStore
 {
-    [BepInIncompatibility("com.maxsch.valheim.MultiUserChest")]
     [BepInIncompatibility("virtuacode.valheim.trashitems")]
-    [BepInPlugin("goldenrevolver.quick_stack_store", NAME, VERSION)]
+    [BepInDependency(CompatibilitySupport.multiUserChest, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInPlugin(GUID, NAME, VERSION)]
     public class QuickStackStorePlugin : BaseUnityPlugin
     {
+        public const string GUID = "goldenrevolver.quick_stack_store";
         public const string NAME = "Quick Stack - Store - Sort - Trash - Restock";
-        public const string VERSION = "1.2.5";
+        public const string VERSION = "1.3.1";
 
         // TODO controller support
         protected void Awake()
         {
+            if (CompatibilitySupport.HasOutdatedMUCPlugin())
+            {
+                Helper.LogO("This mod is not compatible with versions of Multi User Chest earlier than 0.4.0, aborting start", QSSConfig.DebugLevel.Warning);
+                return;
+            }
+
             var path = "QuickStackStore.Resources";
 
             BorderRenderer.border = Helper.LoadSprite($"{path}.border.png", new Rect(0, 0, 1024, 1024), new Vector2(512, 512));

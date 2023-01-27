@@ -237,6 +237,9 @@ namespace QuickStackStore
                 tText.GetComponent<Text>().text = LocalizationConfig.GetRelevantTranslation(LocalizationConfig.TrashLabel, nameof(LocalizationConfig.TrashLabel));
                 tText.GetComponent<Text>().color = TrashConfig.TrashLabelColor.Value;
 
+                // this fixes that the left most letter wants to go below the inventory wood panel if the label text is too long
+                tText.GetComponent<RectTransform>().sizeDelta -= new Vector2(9, 0);
+
                 // Replace armor with trash icon
                 tArmor.GetComponent<Image>().sprite = trashSprite;
 
@@ -369,7 +372,7 @@ namespace QuickStackStore
 
             if (InventoryGui.instance.m_dragGo != null)
             {
-                if (Helper.IsInFavoritingMode())
+                if (FavoritingMode.IsInFavoritingMode())
                 {
                     clickState = ClickState.ClickedTrashFlagging;
                 }
@@ -380,7 +383,7 @@ namespace QuickStackStore
             }
             else
             {
-                if (!usedFromHotkey && TrashConfig.EnableQuickTrash.Value && !Helper.IsInFavoritingMode())
+                if (!usedFromHotkey && TrashConfig.EnableQuickTrash.Value && !FavoritingMode.IsInFavoritingMode())
                 {
                     clickState = ClickState.ClickedQuickTrash;
                 }
@@ -396,7 +399,7 @@ namespace QuickStackStore
                 return;
             }
 
-            if (TrashConfig.EnableQuickTrash.Value && !Helper.IsInFavoritingMode())
+            if (TrashConfig.EnableQuickTrash.Value && !FavoritingMode.IsInFavoritingMode())
             {
                 clickState = ClickState.ClickedQuickTrash;
             }

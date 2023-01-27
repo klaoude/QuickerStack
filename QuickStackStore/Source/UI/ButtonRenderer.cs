@@ -49,18 +49,18 @@ namespace QuickStackStore
                 if (Player.m_localPlayer)
                 {
                     // reset in case player forgot to turn it off
-                    Helper.HasCurrentlyToggledFavoriting = false;
+                    FavoritingMode.HasCurrentlyToggledFavoriting = false;
 
                     var conf = SortConfig.AutoSort.Value;
 
                     if (conf == AutoSortBehavior.SortPlayerInventoryOnOpen || conf == AutoSortBehavior.Both)
                     {
-                        SortModule.Sort(Player.m_localPlayer.m_inventory, UserConfig.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()));
+                        SortModule.SortPlayerInv(Player.m_localPlayer.m_inventory, UserConfig.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()));
                     }
 
                     if (__instance.m_currentContainer && (conf == AutoSortBehavior.SortContainerOnOpen || conf == AutoSortBehavior.Both))
                     {
-                        SortModule.Sort(__instance.m_currentContainer.m_inventory);
+                        SortModule.SortContainer(__instance.m_currentContainer);
                     }
                 }
 
@@ -70,9 +70,6 @@ namespace QuickStackStore
                 {
                     origButtonLength = takeAllButtonRect.sizeDelta.x;
                     origButtonPosition = takeAllButtonRect.localPosition;
-
-                    takeAllButtonRect.GetComponent<Button>().onClick.RemoveAllListeners();
-                    takeAllButtonRect.GetComponent<Button>().onClick.AddListener(new UnityAction(() => StoreTakeAllModule.ContextSensitiveTakeAll(__instance)));
                 }
 
                 // intentionally not checking "ShouldBlockChangesToTakeAllButton", because then everything would look stupid
@@ -160,7 +157,7 @@ namespace QuickStackStore
                         }
 
                         sortInventoryButton.onClick.RemoveAllListeners();
-                        sortInventoryButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(Player.m_localPlayer.m_inventory, UserConfig.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()))));
+                        sortInventoryButton.onClick.AddListener(new UnityAction(() => SortModule.SortPlayerInv(Player.m_localPlayer.m_inventory, UserConfig.GetPlayerConfig(Player.m_localPlayer.GetPlayerID()))));
                     }
                     else
                     {
@@ -168,9 +165,11 @@ namespace QuickStackStore
                     }
                 }
 
+                var allowAreaButtons = AllowAreaStackingRestocking();
+
                 var displayRestockButtons = RestockConfig.DisplayRestockButtons.Value;
 
-                if (displayRestockButtons != ShowTwoButtons.OnlyContainerButton)
+                if (allowAreaButtons && displayRestockButtons != ShowTwoButtons.OnlyContainerButton && RestockConfig.RestockFromNearbyRange.Value > 0)
                 {
                     bool shouldntShow = __instance.m_currentContainer != null && (displayRestockButtons == ShowTwoButtons.BothButDependingOnContext || randyStatus == RandyStatus.EnabledWithQuickSlots);
 
@@ -185,7 +184,7 @@ namespace QuickStackStore
                         }
 
                         restockAreaButton.onClick.RemoveAllListeners();
-                        restockAreaButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoRestock(Player.m_localPlayer)));
+                        restockAreaButton.onClick.AddListener(new UnityAction(() => RestockModule.DoRestock(Player.m_localPlayer)));
                     }
                     else
                     {
@@ -200,7 +199,7 @@ namespace QuickStackStore
 
                 var displayQuickStackButtons = QuickStackConfig.DisplayQuickStackButtons.Value;
 
-                if (displayQuickStackButtons != ShowTwoButtons.OnlyContainerButton)
+                if (allowAreaButtons && displayQuickStackButtons != ShowTwoButtons.OnlyContainerButton && QuickStackConfig.QuickStackToNearbyRange.Value > 0)
                 {
                     bool shouldntShow = __instance.m_currentContainer != null && (displayQuickStackButtons == ShowTwoButtons.BothButDependingOnContext || randyStatus == RandyStatus.EnabledWithQuickSlots);
 
@@ -215,7 +214,7 @@ namespace QuickStackStore
                         }
 
                         quickStackAreaButton.onClick.RemoveAllListeners();
-                        quickStackAreaButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoQuickStack(Player.m_localPlayer)));
+                        quickStackAreaButton.onClick.AddListener(new UnityAction(() => QuickStackModule.DoQuickStack(Player.m_localPlayer)));
                     }
                     else
                     {
@@ -254,12 +253,12 @@ namespace QuickStackStore
                         favoritingTogglingButtonText = favoritingTogglingButton.transform.Find("Text").GetComponent<Text>();
 
                         // trigger text reset without changing value
-                        Helper.HasCurrentlyToggledFavoriting |= false;
+                        FavoritingMode.HasCurrentlyToggledFavoriting |= false;
 
                         __instance.StartCoroutine(WaitAFrameToRepositionMiniButton(__instance, favoritingTogglingButton.transform, parent, index, randyStatus));
 
                         favoritingTogglingButton.onClick.RemoveAllListeners();
-                        favoritingTogglingButton.onClick.AddListener(new UnityAction(() => Helper.HasCurrentlyToggledFavoriting ^= true));
+                        favoritingTogglingButton.onClick.AddListener(new UnityAction(() => FavoritingMode.HasCurrentlyToggledFavoriting ^= true));
                     }
                     else
                     {
@@ -291,7 +290,7 @@ namespace QuickStackStore
                         }
 
                         quickStackToContainerButton.onClick.RemoveAllListeners();
-                        quickStackToContainerButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoQuickStack(Player.m_localPlayer, true)));
+                        quickStackToContainerButton.onClick.AddListener(new UnityAction(() => QuickStackModule.DoQuickStack(Player.m_localPlayer, true)));
                     }
 
                     quickStackToContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
@@ -319,7 +318,7 @@ namespace QuickStackStore
                         MoveButtonToIndex(ref restockFromContainerButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
                         restockFromContainerButton.onClick.RemoveAllListeners();
-                        restockFromContainerButton.onClick.AddListener(new UnityAction(() => QuickStackRestockModule.DoRestock(Player.m_localPlayer, true)));
+                        restockFromContainerButton.onClick.AddListener(new UnityAction(() => RestockModule.DoRestock(Player.m_localPlayer, true)));
                     }
 
                     restockFromContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
@@ -333,7 +332,7 @@ namespace QuickStackStore
                         MoveButtonToIndex(ref sortContainerButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
                         sortContainerButton.onClick.RemoveAllListeners();
-                        sortContainerButton.onClick.AddListener(new UnityAction(() => SortModule.Sort(__instance.m_currentContainer.m_inventory)));
+                        sortContainerButton.onClick.AddListener(new UnityAction(() => SortModule.SortContainer(__instance.m_currentContainer)));
                     }
 
                     sortContainerButton.gameObject.SetActive(__instance.m_currentContainer != null);
@@ -345,6 +344,31 @@ namespace QuickStackStore
                 }
 
                 OnButtonTextTranslationSettingChanged(false);
+            }
+
+            [HarmonyPriority(Priority.LowerThanNormal)]
+            [HarmonyPatch(nameof(InventoryGui.CloseContainer))]
+            [HarmonyPostfix]
+            public static void CloseContainer_Postfix(InventoryGui __instance)
+            {
+                if (__instance.m_currentContainer != null)
+                {
+                    return;
+                }
+
+                var buttons = new Button[] { storeAllButton, quickStackToContainerButton, sortContainerButton, restockFromContainerButton };
+
+                foreach (var button in buttons)
+                {
+                    // hide the buttons when the current container gets closed instead of relying on getting hidden when the container panel gets hidden
+                    // in case a mod uses the container panel to add a custom container (like jewelcrafting) that my buttons don't work with anyway
+                    if (button == null)
+                    {
+                        continue;
+                    }
+
+                    button.gameObject.SetActive(false);
+                }
             }
         }
 
@@ -453,6 +477,11 @@ namespace QuickStackStore
         {
             yield return null;
 
+            if (instance == null)
+            {
+                yield break;
+            }
+
             PatchInventoryGui.Show_Postfix(instance);
 
             if (includeTrashButton)
@@ -461,7 +490,7 @@ namespace QuickStackStore
             }
         }
 
-        internal static void OnButtonRelevantSettingChanged(QuickStackStorePlugin plugin, bool includeTrashButton = false)
+        internal static void OnButtonRelevantSettingChanged(BaseUnityPlugin plugin, bool includeTrashButton = false)
         {
             // reminder to never use ?. on monobehaviors
 
@@ -528,7 +557,7 @@ namespace QuickStackStore
 
                     if (text != null)
                     {
-                        text.text = !LocalizationConfig.TakeAllLabel.Value.IsNullOrWhiteSpace() ? LocalizationConfig.TakeAllLabel.Value : Localization.instance.Translate("inventory_takeall");
+                        text.text = !LocalizationConfig.TakeAllLabel.Value.IsNullOrWhiteSpace() ? LocalizationConfig.TakeAllLabel.Value : Localization.instance.Translate(LocalizationConfig.takeAllKey);
                     }
                 }
             }
