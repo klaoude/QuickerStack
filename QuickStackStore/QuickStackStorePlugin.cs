@@ -12,7 +12,7 @@ namespace QuickStackStore
     {
         public const string GUID = "goldenrevolver.quick_stack_store";
         public const string NAME = "Quick Stack - Store - Sort - Trash - Restock";
-        public const string VERSION = "1.3.2";
+        public const string VERSION = "1.3.3";
 
         protected void Awake()
         {
