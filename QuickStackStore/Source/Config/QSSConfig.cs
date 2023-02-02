@@ -8,6 +8,7 @@ using System.Linq;
 using UnityEngine;
 using static QuickStackStore.ConfigurationManagerAttributes;
 using static QuickStackStore.LocalizationConfig;
+using static QuickStackStore.QSSConfig.ControllerConfig;
 using static QuickStackStore.QSSConfig.FavoriteConfig;
 using static QuickStackStore.QSSConfig.GeneralConfig;
 using static QuickStackStore.QSSConfig.QuickStackConfig;
@@ -39,10 +40,20 @@ namespace QuickStackStore
 
         internal class GeneralConfig
         {
+            public static ConfigEntry<ConfigTemplate> ConfigTemplate;
             public static ConfigEntry<OverrideButtonDisplay> OverrideButtonDisplay;
             public static ConfigEntry<OverrideKeybindBehavior> OverrideKeybindBehavior;
             public static ConfigEntry<OverrideHotkeyBarBehavior> OverrideHotkeyBarBehavior;
             public static ConfigEntry<bool> UseTopDownLogicForEverything;
+        }
+
+        internal class ControllerConfig
+        {
+            public static ConfigEntry<DPadUsage> ControllerDPadUsageInInventoryGrid;
+            public static ConfigEntry<KeyboardShortcut> ControllerDPadUsageModifierKeybind;
+
+            public static ConfigEntry<bool> RemoveControllerButtonHintFromTakeAllButton;
+            public static ConfigEntry<bool> UseHardcodedControllerSupport;
         }
 
         internal class FavoriteConfig
@@ -102,8 +113,12 @@ namespace QuickStackStore
 
             public static ConfigEntry<bool> NeverMoveTakeAllButton;
 
+            public static ConfigEntry<KeyboardShortcut> StoreAllKeybind;
+
             public static ConfigEntry<bool> StoreAllIncludesEquippedItems;
             public static ConfigEntry<bool> StoreAllIncludesHotkeyBar;
+
+            public static ConfigEntry<KeyboardShortcut> TakeAllKeybind;
         }
 
         internal class SortConfig
@@ -139,6 +154,8 @@ namespace QuickStackStore
             public static ConfigEntry<DebugSeverity> DebugSeverity;
             public static ConfigEntry<ResetFavoritingData> ResetAllFavoritingData;
         }
+
+        internal static readonly List<ConfigEntryBase> keyBinds = new List<ConfigEntryBase>();
 
         internal static void LoadConfig(BaseUnityPlugin plugin)
         {
@@ -178,6 +195,9 @@ namespace QuickStackStore
 
             sectionName = "0 - General";
 
+            GeneralConfig.ConfigTemplate = Config.Bind(sectionName, nameof(GeneralConfig.ConfigTemplate), ConfigTemplate.NotCurrentlyLoadingTemplate, "Immediately or at the next startup, resets the config and applies the selected config template. Does not change any custom keybinds!");
+            GeneralConfig.ConfigTemplate.SettingChanged += ConfigTemplate_SettingChanged;
+
             GeneralConfig.OverrideButtonDisplay = Config.Bind(sectionName, nameof(GeneralConfig.OverrideButtonDisplay), OverrideButtonDisplay.UseIndividualConfigOptions, "Override to disable all new UI elements no matter the current individual setting of each of them.");
             GeneralConfig.OverrideButtonDisplay.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin, true);
 
@@ -200,14 +220,24 @@ namespace QuickStackStore
             {
                 GeneralConfig.OverrideHotkeyBarBehavior.Value = oldValue ? OverrideHotkeyBarBehavior.NeverAffectHotkeyBar : OverrideHotkeyBarBehavior.UseIndividualConfigOptions;
             }
-
             UseTopDownLogicForEverything = Config.Bind(sectionName, nameof(UseTopDownLogicForEverything), false, "Whether to always put items into the top first row (affects the entire game) rather than top or bottom first depending on the item type (base game uses top first only for weapons and tools, bottom first for the rest). Recommended to keep off.");
+
+            sectionName = "0.1 - Controller General";
+
+            ControllerDPadUsageInInventoryGrid = Config.Bind(sectionName, nameof(ControllerDPadUsageInInventoryGrid), DPadUsage.Keybinds, "In the base game the DPad and the left stick are both used for slot movement inside the inventory grid. This allows you to exclude the DPad from this to get more keys for keybinds.");
+            ControllerDPadUsageModifierKeybind = Config.Bind(sectionName, nameof(ControllerDPadUsageModifierKeybind), new KeyboardShortcut(KeyCode.None), $"When {nameof(ControllerDPadUsageInInventoryGrid)} is set to {DPadUsage.KeybindsWhileHoldingModifierKey}, then holding this prevents slot movement in the inventory grid with the DPad.");
+
+            RemoveControllerButtonHintFromTakeAllButton = Config.Bind(sectionName, nameof(RemoveControllerButtonHintFromTakeAllButton), false, $"Remove the button hint from the 'Take All' button while using a controller for consistency. Especially useful when using the new keybind {nameof(TakeAllKeybind)}.");
+            RemoveControllerButtonHintFromTakeAllButton.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+
+            UseHardcodedControllerSupport = Config.Bind(sectionName, nameof(UseHardcodedControllerSupport), true, "Whether to enable the hardcoded controller bindings including UI hints while a controller is used. This disables custom hotkeys.");
+            UseHardcodedControllerSupport.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
             sectionName = "1 - Favoriting";
 
             // valheim yellow/ orange-ish
             BorderColorFavoritedItem = Config.Bind(sectionName, nameof(BorderColorFavoritedItem), new Color(1f, 0.8482759f, 0f), "Color of the border for slots containing favorited items.");
-            BorderColorFavoritedItem.SettingChanged += (a, b) => FavoritingMode.HasCurrentlyToggledFavoriting |= false;
+            BorderColorFavoritedItem.SettingChanged += (a, b) => FavoritingMode.RefreshDisplay();
 
             // dark-ish green
             BorderColorFavoritedItemOnFavoritedSlot = Config.Bind(sectionName, nameof(BorderColorFavoritedItemOnFavoritedSlot), new Color(0.5f, 0.67413795f, 0.5f), "Color of the border of a favorited slot that also contains a favorited item.");
@@ -236,7 +266,7 @@ namespace QuickStackStore
             KeyCodeBackwardsCompatibility(FavoritingModifierKeybind2, sectionName, "FavoritingModifierKey2");
 
             FavoriteConfig.FavoriteToggleButtonStyle = Config.Bind(sectionName, nameof(FavoriteConfig.FavoriteToggleButtonStyle), FavoriteToggleButtonStyle.TextStarInItemFavoriteColor, $"The style of the favorite toggling button enabled with {nameof(DisplayFavoriteToggleButton)}.");
-            FavoriteConfig.FavoriteToggleButtonStyle.SettingChanged += (a, b) => FavoritingMode.HasCurrentlyToggledFavoriting |= false;
+            FavoriteConfig.FavoriteToggleButtonStyle.SettingChanged += (a, b) => FavoritingMode.RefreshDisplay();
 
             sectionName = "2 - Quick Stacking and Restocking";
             string areaStackSectionDisplayName = "2.0 - Area Quick Stacking and Restocking";
@@ -300,8 +330,12 @@ namespace QuickStackStore
 
             NeverMoveTakeAllButton = Config.Bind(sectionName, nameof(NeverMoveTakeAllButton), false, "Disallows my mod from moving the 'Take All' button. Enable for compatibility with other mods. If it was already moved, then you need to log out and back in (since I don't even allow to reset the position, since I don't know if that position is valid with your installed mods).");
 
+            StoreAllKeybind = Config.Bind(sectionName, nameof(StoreAllKeybind), new KeyboardShortcut(KeyCode.None), $"The hotkey to use 'Store All' on the currently opened container ({overrideHotkey}).");
+
             StoreAllIncludesEquippedItems = Config.Bind(sectionName, nameof(StoreAllIncludesEquippedItems), false, "Whether to also unequip and store non favorited equipped items or exclude them.");
-            StoreAllIncludesHotkeyBar = Config.Bind(sectionName, nameof(StoreAllIncludesHotkeyBar), true, $"Whether to also store all non favorited items from the hotkey bar ({overrideHotkeyBar})");
+            StoreAllIncludesHotkeyBar = Config.Bind(sectionName, nameof(StoreAllIncludesHotkeyBar), true, $"Whether to also store all non favorited items from the hotkey bar ({overrideHotkeyBar}).");
+
+            TakeAllKeybind = Config.Bind(sectionName, nameof(TakeAllKeybind), new KeyboardShortcut(KeyCode.None), $"The hotkey to use 'Take All' on the currently opened container ({overrideHotkey}).");
 
             sectionName = "4 - Sorting";
 
@@ -417,6 +451,92 @@ namespace QuickStackStore
 
             FavoritedItemTooltip = Config.Bind(sectionName, nameof(FavoritedItemTooltip), string.Empty, string.Empty);
             TrashFlaggedItemTooltip = Config.Bind(sectionName, nameof(TrashFlaggedItemTooltip), string.Empty, string.Empty);
+
+            keyBinds.Clear();
+
+            keyBinds.Add(ControllerDPadUsageModifierKeybind);
+            keyBinds.Add(FavoritingModifierKeybind1);
+            keyBinds.Add(FavoritingModifierKeybind2);
+            keyBinds.Add(QuickStackKeybind);
+            keyBinds.Add(QuickTrashKeybind);
+            keyBinds.Add(RestockKeybind);
+            keyBinds.Add(SortKeybind);
+            keyBinds.Add(StoreAllKeybind);
+            keyBinds.Add(TakeAllKeybind);
+            keyBinds.Add(TrashKeybind);
+        }
+
+        internal static void ConfigTemplate_SettingChanged(object sender, EventArgs e)
+        {
+            GeneralConfig.ConfigTemplate.SettingChanged -= ConfigTemplate_SettingChanged;
+
+            ApplyTemplate(GeneralConfig.ConfigTemplate.Value);
+
+            GeneralConfig.ConfigTemplate.Value = ConfigTemplate.NotCurrentlyLoadingTemplate;
+            GeneralConfig.ConfigTemplate.SettingChanged += ConfigTemplate_SettingChanged;
+        }
+
+        internal static void ApplyTemplate(ConfigTemplate template)
+        {
+            if (GeneralConfig.ConfigTemplate.Value == ConfigTemplate.NotCurrentlyLoadingTemplate)
+            {
+                return;
+            }
+
+            var forbiddenKeys = new HashSet<string>(keyBinds.Select((a) => a.Definition.Key));
+
+            foreach (var config in Config)
+            {
+                if (forbiddenKeys.Contains(config.Key.Key))
+                {
+                    continue;
+                }
+
+                config.Value.BoxedValue = config.Value.DefaultValue;
+            }
+
+            switch (template)
+            {
+                case ConfigTemplate.BasicControllerKeybinds:
+                    GeneralConfig.OverrideKeybindBehavior.Value = OverrideKeybindBehavior.DisableAllNewHotkeys;
+
+                    ControllerConfig.UseHardcodedControllerSupport.Value = true;
+                    ControllerConfig.ControllerDPadUsageInInventoryGrid.Value = DPadUsage.Keybinds;
+                    ControllerConfig.RemoveControllerButtonHintFromTakeAllButton.Value = false;
+                    break;
+
+                case ConfigTemplate.CustomControllerKeybinds:
+                    GeneralConfig.OverrideKeybindBehavior.Value = OverrideKeybindBehavior.UseIndividualConfigOptions;
+
+                    FavoriteConfig.DisplayFavoriteToggleButton.Value = FavoritingToggling.Disabled;
+                    ControllerConfig.UseHardcodedControllerSupport.Value = false;
+                    ControllerConfig.ControllerDPadUsageInInventoryGrid.Value = DPadUsage.InventorySlotMovement;
+                    ControllerConfig.RemoveControllerButtonHintFromTakeAllButton.Value = true;
+                    break;
+
+                case ConfigTemplate.MouseAndKeyboardWithButtons:
+                    GeneralConfig.OverrideKeybindBehavior.Value = OverrideKeybindBehavior.DisableAllNewHotkeys;
+
+                    break;
+
+                case ConfigTemplate.MouseAndKeyboardWithHotkeys:
+                    GeneralConfig.OverrideButtonDisplay.Value = OverrideButtonDisplay.DisableAllNewButtons;
+                    GeneralConfig.OverrideKeybindBehavior.Value = OverrideKeybindBehavior.UseIndividualConfigOptions;
+
+                    break;
+
+                case ConfigTemplate.GoldensChoice:
+
+                    GeneralConfig.OverrideKeybindBehavior.Value = OverrideKeybindBehavior.DisableAllNewHotkeys;
+                    GeneralConfig.OverrideButtonDisplay.Value = OverrideButtonDisplay.UseIndividualConfigOptions;
+                    GeneralConfig.OverrideHotkeyBarBehavior.Value = OverrideHotkeyBarBehavior.UseIndividualConfigOptions;
+                    QuickStackRestockConfig.AllowAreaStackingInMultiplayerWithoutMUC.Value = true;
+                    RestockConfig.RestockOnlyAmmoAndConsumables.Value = false;
+                    RestockConfig.RestockOnlyFavoritedItems.Value = true;
+                    break;
+            }
+
+            Config.Save();
         }
 
         internal static void ResetAllFavoritingData_SettingChanged(object sender, EventArgs e)
@@ -582,6 +702,24 @@ namespace QuickStackStore
         {
             DefaultTextStar = 0,
             TextStarInItemFavoriteColor = 1,
+        }
+
+        internal enum DPadUsage
+        {
+            InventorySlotMovement = 0,
+            Keybinds = 1,
+            KeybindsWhileHoldingModifierKey = 2,
+        }
+
+        internal enum ConfigTemplate
+        {
+            NotCurrentlyLoadingTemplate = 0,
+            BasicControllerKeybinds = 1,
+            CustomControllerKeybinds = 2,
+            MouseAndKeyboardWithButtons = 3,
+            MouseAndKeyboardWithHotkeys = 4,
+            GoldensChoice = 5,
+            ResetToDefault = 6,
         }
     }
 }

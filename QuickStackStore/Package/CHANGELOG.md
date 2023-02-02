@@ -1,4 +1,13 @@
 # Changelog
+## 1.3.3
+- Full controller support (including keybind hints and favoriting)
+- Fixed ServerSync messing up button layout
+- Fixed trash hotkey doing quick trash and vice versa (introduced in 1.3.1)
+- Added French, BR Portuguese and Polish translation
+- Added config template feature
+- Added 'Take All' and 'Store All' keybind
+## 1.3.2
+- Non public testing version of 1.3.3
 ## 1.3.1
 - Multi User Chest support (requires MUC 0.4)
 - Area quick stacking and restocking in multiplayer can now be disabled when not using MUC (default). Ships are excluded from area quick stacking in multiplayer without MUC

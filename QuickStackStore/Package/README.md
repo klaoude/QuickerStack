@@ -126,6 +126,8 @@ Thank you to everyone who provided a translation:
 
 The Chinese translation was provided by [Tiomer](https://www.nexusmods.com/users/114839878).
 The Russian translation was provided by [Opik7](https://www.nexusmods.com/users/82796113).
-
+The French translation was provided by [cyouinlan](https://www.nexusmods.com/users/45502817).
+The Brazilian Portuguese translation was provided by [kaiqueknup](https://www.nexusmods.com/users/37243480).
+The Polish translation was provided by [peser](https://www.nexusmods.com/valheim/users/15748869).
 
 Source code available on github: https://github.com/Goldenrevolver/QuickStackStore

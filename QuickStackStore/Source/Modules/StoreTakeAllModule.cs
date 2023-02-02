@@ -29,6 +29,36 @@ namespace QuickStackStore
 
     internal class StoreTakeAllModule
     {
+        internal static void DoTakeAllWithKeybind(Player player)
+        {
+            if (!InventoryGui.instance || !InventoryGui.IsVisible())
+            {
+                return;
+            }
+
+            if (player != Player.m_localPlayer)
+            {
+                return;
+            }
+
+            InventoryGui.instance.OnTakeAll();
+        }
+
+        internal static void DoStoreAllWithKeybind(Player player)
+        {
+            if (!InventoryGui.instance || !InventoryGui.IsVisible())
+            {
+                return;
+            }
+
+            if (player != Player.m_localPlayer)
+            {
+                return;
+            }
+
+            StoreAllItemsInOrder(player);
+        }
+
         private static bool ShouldStoreItem(ItemData item, UserConfig playerConfig, int inventoryHeight, bool includeHotbar)
         {
             return (item.m_gridPos.y > 0 || includeHotbar)
