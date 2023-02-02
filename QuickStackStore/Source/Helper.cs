@@ -26,7 +26,7 @@ namespace QuickStackStore
             }
         }
 
-        internal static void LogO(object s, DebugLevel OverrideLevel)
+        internal static void LogO(object s, DebugLevel OverrideLevel = DebugLevel.Warning)
         {
             var toPrint = $"{QuickStackStorePlugin.NAME} {QuickStackStorePlugin.VERSION}: {(s != null ? s.ToString() : "null")}";
 
@@ -57,8 +57,13 @@ namespace QuickStackStore
         // originally from 'Trash Items' mod, as allowed in their permission settings on nexus
         // https://www.nexusmods.com/valheim/mods/441
         // https://github.com/virtuaCode/valheim-mods/tree/main/TrashItems
-        public static Sprite LoadSprite(string path, Rect size, Vector2 pivot, int units = 100)
+        public static Sprite LoadSprite(string path, Rect size, Vector2? pivot = null, int units = 100)
         {
+            if (pivot == null)
+            {
+                pivot = new Vector2(0.5f, 0.5f);
+            }
+
             Assembly assembly = Assembly.GetExecutingAssembly();
             Stream imageStream = assembly.GetManifestResourceStream(path);
 
@@ -69,7 +74,7 @@ namespace QuickStackStore
                 imageStream.CopyTo(mStream);
                 texture.LoadImage(mStream.ToArray());
                 texture.Apply();
-                return Sprite.Create(texture, size, pivot, units);
+                return Sprite.Create(texture, size, pivot.Value, units);
             }
         }
     }

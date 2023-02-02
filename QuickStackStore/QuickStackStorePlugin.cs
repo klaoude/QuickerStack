@@ -12,9 +12,8 @@ namespace QuickStackStore
     {
         public const string GUID = "goldenrevolver.quick_stack_store";
         public const string NAME = "Quick Stack - Store - Sort - Trash - Restock";
-        public const string VERSION = "1.3.1";
+        public const string VERSION = "1.3.2";
 
-        // TODO controller support
         protected void Awake()
         {
             if (CompatibilitySupport.HasOutdatedMUCPlugin())
@@ -25,13 +24,27 @@ namespace QuickStackStore
 
             var path = "QuickStackStore.Resources";
 
-            BorderRenderer.border = Helper.LoadSprite($"{path}.border.png", new Rect(0, 0, 1024, 1024), new Vector2(512, 512));
-            TrashModule.trashSprite = Helper.LoadSprite($"{path}.trash.png", new Rect(0, 0, 64, 64), new Vector2(32, 32));
-            TrashModule.bgSprite = Helper.LoadSprite($"{path}.trashmask.png", new Rect(0, 0, 96, 112), new Vector2(48, 56));
+            ControllerButtonHintHelper.circleButtonSprite = Helper.LoadSprite($"{path}.circleButton.png", new Rect(0, 0, 36, 36));
+            ControllerButtonHintHelper.rectButtonSprite = Helper.LoadSprite($"{path}.rectangleButton.png", new Rect(0, 0, 28, 28));
+
+            BorderRenderer.border = Helper.LoadSprite($"{path}.border.png", new Rect(0, 0, 1024, 1024));
+            TrashModule.trashSprite = Helper.LoadSprite($"{path}.trash.png", new Rect(0, 0, 64, 64));
+            TrashModule.bgSprite = Helper.LoadSprite($"{path}.trashmask.png", new Rect(0, 0, 96, 112));
 
             QSSConfig.LoadConfig(this);
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
+        }
+    }
+
+    [HarmonyPatch(typeof(FejdStartup))]
+    internal class FejdStartupPatch
+    {
+        [HarmonyPatch(nameof(FejdStartup.Awake)), HarmonyPostfix]
+        private static void FejdStartupAwakePatch()
+        {
+            LocalizationConfig.SetupTranslations();
+            QSSConfig.ConfigTemplate_SettingChanged(null, null);
         }
     }
 }

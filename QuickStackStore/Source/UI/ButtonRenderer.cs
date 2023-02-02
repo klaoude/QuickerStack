@@ -1,46 +1,46 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
-using HarmonyLib;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using static QuickStackStore.CompatibilitySupport;
+using static QuickStackStore.ControllerButtonHintHelper;
 using static QuickStackStore.QSSConfig;
 
 namespace QuickStackStore
 {
     internal class ButtonRenderer
     {
-        private static float origButtonLength = -1;
-        private static Vector3 origButtonPosition;
+        internal static bool hasOpenedInventoryOnce = false;
+        internal static float origButtonLength = -1;
+        internal static Vector3 origButtonPosition;
 
         internal static Text favoritingTogglingButtonText;
 
-        private static Button favoritingTogglingButton;
-        private static Button quickStackAreaButton;
-        private static Button sortInventoryButton;
-        private static Button restockAreaButton;
+        internal static Button favoritingTogglingButton;
+        internal static Button quickStackAreaButton;
+        internal static Button sortInventoryButton;
+        internal static Button restockAreaButton;
 
-        private static Button quickStackToContainerButton;
-        private static Button storeAllButton;
-        private static Button sortContainerButton;
-        private static Button restockFromContainerButton;
+        internal static Button quickStackToContainerButton;
+        internal static Button storeAllButton;
+        internal static Button sortContainerButton;
+        internal static Button restockFromContainerButton;
 
         private const float shrinkFactor = 0.9f;
         private const int vPadding = 8;
         private const int hAlign = 1;
 
-        [HarmonyPatch(typeof(InventoryGui))]
-        internal static class PatchInventoryGui
+        internal class MainButtonUpdate
         {
-            // slightly lower priority so we get rendered on top of equipment slot mods
-            // (lower priority -> later rendering -> you get rendered on top)
-            [HarmonyPriority(Priority.LowerThanNormal)]
-            [HarmonyPatch(nameof(InventoryGui.Show))]
-            [HarmonyPostfix]
-            public static void Show_Postfix(InventoryGui __instance)
+            internal static void UpdateInventoryGuiButtons(InventoryGui __instance)
             {
+                if (!hasOpenedInventoryOnce)
+                {
+                    return;
+                }
+
                 if (__instance != InventoryGui.instance)
                 {
                     return;
@@ -65,6 +65,8 @@ namespace QuickStackStore
                 }
 
                 var takeAllButtonRect = __instance.m_takeAllButton.GetComponent<RectTransform>();
+
+                FixTakeAllButtonControllerHint(__instance);
 
                 if (origButtonLength == -1)
                 {
@@ -141,14 +143,14 @@ namespace QuickStackStore
 
                 var randyStatus = HasRandyPlugin();
 
-                if (SortConfig.DisplaySortButtons.Value != ShowTwoButtons.OnlyContainerButton)
+                if (displaySortButtons != ShowTwoButtons.OnlyContainerButton)
                 {
                     // this one is deliberately unaffected by the randy equipment slot compatibility
                     bool shouldShow = __instance.m_currentContainer == null || displaySortButtons != ShowTwoButtons.BothButDependingOnContext;
 
                     if (sortInventoryButton == null)
                     {
-                        sortInventoryButton = CreateMiniButton(__instance, nameof(sortInventoryButton));
+                        sortInventoryButton = CreateMiniButton(__instance, nameof(sortInventoryButton), KeybindChecker.joySort);
                         sortInventoryButton.gameObject.SetActive(shouldShow);
 
                         if (shouldShow)
@@ -175,7 +177,7 @@ namespace QuickStackStore
 
                     if (restockAreaButton == null)
                     {
-                        restockAreaButton = CreateMiniButton(__instance, nameof(restockAreaButton));
+                        restockAreaButton = CreateMiniButton(__instance, nameof(restockAreaButton), KeybindChecker.joyRestock);
                         restockAreaButton.gameObject.SetActive(!shouldntShow);
 
                         if (!shouldntShow)
@@ -205,7 +207,7 @@ namespace QuickStackStore
 
                     if (quickStackAreaButton == null)
                     {
-                        quickStackAreaButton = CreateMiniButton(__instance, nameof(quickStackAreaButton));
+                        quickStackAreaButton = CreateMiniButton(__instance, nameof(quickStackAreaButton), KeybindChecker.joyQuickStack);
                         quickStackAreaButton.gameObject.SetActive(!shouldntShow);
 
                         if (!shouldntShow)
@@ -247,18 +249,18 @@ namespace QuickStackStore
 
                     if (favoritingTogglingButton == null)
                     {
-                        favoritingTogglingButton = CreateMiniButton(__instance, nameof(favoritingTogglingButton));
+                        favoritingTogglingButton = CreateMiniButton(__instance, nameof(favoritingTogglingButton), KeybindChecker.joyFavoriteToggling);
                         favoritingTogglingButton.gameObject.SetActive(true);
 
                         favoritingTogglingButtonText = favoritingTogglingButton.transform.Find("Text").GetComponent<Text>();
 
                         // trigger text reset without changing value
-                        FavoritingMode.HasCurrentlyToggledFavoriting |= false;
+                        FavoritingMode.RefreshDisplay();
 
                         __instance.StartCoroutine(WaitAFrameToRepositionMiniButton(__instance, favoritingTogglingButton.transform, parent, index, randyStatus));
 
                         favoritingTogglingButton.onClick.RemoveAllListeners();
-                        favoritingTogglingButton.onClick.AddListener(new UnityAction(() => FavoritingMode.HasCurrentlyToggledFavoriting ^= true));
+                        favoritingTogglingButton.onClick.AddListener(new UnityAction(() => FavoritingMode.ToggleFavoriteToggling()));
                     }
                     else
                     {
@@ -272,7 +274,7 @@ namespace QuickStackStore
                 {
                     if (quickStackToContainerButton == null)
                     {
-                        quickStackToContainerButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
+                        quickStackToContainerButton = CreateBigButton(__instance, nameof(quickStackToContainerButton), KeybindChecker.joyQuickStack);
 
                         if (randyStatus == RandyStatus.EnabledWithQuickSlots)
                         {
@@ -289,7 +291,6 @@ namespace QuickStackStore
                             MoveButtonToIndex(ref quickStackToContainerButton, startOffset, -vOffset, extraContainerButtons, 1);
                         }
 
-                        quickStackToContainerButton.onClick.RemoveAllListeners();
                         quickStackToContainerButton.onClick.AddListener(new UnityAction(() => QuickStackModule.DoQuickStack(Player.m_localPlayer, true)));
                     }
 
@@ -300,10 +301,9 @@ namespace QuickStackStore
                 {
                     if (storeAllButton == null)
                     {
-                        storeAllButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
+                        storeAllButton = CreateBigButton(__instance, nameof(storeAllButton), KeybindChecker.joyStoreAll);
                         MoveButtonToIndex(ref storeAllButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
-                        storeAllButton.onClick.RemoveAllListeners();
                         storeAllButton.onClick.AddListener(new UnityAction(() => StoreTakeAllModule.StoreAllItemsInOrder(Player.m_localPlayer)));
                     }
 
@@ -314,10 +314,9 @@ namespace QuickStackStore
                 {
                     if (restockFromContainerButton == null)
                     {
-                        restockFromContainerButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
+                        restockFromContainerButton = CreateBigButton(__instance, nameof(restockFromContainerButton), KeybindChecker.joyRestock);
                         MoveButtonToIndex(ref restockFromContainerButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
-                        restockFromContainerButton.onClick.RemoveAllListeners();
                         restockFromContainerButton.onClick.AddListener(new UnityAction(() => RestockModule.DoRestock(Player.m_localPlayer, true)));
                     }
 
@@ -328,10 +327,9 @@ namespace QuickStackStore
                 {
                     if (sortContainerButton == null)
                     {
-                        sortContainerButton = Object.Instantiate(__instance.m_takeAllButton, takeAllButtonRect.parent);
+                        sortContainerButton = CreateBigButton(__instance, nameof(sortContainerButton), KeybindChecker.joySort);
                         MoveButtonToIndex(ref sortContainerButton, startOffset, vOffset, extraContainerButtons, ++buttonsBelowTakeAll);
 
-                        sortContainerButton.onClick.RemoveAllListeners();
                         sortContainerButton.onClick.AddListener(new UnityAction(() => SortModule.SortContainer(__instance.m_currentContainer)));
                     }
 
@@ -344,31 +342,6 @@ namespace QuickStackStore
                 }
 
                 OnButtonTextTranslationSettingChanged(false);
-            }
-
-            [HarmonyPriority(Priority.LowerThanNormal)]
-            [HarmonyPatch(nameof(InventoryGui.CloseContainer))]
-            [HarmonyPostfix]
-            public static void CloseContainer_Postfix(InventoryGui __instance)
-            {
-                if (__instance.m_currentContainer != null)
-                {
-                    return;
-                }
-
-                var buttons = new Button[] { storeAllButton, quickStackToContainerButton, sortContainerButton, restockFromContainerButton };
-
-                foreach (var button in buttons)
-                {
-                    // hide the buttons when the current container gets closed instead of relying on getting hidden when the container panel gets hidden
-                    // in case a mod uses the container panel to add a custom container (like jewelcrafting) that my buttons don't work with anyway
-                    if (button == null)
-                    {
-                        continue;
-                    }
-
-                    button.gameObject.SetActive(false);
-                }
             }
         }
 
@@ -416,26 +389,40 @@ namespace QuickStackStore
             }
         }
 
+        private static Button CreateBigButton(InventoryGui instance, string name, string joyHint)
+        {
+            var button = Object.Instantiate(instance.m_takeAllButton, instance.m_takeAllButton.transform.parent);
+            button.name = name;
+
+            instance.StartCoroutine(WaitAFrameToSetupControllerHint(button, joyHint));
+
+            button.onClick.RemoveAllListeners();
+
+            return button;
+        }
+
         private const int miniButtonSize = 38;
         private const int miniButtonHPadding = 2;
         private const float normalMiniButtonVOffset = -56f;
         private const float lowerMiniButtonVOffset = -75f;
 
-        private static Button CreateMiniButton(InventoryGui instance, string name)
+        private static Button CreateMiniButton(InventoryGui instance, string name, string joyHint)
         {
             var playerInventory = instance.m_player.transform;
 
-            Transform obj = Object.Instantiate(instance.m_takeAllButton.transform, playerInventory);
-            obj.name = name;
+            Button button = Object.Instantiate(instance.m_takeAllButton, playerInventory);
+            button.name = name;
 
-            var rect = (RectTransform)obj.transform;
+            instance.StartCoroutine(WaitAFrameToSetupControllerHint(button, joyHint));
+
+            var rect = (RectTransform)button.transform;
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, miniButtonSize);
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, miniButtonSize);
 
             Text text = rect.Find("Text").GetComponent<Text>();
             text.resizeTextForBestFit = true;
 
-            return rect.GetComponent<Button>();
+            return button;
         }
 
         private static void RepositionMiniButton(InventoryGui instance, Transform button, Transform weight, int existingMiniButtons, RandyStatus randyStatus)
@@ -482,16 +469,21 @@ namespace QuickStackStore
                 yield break;
             }
 
-            PatchInventoryGui.Show_Postfix(instance);
+            MainButtonUpdate.UpdateInventoryGuiButtons(instance);
 
             if (includeTrashButton)
             {
-                TrashModule.TrashItemsPatches.Show_Postfix(instance);
+                TrashModule.TrashItemsPatches.UpdateTrashCanUI(instance);
             }
         }
 
         internal static void OnButtonRelevantSettingChanged(BaseUnityPlugin plugin, bool includeTrashButton = false)
         {
+            if (!hasOpenedInventoryOnce || !TrashModule.TrashItemsPatches.hasOpenedInventoryOnce)
+            {
+                return;
+            }
+
             // reminder to never use ?. on monobehaviors
 
             if (InventoryGui.instance != null)

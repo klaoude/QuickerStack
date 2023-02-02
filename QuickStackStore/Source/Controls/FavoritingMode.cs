@@ -35,11 +35,21 @@ namespace QuickStackStore
             }
         }
 
+        internal static void RefreshDisplay()
+        {
+            HasCurrentlyToggledFavoriting |= false;
+        }
+
+        internal static void ToggleFavoriteToggling()
+        {
+            HasCurrentlyToggledFavoriting ^= true;
+        }
+
         internal static bool IsInFavoritingMode()
         {
             return HasCurrentlyToggledFavoriting
-                || HotkeyListener.IsKeyHeld(FavoriteConfig.FavoritingModifierKeybind1.Value)
-                || HotkeyListener.IsKeyHeld(FavoriteConfig.FavoritingModifierKeybind2.Value);
+                || KeybindChecker.IsKeyHeld(FavoriteConfig.FavoritingModifierKeybind1.Value)
+                || KeybindChecker.IsKeyHeld(FavoriteConfig.FavoritingModifierKeybind2.Value);
         }
     }
 }

@@ -20,16 +20,6 @@ namespace QuickStackStore
         }
     }
 
-    [HarmonyPatch(typeof(FejdStartup))]
-    internal class FejdStartupPatch
-    {
-        [HarmonyPatch(nameof(FejdStartup.Awake)), HarmonyPostfix]
-        private static void FejdStartupAwakePatch()
-        {
-            LocalizationConfig.SetupTranslations();
-        }
-    }
-
     internal class LocalizationConfig
     {
         private const string keyPrefix = "quickstackstore_";
@@ -71,8 +61,7 @@ namespace QuickStackStore
         public static ConfigEntry<string> FavoritedItemTooltip;
         public static ConfigEntry<string> TrashFlaggedItemTooltip;
 
-        // don't put English in here, it gets checked separately
-        public static string[] supportedEmbeddedLanguages = new[] { "Chinese", "Russian" };
+        public static string[] supportedEmbeddedLanguages = new[] { "English", "Chinese", "Russian", "French", "Portuguese_Brazilian", "Polish" };
 
         private const string embeddedLanguagePathFormat = "QuickStackStore.Translations.QuickStackStore.{0}.json";
 
@@ -99,6 +88,10 @@ namespace QuickStackStore
                 else if (language == "Russian")
                 {
                     localization.m_translations[takeAllKey] = "взять всё";
+                }
+                else if (language == "French")
+                {
+                    localization.m_translations[takeAllKey] = "Tout Prendre";
                 }
             }
         }
@@ -134,7 +127,7 @@ namespace QuickStackStore
                 }
             }
 
-            if (!externalFileLoaded && supportedEmbeddedLanguages.Contains(currentLanguage))
+            if (!externalFileLoaded && currentLanguage != "English" && supportedEmbeddedLanguages.Contains(currentLanguage))
             {
                 Helper.Log(string.Format(loadingLog, embedded, currentLanguage), QSSConfig.DebugSeverity.Everything);
 
