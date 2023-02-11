@@ -14,6 +14,7 @@ namespace QuickStackStore
         private static FieldInfo AedenAddEquipmentRow;
         private static FieldInfo OdinExAddEquipmentRow;
         private static FieldInfo OdinQOLAddEquipmentRow;
+        private static FieldInfo AzuEPIAddEquipmentRow;
         private static FieldInfo RandyQuickSlotsEnabled;
 
         public const string aeden = "aedenthorn.ExtendedPlayerInventory";
@@ -21,6 +22,14 @@ namespace QuickStackStore
         public const string odinPlus = "com.odinplusqol.mod";
         public const string odinExInv = "odinplusqol.OdinsExtendedInventory";
         public const string randy = "randyknapp.mods.equipmentandquickslots";
+        public const string azuEPI = "Azumatt.AzuExtendedPlayerInventory";
+
+        // intentionally up here so, we don't forget to update it
+        public static bool HasAedenLikeEquipOrQuickSlotPlugin()
+        {
+            return HasPlugin(aeden) || HasPlugin(odinExInv) || HasPlugin(odinPlus) || HasPlugin(azuEPI);
+        }
+
         public const string betterArchery = "ishid4.mods.betterarchery";
         public const string smartContainers = "flueno.SmartContainers";
         public const string backpacks = "org.bepinex.plugins.backpacks";
@@ -96,10 +105,50 @@ namespace QuickStackStore
 
         public static bool HasPluginThatRequiresMiniButtonVMove()
         {
-            return HasPlugin(aeden) || HasPlugin(odinExInv) || HasPlugin(odinPlus);
+            return HasAedenLikeEquipOrQuickSlotPlugin();
         }
 
-        private static bool IsEquipOrQuickSlotForAedenLike(ref FieldInfo fieldInfo, string assemblyName, string className, string fieldName, int inventoryHeight, Vector2i itemPos, bool checkForRestockableSlots)
+        public static bool IsEquipOrQuickSlot(int inventoryHeight, Vector2i itemPos, bool checkForRestockableSlots = true)
+        {
+            //if (HasPlugin(randy))
+            //{
+            //    // randyknapps mod ignores everything this mod does anyway, so no need for specific compatibility
+            //}
+
+            if (HasPlugin(aeden) && IsAedenLikeEquipOrQuickSlot(ref AedenAddEquipmentRow, "ExtendedPlayerInventory", "BepInExPlugin", "addEquipmentRow", inventoryHeight, itemPos, checkForRestockableSlots))
+            {
+                return true;
+            }
+
+            if (HasPlugin(odinExInv) && IsAedenLikeEquipOrQuickSlot(ref OdinExAddEquipmentRow, "OdinsExtendedInventory", "OdinsExtendedInventoryPlugin", "addEquipmentRow", inventoryHeight, itemPos, checkForRestockableSlots))
+            {
+                return true;
+            }
+
+            if (HasPlugin(odinPlus) && IsAedenLikeEquipOrQuickSlot(ref OdinQOLAddEquipmentRow, "OdinQOL", "QuickAccessBar", "AddEquipmentRow", inventoryHeight, itemPos, checkForRestockableSlots))
+            {
+                return true;
+            }
+
+            if (HasPlugin(azuEPI) && IsAedenLikeEquipOrQuickSlot(ref AzuEPIAddEquipmentRow, "AzuExtendedPlayerInventory", "AzuExtendedPlayerInventoryPlugin", "AddEquipmentRow", inventoryHeight, itemPos, checkForRestockableSlots))
+            {
+                return true;
+            }
+
+            if (HasPlugin(comfy) && IsComfyEquipOrQuickSlot(inventoryHeight, itemPos, checkForRestockableSlots))
+            {
+                return true;
+            }
+
+            if (HasPlugin(betterArchery) && IsBetterArcheryQuiverSlot(itemPos, checkForRestockableSlots))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsAedenLikeEquipOrQuickSlot(ref FieldInfo fieldInfo, string assemblyName, string className, string fieldName, int inventoryHeight, Vector2i itemPos, bool checkForRestockableSlots)
         {
             if (fieldInfo == null)
             {
@@ -126,93 +175,75 @@ namespace QuickStackStore
             return false;
         }
 
-        //Helper.Log($"Found {mod} and it says {itemPos} is an equip/ quick slot");
-        public static bool IsEquipOrQuickSlot(int inventoryHeight, Vector2i itemPos, bool checkForRestockableSlots = true)
+        private static bool IsComfyEquipOrQuickSlot(int inventoryHeight, Vector2i itemPos, bool checkForRestockableSlots)
         {
-            //if (HasPlugin(randy))
-            //{
-            //    // randyknapps mod ignores everything this mod does anyway, so no need for specific compatibility
-            //}
-
-            if (HasPlugin(aeden) && IsEquipOrQuickSlotForAedenLike(ref AedenAddEquipmentRow, "ExtendedPlayerInventory", "BepInExPlugin", "addEquipmentRow", inventoryHeight, itemPos, checkForRestockableSlots))
+            if (IsComfyArmorSlot == null)
             {
-                return true;
-            }
+                var assembly = Assembly.Load("ComfyQuickSlots");
 
-            if (HasPlugin(odinExInv) && IsEquipOrQuickSlotForAedenLike(ref OdinExAddEquipmentRow, "OdinsExtendedInventory", "OdinsExtendedInventoryPlugin", "addEquipmentRow", inventoryHeight, itemPos, checkForRestockableSlots))
-            {
-                return true;
-            }
-
-            if (HasPlugin(odinPlus) && IsEquipOrQuickSlotForAedenLike(ref OdinQOLAddEquipmentRow, "OdinQOL", "QuickAccessBar", "AddEquipmentRow", inventoryHeight, itemPos, checkForRestockableSlots))
-            {
-                return true;
-            }
-
-            if (HasPlugin(comfy))
-            {
-                if (IsComfyArmorSlot == null)
+                if (assembly != null)
                 {
-                    var assembly = Assembly.Load("ComfyQuickSlots");
+                    var type = assembly.GetTypes().First(a => a.IsClass && a.Name == "ComfyQuickSlots");
+                    var pubStaticMethods = type.GetMethods(BindingFlags.Public | BindingFlags.Static);
+                    IsComfyArmorSlot = pubStaticMethods.First(t => t.Name == "IsArmorSlot" && t.GetParameters().Length == 1);
+                }
+            }
 
-                    if (assembly != null)
-                    {
-                        var type = assembly.GetTypes().First(a => a.IsClass && a.Name == "ComfyQuickSlots");
-                        var pubStaticMethods = type.GetMethods(BindingFlags.Public | BindingFlags.Static);
-                        IsComfyArmorSlot = pubStaticMethods.First(t => t.Name == "IsArmorSlot" && t.GetParameters().Length == 1);
-                    }
+            if (IsComfyArmorSlot?.Invoke(null, new object[] { itemPos }) is bool isArmorSlot && isArmorSlot)
+            {
+                return true;
+            }
+
+            if (checkForRestockableSlots)
+            {
+                // check for quickslot (could also be armor slot)
+                if (IsComfyArmorSlot?.Invoke(null, new object[] { new Vector2i(itemPos.x - 3, itemPos.y) }) is bool isArmorOrQuickSlot && isArmorOrQuickSlot)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsBetterArcheryQuiverSlot(Vector2i itemPos, bool checkForRestockableSlots)
+        {
+            if (IsQuiverEnabled == null || QuiverRowIndex == null)
+            {
+                var assembly = Assembly.Load("BetterArchery");
+
+                if (assembly != null)
+                {
+                    var type = assembly.GetTypes().First(a => a.IsClass && a.Name == "BetterArchery");
+                    var pubStaticFields = type.GetFields(BindingFlags.Public | BindingFlags.Static);
+                    IsQuiverEnabled = pubStaticFields.First(t => t.Name == "configQuiverEnabled");
+                    QuiverRowIndex = pubStaticFields.First(t => t.Name == "QuiverRowIndex");
+                }
+            }
+
+            if (!(IsQuiverEnabled?.GetValue(null) is ConfigEntry<bool> config) || !config.Value)
+            {
+                return false;
+            }
+
+            // this would also return the same thing: GetBonusInventoryRowIndex
+            if (QuiverRowIndex?.GetValue(null) is int rowIndex)
+            {
+                // it doesn't make sense for it to be the hotkey bar
+                if (rowIndex == 0)
+                {
+                    return false;
                 }
 
-                if (IsComfyArmorSlot?.Invoke(null, new object[] { itemPos }) is bool isArmorSlot && isArmorSlot)
+                if (itemPos.y == rowIndex && (checkForRestockableSlots || itemPos.x < 0 || itemPos.x > 2))
                 {
                     return true;
                 }
 
-                if (checkForRestockableSlots)
+                // for some reason 'Better Archery' adds two entire rows and doesn't even use this one (probably for backwards compatibility)
+                if (itemPos.y == rowIndex - 1)
                 {
-                    // check for quickslot (could also be armor slot)
-                    if (IsComfyArmorSlot?.Invoke(null, new object[] { new Vector2i(itemPos.x - 3, itemPos.y) }) is bool isArmorOrQuickSlot && isArmorOrQuickSlot)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            if (HasPlugin(betterArchery))
-            {
-                if (IsQuiverEnabled == null || QuiverRowIndex == null)
-                {
-                    var assembly = Assembly.Load("BetterArchery");
-
-                    if (assembly != null)
-                    {
-                        var type = assembly.GetTypes().First(a => a.IsClass && a.Name == "BetterArchery");
-                        var pubStaticFields = type.GetFields(BindingFlags.Public | BindingFlags.Static);
-                        IsQuiverEnabled = pubStaticFields.First(t => t.Name == "configQuiverEnabled");
-                        QuiverRowIndex = pubStaticFields.First(t => t.Name == "QuiverRowIndex");
-                    }
-                }
-
-                if (IsQuiverEnabled?.GetValue(null) is ConfigEntry<bool> config && config.Value)
-                {
-                    // this would also return the same thing: GetBonusInventoryRowIndex
-                    if (QuiverRowIndex?.GetValue(null) is int rowIndex)
-                    {
-                        // it doesn't make sense for it to be the hotkey bar
-                        if (rowIndex != 0)
-                        {
-                            if (itemPos.y == rowIndex && (checkForRestockableSlots || itemPos.x < 0 || itemPos.x > 2))
-                            {
-                                return true;
-                            }
-
-                            // for some reason 'Better Archery' adds two entire rows and doesn't even use this one (probably for backwards compatibility)
-                            if (itemPos.y == rowIndex - 1)
-                            {
-                                return true;
-                            }
-                        }
-                    }
+                    return true;
                 }
             }
 
