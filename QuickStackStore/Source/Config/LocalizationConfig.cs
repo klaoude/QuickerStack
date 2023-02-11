@@ -64,17 +64,26 @@ namespace QuickStackStore
         {
             if (localization.m_translations.ContainsKey(takeAllKey))
             {
-                if (language == "English")
+                switch (language)
                 {
-                    localization.m_translations[takeAllKey] = "Take All";
-                }
-                else if (language == "Russian")
-                {
-                    localization.m_translations[takeAllKey] = "взять всё";
-                }
-                else if (language == "French")
-                {
-                    localization.m_translations[takeAllKey] = "Tout Prendre";
+                    case "English":
+                        localization.m_translations[takeAllKey] = "Take All";
+                        break;
+
+                    case "Russian":
+                        localization.m_translations[takeAllKey] = "взять всё";
+                        break;
+
+                    case "French":
+                        localization.m_translations[takeAllKey] = "Tout Prendre";
+                        break;
+
+                    case "Portuguese_Brazilian":
+                        localization.m_translations[takeAllKey] = "Pegar Tudo";
+                        break;
+
+                    default:
+                        break;
                 }
             }
         }
