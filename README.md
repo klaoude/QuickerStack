@@ -17,7 +17,7 @@ For further information visit its [Nexus page](https://www.nexusmods.com/valheim
 - If your Valheim game directory is not coincidentally at the same location as mine (`D:\Steam\steamapps\common\Valheim`), edit [GameDir.targets](/QuickStackStore/GameDir.targets) accordingly. The standard windows location is `C:\Program Files (x86)\Steam\steamapps\common\Valheim`.
 - Remember to not stage and commit any changes to `GameDir.targets`
 #### BepInEx
- - Download and install [BepInEx](https://valheim.thunderstore.io/package/denikson/BepInExPack_Valheim/) *(this is an Valheim specific pack)*
+ - Download and install [BepInEx](https://valheim.thunderstore.io/package/denikson/BepInExPack_Valheim/) *(this is a Valheim specific pack)*
  - Follow the information under manual install
  - Alternatively, use a mod manager to install BepInEx
 #### BepInEx Publicizer
@@ -26,8 +26,12 @@ For further information visit its [Nexus page](https://www.nexusmods.com/valheim
  - The publicizer is just like any other mod. So install it with a mod manager or manually take the `Bepinex-Publicizer` folder from the `.zip` and place it under `<ValheimGameDirectory>\BepInEx\plugins`
  - Run the game once, the BepInEx console should pop-up. In the background, BepInEx Publicizer will create assemblies under `<ValheimGameDirectory>\valheim_Data\Managed\publicized_assemblies`
  - You can now remove or deactive the publicizer, or keep it there, so it automatically updates the assemblies when the game updates
- 
- You should now successfully build this project 🎉
+#### .NET framework
+ - If your IDE wants to upgrade this project to version 4.7 or 4.8, decline. Valheim only supports version 4.6.2, so download that one
+#### Packages
+ - If your IDE does not prompt you to download the required NuGet packages 'ILRepack.Lib.MSBuild.Task' and 'YamlDotNet', download them through the NuGet package manager of your IDE (be sure to download the ones for .NET framework 4.6.2)
+
+You should now successfully build this project 🎉
 
 ## Credits
 

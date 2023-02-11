@@ -37,7 +37,10 @@ namespace QuickStackStore
         }
 
         // written with extensibility in mind (I wouldn't even mind if other mods patch this)
+#pragma warning disable IDE0060 // Remove unused parameter
+
         private static bool IsExcludedContainer(Container container)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             return false;
         }

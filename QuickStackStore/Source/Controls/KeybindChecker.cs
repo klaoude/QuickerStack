@@ -35,12 +35,12 @@ namespace QuickStackStore
 
         // thank you to 'Margmas' for giving me this snippet from VNEI https://github.com/MSchmoecker/VNEI/blob/master/VNEI/Logic/BepInExExtensions.cs#L21
         // since KeyboardShortcut.IsPressed and KeyboardShortcut.IsDown behave unintuitively
-        public static bool IsKeyDown(KeyboardShortcut shortcut)
+        public static bool IsKeyDown(this KeyboardShortcut shortcut)
         {
             return shortcut.MainKey != KeyCode.None && Input.GetKeyDown(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
         }
 
-        public static bool IsKeyHeld(KeyboardShortcut shortcut)
+        public static bool IsKeyHeld(this KeyboardShortcut shortcut)
         {
             return shortcut.MainKey != KeyCode.None && Input.GetKey(shortcut.MainKey) && shortcut.Modifiers.All(Input.GetKey);
         }
@@ -78,11 +78,11 @@ namespace QuickStackStore
                     return;
                 }
 
-                if (IsKeyDown(QuickStackConfig.QuickStackKeybind.Value))
+                if (QuickStackConfig.QuickStackKeybind.Value.IsKeyDown())
                 {
                     QuickStackModule.DoQuickStack(player);
                 }
-                else if (IsKeyDown(RestockConfig.RestockKeybind.Value))
+                else if (RestockConfig.RestockKeybind.Value.IsKeyDown())
                 {
                     RestockModule.DoRestock(player);
                 }
@@ -92,23 +92,23 @@ namespace QuickStackStore
                     return;
                 }
 
-                if (IsKeyDown(SortConfig.SortKeybind.Value))
+                if (SortConfig.SortKeybind.Value.IsKeyDown())
                 {
                     SortModule.DoSort(player);
                 }
-                else if (IsKeyDown(TrashConfig.QuickTrashKeybind.Value))
+                else if (TrashConfig.QuickTrashKeybind.Value.IsKeyDown())
                 {
                     TrashModule.AttemptQuickTrash();
                 }
-                else if (IsKeyDown(TrashConfig.TrashKeybind.Value))
+                else if (TrashConfig.TrashKeybind.Value.IsKeyDown())
                 {
                     TrashModule.TrashOrTrashFlagItem(true);
                 }
-                else if (IsKeyDown(StoreTakeAllConfig.TakeAllKeybind.Value))
+                else if (StoreTakeAllConfig.TakeAllKeybind.Value.IsKeyDown())
                 {
                     StoreTakeAllModule.DoTakeAllWithKeybind(player);
                 }
-                else if (IsKeyDown(StoreTakeAllConfig.StoreAllKeybind.Value))
+                else if (StoreTakeAllConfig.StoreAllKeybind.Value.IsKeyDown())
                 {
                     StoreTakeAllModule.DoStoreAllWithKeybind(player);
                 }

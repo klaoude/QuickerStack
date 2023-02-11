@@ -49,5 +49,5 @@
 - Sorting now respects ComfyQuickSlots. QuickStack and Restock hotkeys no longer require the inventory to be open
 ## 1.0.1
 - Fixed sort merging leaving empty slots after removing stacks. Renamed 3 config options that were double negatives
-## 1.0
+## 1.0.0
 - Initial release

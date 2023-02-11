@@ -82,6 +82,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QuickStackStorePlugin.cs" />
     <Compile Include="Source\Config\ConfigurationManagerAttributes.cs" />
+    <Compile Include="Source\Config\LocalizationLoader.cs" />
     <Compile Include="Source\Config\ServerSyncWrapper.cs" />
     <Compile Include="Source\Controls\FavoritingMode.cs" />
     <Compile Include="Source\Controls\KeybindChecker.cs" />

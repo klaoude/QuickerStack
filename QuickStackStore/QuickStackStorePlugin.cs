@@ -43,7 +43,7 @@ namespace QuickStackStore
         [HarmonyPatch(nameof(FejdStartup.Awake)), HarmonyPostfix]
         private static void FejdStartupAwakePatch()
         {
-            LocalizationConfig.SetupTranslations();
+            LocalizationLoader.SetupTranslations();
             QSSConfig.ConfigTemplate_SettingChanged(null, null);
         }
     }
