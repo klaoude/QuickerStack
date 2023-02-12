@@ -92,11 +92,14 @@ This mod has explicit compatibility for the following Equipment and Quick Slot m
 [Comfy Quick Slots](https://valheim.thunderstore.io/package/ComfyMods/ComfyQuickSlots/):
 - My mod will respect both the equipment slots and the quick slots, and intentionally allows restocking the quick slots. 'Take All' will put items into the quick slots though, but that is intended functionality of 'Comfy Quick Slots'.
 
+[Azu Extended Player Inventory](https://valheim.thunderstore.io/package/Azumatt/AzuExtendedPlayerInventory/):
+- My mod will respect both the equipment slots and the quick slots, and intentionally allows restocking the quick slots. The buttons from my mod will move to not overlap if the separate equipment slot UI is enabled.
+
 [Odins QOL](https://valheim.thunderstore.io/package/OdinPlus/OdinsQOL/) and [Odins Extended Inventory](https://valheim.thunderstore.io/package/OdinPlus/OdinsExtendedInventory/):
 - My mod will respect both the equipment slots and the quick slots, and intentionally allows restocking the quick slots. The buttons from my mod will move to not overlap if the separate equipment slot UI is enabled.
 
 Aedenthorn's [Extended Player Inventory](https://www.nexusmods.com/valheim/mods/1356):
-- This mod behaves identically to OdinsQOL and OdinsExtendedInventory, because they used Aeden's work as a base. If you use this, be sure to download this mod from Nexus and not from Thunderstore, as those are unofficial irregularly updated versions.
+- This mod behaves identically to AzuEPI, OdinsQOL and OdinsExtendedInventory, because they used Aeden's work as a base. If you use this, be sure to download this mod from Nexus and not from Thunderstore, as those are unofficial irregularly updated versions.
 
 RandyKnapp's [Equipment and Quick Slots](https://valheim.thunderstore.io/package/RandyKnapp/EquipmentAndQuickSlots/):
 - The slots from this mod are not actual inventory slot, so my mod cannot affect them in any way (which is good). Due to that, restocking the quick slots is not possible﻿ though. The buttons from my mod will move to not overlap with the equipment slot UI and while using a chest the small Quick Stack and Restock buttons are hidden if you have quickslots enabled (because there is no room for them).
@@ -127,7 +130,7 @@ Thank you to everyone who provided a translation:
 The Chinese translation was provided by [Tiomer](https://www.nexusmods.com/users/114839878).\
 The Russian translation was provided by [Opik7](https://www.nexusmods.com/users/82796113).\
 The French translation was provided by [cyouinlan](https://www.nexusmods.com/users/45502817).\
-The Brazilian Portuguese translation was provided by [kaiqueknup](https://www.nexusmods.com/users/37243480).\
+The Brazilian Portuguese translation was provided by [kaiqueknup](https://www.nexusmods.com/users/37243480). and updated by the YggBrasil team.\
 The Polish translation was provided by [ViRooz](https://www.nexusmods.com/users/174267204).
 
 Source code available on github: https://github.com/Goldenrevolver/QuickStackStore

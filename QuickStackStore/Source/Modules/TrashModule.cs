@@ -92,8 +92,7 @@ namespace QuickStackStore
             // slightly lower priority so we get rendered on top of equipment slot mods
             // (lower priority -> later rendering -> you get rendered on top)
             [HarmonyPriority(Priority.LowerThanNormal)]
-            [HarmonyPatch(nameof(InventoryGui.Show))]
-            [HarmonyPostfix]
+            [HarmonyPatch(nameof(InventoryGui.Show)), HarmonyPostfix]
             private static void Show_Postfix(InventoryGui __instance)
             {
                 hasOpenedInventoryOnce = true;
@@ -113,7 +112,22 @@ namespace QuickStackStore
                     return;
                 }
 
-                if (trashRoot != null || GeneralConfig.OverrideButtonDisplay.Value == OverrideButtonDisplay.DisableAllNewButtons || !TrashConfig.DisplayTrashCanUI.Value)
+                if (trashRoot != null)
+                {
+                    return;
+                }
+
+                if (CompatibilitySupport.DisallowAllTrashCanFeatures())
+                {
+                    return;
+                }
+
+                if (GeneralConfig.OverrideButtonDisplay.Value == OverrideButtonDisplay.DisableAllNewButtons)
+                {
+                    return;
+                }
+
+                if (!TrashConfig.DisplayTrashCanUI.Value)
                 {
                     return;
                 }
@@ -127,16 +141,14 @@ namespace QuickStackStore
                 trashButton = trashRoot.gameObject.AddComponent<TrashButton>();
             }
 
-            [HarmonyPatch(nameof(InventoryGui.Hide))]
-            [HarmonyPostfix]
-            public static void Postfix()
+            [HarmonyPatch(nameof(InventoryGui.Hide)), HarmonyPostfix]
+            private static void Hide_Postfix()
             {
                 OnChoice();
             }
 
-            [HarmonyPostfix]
-            [HarmonyPatch(nameof(InventoryGui.UpdateItemDrag))]
-            public static void UpdateItemDrag_Postfix(InventoryGui __instance, ItemDrop.ItemData ___m_dragItem, Inventory ___m_dragInventory, int ___m_dragAmount)
+            [HarmonyPatch(nameof(InventoryGui.UpdateItemDrag)), HarmonyPostfix]
+            private static void UpdateItemDrag_Postfix(InventoryGui __instance, ItemDrop.ItemData ___m_dragItem, Inventory ___m_dragInventory, int ___m_dragAmount)
             {
                 if (dialog != null || clickState == 0)
                 {
@@ -295,7 +307,7 @@ namespace QuickStackStore
                 StartCoroutine(DelayedOverrideSorting());
             }
 
-            protected IEnumerator DelayedOverrideSorting()
+            private IEnumerator DelayedOverrideSorting()
             {
                 yield return null;
 
@@ -309,7 +321,7 @@ namespace QuickStackStore
             }
         }
 
-        public static void ShowConfirmDialog(ItemDrop.ItemData item, int itemAmount, UnityAction onConfirm)
+        private static void ShowConfirmDialog(ItemDrop.ItemData item, int itemAmount, UnityAction onConfirm)
         {
             ShowBaseConfirmDialog(item.GetIcon(),
                 Localization.instance.Localize(item.m_shared.m_name),
@@ -317,7 +329,7 @@ namespace QuickStackStore
                 onConfirm);
         }
 
-        public static void ShowBaseConfirmDialog(Sprite potentialIcon, string name, string amountText, UnityAction onConfirm)
+        private static void ShowBaseConfirmDialog(Sprite potentialIcon, string name, string amountText, UnityAction onConfirm)
         {
             if (InventoryGui.instance == null || dialog != null)
             {
@@ -360,7 +372,7 @@ namespace QuickStackStore
             dialog.gameObject.SetActive(true);
         }
 
-        public static void OnChoice()
+        private static void OnChoice()
         {
             clickState = 0;
 
@@ -373,6 +385,11 @@ namespace QuickStackStore
 
         public static void TrashOrTrashFlagItem(bool usedFromHotkey = false)
         {
+            if (CompatibilitySupport.DisallowAllTrashCanFeatures())
+            {
+                return;
+            }
+
             Helper.Log("Trash Item called!");
 
             if (clickState != ClickState.None || InventoryGui.instance == null)
@@ -402,6 +419,11 @@ namespace QuickStackStore
 
         public static void AttemptQuickTrash()
         {
+            if (CompatibilitySupport.DisallowAllTrashCanFeatures())
+            {
+                return;
+            }
+
             Helper.Log("Quick Trash Item called!");
 
             if (clickState != ClickState.None || InventoryGui.instance == null || InventoryGui.instance.m_dragGo != null)

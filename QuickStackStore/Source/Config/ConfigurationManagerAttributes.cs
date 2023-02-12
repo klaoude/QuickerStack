@@ -1,4 +1,6 @@
 ﻿using BepInEx.Configuration;
+using System;
+using UnityEngine;
 
 namespace QuickStackStore
 {
@@ -45,6 +47,62 @@ namespace QuickStackStore
         internal static ConfigDescription CustomCategoryWithDescription(string category, string description, AcceptableValueBase acceptableValues = null)
         {
             return new ConfigDescription(description, acceptableValues, new ConfigurationManagerAttributes() { Category = category });
+        }
+
+        internal static ConfigDescription HiddenDisplay(Func<bool> condition, string description, AcceptableValueBase acceptableValues = null)
+        {
+            if (condition.Invoke())
+            {
+                return new ConfigDescription(description, acceptableValues, new ConfigurationManagerAttributes() { Browsable = false, ReadOnly = true });
+            }
+            else
+            {
+                return new ConfigDescription(description, acceptableValues);
+            }
+        }
+
+        internal static ConfigDescription HiddenTrashingDisplay(string description, AcceptableValueBase acceptableValues = null)
+        {
+            return HiddenDisplay(CompatibilitySupport.DisallowAllTrashCanFeatures, description, acceptableValues);
+        }
+
+        internal static ConfigDescription TrashingCategoryHideNotificationDisplay(string description, AcceptableValueBase acceptableValues = null)
+        {
+            if (CompatibilitySupport.DisallowAllTrashCanFeatures())
+            {
+                return new ConfigDescription("Force disabled due to using other mod that adds trashing/ recycling", acceptableValues, new ConfigurationManagerAttributes() { DispName = "Trashing", ReadOnly = true, CustomDrawer = (a) => CustomLabelDrawer("Force disabled for compatibility reasons") });
+            }
+            else
+            {
+                return new ConfigDescription(description, acceptableValues);
+            }
+        }
+
+        internal static ConfigDescription ForceEnabledDisplay(Func<bool> condition, string description, AcceptableValueBase acceptableValues = null)
+        {
+            return SeeOnlyDisplay(condition, description, "Force enabled for better compatibility with one of your installed mods", "Force enabled for compatibility reasons", acceptableValues);
+        }
+
+        internal static ConfigDescription ForceDisabledDisplay(Func<bool> condition, string description, AcceptableValueBase acceptableValues = null)
+        {
+            return SeeOnlyDisplay(condition, description, "Force disabled for better compatibility with one of your installed mods", "Force disabled for compatibility reasons", acceptableValues);
+        }
+
+        internal static ConfigDescription SeeOnlyDisplay(Func<bool> condition, string description, string overwriteDescription, string overwriteLabel, AcceptableValueBase acceptableValues = null)
+        {
+            if (condition.Invoke())
+            {
+                return new ConfigDescription(overwriteDescription, acceptableValues, new ConfigurationManagerAttributes() { ReadOnly = true, CustomDrawer = (a) => CustomLabelDrawer(overwriteLabel) });
+            }
+            else
+            {
+                return new ConfigDescription(description, acceptableValues);
+            }
+        }
+
+        private static void CustomLabelDrawer(string labelText)
+        {
+            GUILayout.Label(labelText, GUILayout.ExpandWidth(true));
         }
 
         /// <summary>

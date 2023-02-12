@@ -245,9 +245,9 @@ namespace QuickStackStore
             // light-ish blue
             BorderColorFavoritedSlot = Config.Bind(sectionName, nameof(BorderColorFavoritedSlot), new Color(0f, 0.5f, 1f), "Color of the border for favorited slots.");
             // dark-ish red
-            BorderColorTrashFlaggedItem = Config.Bind(sectionName, nameof(BorderColorTrashFlaggedItem), new Color(0.5f, 0f, 0), "Color of the border for slots containing trash flagged items.");
+            BorderColorTrashFlaggedItem = Config.Bind(sectionName, nameof(BorderColorTrashFlaggedItem), new Color(0.5f, 0f, 0), HiddenTrashingDisplay("Color of the border for slots containing trash flagged items."));
             // black
-            BorderColorTrashFlaggedItemOnFavoritedSlot = Config.Bind(sectionName, nameof(BorderColorTrashFlaggedItemOnFavoritedSlot), Color.black, "Color of the border of a favorited slot that also contains a trash flagged item.");
+            BorderColorTrashFlaggedItemOnFavoritedSlot = Config.Bind(sectionName, nameof(BorderColorTrashFlaggedItemOnFavoritedSlot), Color.black, HiddenTrashingDisplay("Color of the border of a favorited slot that also contains a trash flagged item."));
 
             DisplayFavoriteToggleButton = Config.Bind(sectionName, nameof(DisplayFavoriteToggleButton), FavoritingToggling.EnabledTopButton, $"Whether to display a button to toggle favoriting mode on or off, allowing to favorite without holding any hotkey ({overrideButton}). This can also be used to trash flag. The hotkeys work independently.");
             DisplayFavoriteToggleButton.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
@@ -328,7 +328,7 @@ namespace QuickStackStore
             DisplayStoreAllButton = Config.Bind(sectionName, nameof(DisplayStoreAllButton), true, $"Whether to display the 'Store All' button in containers ({overrideButton}).");
             DisplayStoreAllButton.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
-            NeverMoveTakeAllButton = Config.Bind(sectionName, nameof(NeverMoveTakeAllButton), false, "Disallows my mod from moving the 'Take All' button. Enable for compatibility with other mods. If it was already moved, then you need to log out and back in (since I don't even allow to reset the position, since I don't know if that position is valid with your installed mods).");
+            NeverMoveTakeAllButton = Config.Bind(sectionName, nameof(NeverMoveTakeAllButton), false, ForceEnabledDisplay(CompatibilitySupport.ShouldBlockChangesToTakeAllButtonDueToPlugin, "Disallows my mod from moving the 'Take All' button. Enable for compatibility with other mods (when certain mods are detected, this setting is force enabled). If it was already moved, then you need to log out and back in (since I don't even allow to reset the position, since I don't know if that position is valid with your installed mods)."));
 
             StoreAllKeybind = Config.Bind(sectionName, nameof(StoreAllKeybind), new KeyboardShortcut(KeyCode.None), $"The hotkey to use 'Store All' on the currently opened container ({overrideHotkey}).");
 
@@ -360,25 +360,25 @@ namespace QuickStackStore
 
             sectionName = "5 - Trashing";
 
-            AlwaysConsiderTrophiesTrashFlagged = Config.Bind(sectionName, nameof(AlwaysConsiderTrophiesTrashFlagged), false, "Whether to always consider trophies as trash flagged, allowing for immediate trashing or to be affected by quick trashing.");
+            AlwaysConsiderTrophiesTrashFlagged = Config.Bind(sectionName, nameof(AlwaysConsiderTrophiesTrashFlagged), false, HiddenTrashingDisplay("Whether to always consider trophies as trash flagged, allowing for immediate trashing or to be affected by quick trashing."));
 
-            DisplayTrashCanUI = Config.Bind(sectionName, nameof(DisplayTrashCanUI), true, $"Whether to display the trash can UI element ({overrideButton}). Hotkeys work independently.");
+            DisplayTrashCanUI = Config.Bind(sectionName, nameof(DisplayTrashCanUI), true, TrashingCategoryHideNotificationDisplay($"Whether to display the trash can UI element ({overrideButton}). Hotkeys work independently."));
             DisplayTrashCanUI.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin, true);
 
-            EnableQuickTrash = Config.Bind(sectionName, nameof(EnableQuickTrash), true, "Whether quick trashing can be called with the hotkey or be clicking on the trash can while not holding anything.");
+            EnableQuickTrash = Config.Bind(sectionName, nameof(EnableQuickTrash), true, HiddenTrashingDisplay("Whether quick trashing can be called with the hotkey or be clicking on the trash can while not holding anything."));
 
-            QuickTrashKeybind = Config.Bind(sectionName, nameof(QuickTrashKeybind), new KeyboardShortcut(KeyCode.None), $"The hotkey to perform a quick trash on the player inventory, deleting all trash flagged items ({overrideHotkey}).");
+            QuickTrashKeybind = Config.Bind(sectionName, nameof(QuickTrashKeybind), new KeyboardShortcut(KeyCode.None), HiddenTrashingDisplay($"The hotkey to perform a quick trash on the player inventory, deleting all trash flagged items ({overrideHotkey})."));
             KeyCodeBackwardsCompatibility(QuickTrashKeybind, sectionName, "QuickTrashHotkey");
 
-            ShowConfirmDialogForNormalItem = Config.Bind(sectionName, nameof(ShowConfirmDialogForNormalItem), ShowConfirmDialogOption.WhenNotTrashFlagged, "When to show a confirmation dialog while doing a non quick trash.");
-            ShowConfirmDialogForQuickTrash = Config.Bind(sectionName, nameof(ShowConfirmDialogForQuickTrash), true, "Whether to show a confirmation dialog while doing a quick trash.");
+            ShowConfirmDialogForNormalItem = Config.Bind(sectionName, nameof(ShowConfirmDialogForNormalItem), ShowConfirmDialogOption.WhenNotTrashFlagged, HiddenTrashingDisplay("When to show a confirmation dialog while doing a non quick trash."));
+            ShowConfirmDialogForQuickTrash = Config.Bind(sectionName, nameof(ShowConfirmDialogForQuickTrash), true, HiddenTrashingDisplay("Whether to show a confirmation dialog while doing a quick trash."));
 
-            TrashingCanAffectHotkeyBar = Config.Bind(sectionName, nameof(TrashingCanAffectHotkeyBar), true, $"Whether trashing and quick trashing can trash items that are currently in the hotkey bar ({overrideHotkeyBar}).");
+            TrashingCanAffectHotkeyBar = Config.Bind(sectionName, nameof(TrashingCanAffectHotkeyBar), true, HiddenTrashingDisplay($"Whether trashing and quick trashing can trash items that are currently in the hotkey bar ({overrideHotkeyBar})."));
 
-            TrashKeybind = Config.Bind(sectionName, nameof(TrashKeybind), new KeyboardShortcut(KeyCode.Delete), $"The hotkey to trash the currently held item ({overrideHotkey}).");
+            TrashKeybind = Config.Bind(sectionName, nameof(TrashKeybind), new KeyboardShortcut(KeyCode.Delete), HiddenTrashingDisplay($"The hotkey to trash the currently held item ({overrideHotkey})."));
             KeyCodeBackwardsCompatibility(TrashKeybind, sectionName, "TrashHotkey");
 
-            TrashLabelColor = Config.Bind(sectionName, nameof(TrashLabelColor), new Color(1f, 0.8482759f, 0), "The color of the text below the trash can in the player inventory.");
+            TrashLabelColor = Config.Bind(sectionName, nameof(TrashLabelColor), new Color(1f, 0.8482759f, 0), HiddenTrashingDisplay("The color of the text below the trash can in the player inventory."));
 
             sectionName = "8 - Debugging";
 

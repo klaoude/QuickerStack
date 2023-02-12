@@ -35,12 +35,28 @@ namespace QuickStackStore
         public const string backpacks = "org.bepinex.plugins.backpacks";
         public const string multiUserChest = "com.maxsch.valheim.MultiUserChest";
         public const string jewelCrafting = "org.bepinex.plugins.jewelcrafting";
+        public const string recyclePlus = "TastyChickenLegs.RecyclePlus";
 
         public static System.Version mucUpdateVersion = new System.Version(0, 4, 0);
 
         public static bool AllowAreaStackingRestocking()
         {
             return AreaStackRestockHelper.IsTrueSingleplayer() || HasPlugin(multiUserChest) || QuickStackRestockConfig.AllowAreaStackingInMultiplayerWithoutMUC.Value;
+        }
+
+        public static bool DisallowAllTrashCanFeatures()
+        {
+            return HasPlugin(recyclePlus);
+        }
+
+        public static bool ShouldBlockChangesToTakeAllButton()
+        {
+            return StoreTakeAllConfig.NeverMoveTakeAllButton.Value || ShouldBlockChangesToTakeAllButtonDueToPlugin();
+        }
+
+        public static bool ShouldBlockChangesToTakeAllButtonDueToPlugin()
+        {
+            return HasPlugin(smartContainers) || HasPlugin(backpacks) || HasPlugin(jewelCrafting);
         }
 
         public static bool HasOutdatedMUCPlugin()
@@ -96,11 +112,6 @@ namespace QuickStackStore
             }
 
             return status;
-        }
-
-        public static bool ShouldBlockChangesToTakeAllButton()
-        {
-            return StoreTakeAllConfig.NeverMoveTakeAllButton.Value || HasPlugin(smartContainers) || HasPlugin(backpacks) || HasPlugin(jewelCrafting);
         }
 
         public static bool HasPluginThatRequiresMiniButtonVMove()

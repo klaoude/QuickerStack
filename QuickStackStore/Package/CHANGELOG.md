@@ -1,4 +1,9 @@
 # Changelog
+## 1.3.4
+- Added compatibility for AzuExtendedPlayerInventory
+- All trashing features are now disabled when using RecyclePlus
+- The ingame config menu now changes the display of settings that are overridden for compatibility reasons
+- Updated BR portuguese translation
 ## 1.3.3
 - Full controller support (including keybind hints and favoriting)
 - Fixed ServerSync messing up button layout

@@ -95,16 +95,24 @@ namespace QuickStackStore
                 if (SortConfig.SortKeybind.Value.IsKeyDown())
                 {
                     SortModule.DoSort(player);
+                    return;
                 }
-                else if (TrashConfig.QuickTrashKeybind.Value.IsKeyDown())
+
+                if (!CompatibilitySupport.DisallowAllTrashCanFeatures())
                 {
-                    TrashModule.AttemptQuickTrash();
+                    if (TrashConfig.QuickTrashKeybind.Value.IsKeyDown())
+                    {
+                        TrashModule.AttemptQuickTrash();
+                        return;
+                    }
+                    else if (TrashConfig.TrashKeybind.Value.IsKeyDown())
+                    {
+                        TrashModule.TrashOrTrashFlagItem(true);
+                        return;
+                    }
                 }
-                else if (TrashConfig.TrashKeybind.Value.IsKeyDown())
-                {
-                    TrashModule.TrashOrTrashFlagItem(true);
-                }
-                else if (StoreTakeAllConfig.TakeAllKeybind.Value.IsKeyDown())
+
+                if (StoreTakeAllConfig.TakeAllKeybind.Value.IsKeyDown())
                 {
                     StoreTakeAllModule.DoTakeAllWithKeybind(player);
                 }
@@ -153,9 +161,13 @@ namespace QuickStackStore
                 {
                     FavoritingMode.ToggleFavoriteToggling();
                 }
-                else if (ZInput.GetButtonDown(joyGetButtonDownPrefix + joyTrash))
+                else
                 {
-                    TrashModule.TrashOrTrashFlagItem();
+                    if (ZInput.GetButtonDown(joyGetButtonDownPrefix + joyTrash)
+                        && !CompatibilitySupport.DisallowAllTrashCanFeatures())
+                    {
+                        TrashModule.TrashOrTrashFlagItem();
+                    }
                 }
             }
         }

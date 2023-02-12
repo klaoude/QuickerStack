@@ -181,8 +181,22 @@ namespace QuickStackStore
 
         public bool IsItemNameConsideredTrashFlagged(ItemDrop.ItemData.SharedData item)
         {
-            return IsItemNameLiterallyTrashFlagged(item)
-                || (TrashConfig.AlwaysConsiderTrophiesTrashFlagged.Value && item.m_itemType == ItemDrop.ItemData.ItemType.Trophie && !IsItemNameFavorited(item));
+            if (CompatibilitySupport.DisallowAllTrashCanFeatures())
+            {
+                return false;
+            }
+
+            if (IsItemNameLiterallyTrashFlagged(item))
+            {
+                return true;
+            }
+
+            if (!TrashConfig.AlwaysConsiderTrophiesTrashFlagged.Value)
+            {
+                return false;
+            }
+
+            return item.m_itemType == ItemDrop.ItemData.ItemType.Trophie && !IsItemNameFavorited(item);
         }
 
         public bool IsItemNameOrSlotFavorited(ItemDrop.ItemData item)
