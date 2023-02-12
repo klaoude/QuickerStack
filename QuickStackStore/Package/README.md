@@ -27,14 +27,14 @@ You are probably already familiar with Quick Stacking. With one button press, ev
 
 This implementation is based on the original [Quick Stack](https://www.nexusmods.com/valheim/mods/29) mod by [damnsneaker](https://www.nexusmods.com/valheim/users/52080261), who gave me permission. This mod has a smarter algorithm for accessing multiple containers than the original (even if it's not threaded like [Quicker Stack](https://www.nexusmods.com/valheim/mods/2049), but that prevents the issues that mod is currently facing).
 
-![image](https://staticdelivery.nexusmods.com/mods/3667/images/2094/2094-1671547317-1324456515.gif)
+![image](https://staticdelivery.nexusmods.com/mods/3667/images/2094/2094-1676165723-1103038310.gif)
 
 
 ## 2.2 - Restocking
 
 Restocking is like Quick Stacking but in reverse. Quickly refill your arrows, your food or your one emergency stack of wood from the current or nearby chests. With one button press, restocking tops off (or optionally partially refills) the stack size for each item in your inventory that you want to restock, which can easily be configured (for example based on item type or favoriting status).
 
-![image](https://staticdelivery.nexusmods.com/mods/3667/images/2094/2094-1671547324-1045740202.gif)
+![image](https://staticdelivery.nexusmods.com/mods/3667/images/2094/2094-1676165735-78653556.gif)
 
 
 ## 2.3 - Area Quick Stacking and Restocking
@@ -66,7 +66,7 @@ There are various different sort criteria to choose from:
 
 Ties are always broken by internal name, quality and stack size. You can also sort automatically when opening the inventory or a container.
 
-![image](https://staticdelivery.nexusmods.com/mods/3667/images/2094/2094-1671547329-2082520177.gif)
+![image](https://staticdelivery.nexusmods.com/mods/3667/images/2094/2094-1676165848-218991172.gif)
 
 
 ## 5 - Trashing and Quick Trashing
