@@ -49,6 +49,18 @@ namespace QuickStackStore
             return new ConfigDescription(description, acceptableValues, new ConfigurationManagerAttributes() { Category = category });
         }
 
+        internal static ConfigDescription MUCSettingDisplay(string overwriteName, string category, string description, AcceptableValueBase acceptableValues = null)
+        {
+            if (CompatibilitySupport.HasPlugin(CompatibilitySupport.multiUserChest))
+            {
+                return new ConfigDescription("area quick stacking and area restocking is always allowed while using 'Multi User Chest'.", acceptableValues, new ConfigurationManagerAttributes() { DispName = overwriteName, Category = category, ReadOnly = true, CustomDrawer = (a) => CustomLabelDrawer("Enabled ('Multi User Chest' is installed)") });
+            }
+            else
+            {
+                return CustomCategoryWithDescription(category, description, acceptableValues);
+            }
+        }
+
         internal static ConfigDescription HiddenDisplay(Func<bool> condition, string description, AcceptableValueBase acceptableValues = null)
         {
             if (condition.Invoke())
