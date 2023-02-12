@@ -53,7 +53,7 @@ namespace QuickStackStore
         {
             if (CompatibilitySupport.HasPlugin(CompatibilitySupport.multiUserChest))
             {
-                return new ConfigDescription("area quick stacking and area restocking is always allowed while using 'Multi User Chest'.", acceptableValues, new ConfigurationManagerAttributes() { DispName = overwriteName, Category = category, ReadOnly = true, CustomDrawer = (a) => CustomLabelDrawer("Enabled ('Multi User Chest' is installed)") });
+                return new ConfigDescription("Area quick stacking and area restocking is always allowed while using 'Multi User Chest'.", acceptableValues, new ConfigurationManagerAttributes() { DispName = overwriteName, Category = category, ReadOnly = true, CustomDrawer = (a) => CustomLabelDrawer("Enabled ('Multi User Chest' is installed)") });
             }
             else
             {
