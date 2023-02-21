@@ -476,6 +476,7 @@ namespace QuickStackStore
             GeneralConfig.ConfigTemplate.SettingChanged += ConfigTemplate_SettingChanged;
         }
 
+
         internal static void ApplyTemplate(ConfigTemplate template)
         {
             if (GeneralConfig.ConfigTemplate.Value == ConfigTemplate.NotCurrentlyLoadingTemplate)

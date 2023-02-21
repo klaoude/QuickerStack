@@ -81,10 +81,12 @@ namespace QuickStackStore
                 if (QuickStackConfig.QuickStackKeybind.Value.IsKeyDown())
                 {
                     QuickStackModule.DoQuickStack(player);
+                    return;
                 }
                 else if (RestockConfig.RestockKeybind.Value.IsKeyDown())
                 {
                     RestockModule.DoRestock(player);
+                    return;
                 }
 
                 if (!InventoryGui.IsVisible())
@@ -115,10 +117,12 @@ namespace QuickStackStore
                 if (StoreTakeAllConfig.TakeAllKeybind.Value.IsKeyDown())
                 {
                     StoreTakeAllModule.DoTakeAllWithKeybind(player);
+                    return;
                 }
                 else if (StoreTakeAllConfig.StoreAllKeybind.Value.IsKeyDown())
                 {
                     StoreTakeAllModule.DoStoreAllWithKeybind(player);
+                    return;
                 }
             }
 
@@ -132,10 +136,12 @@ namespace QuickStackStore
                 if (ZInput.GetButtonDown(joyGetButtonDownPrefix + joySort))
                 {
                     SortModule.DoSort(player);
+                    return;
                 }
                 else if (ZInput.GetButtonDown(joyGetButtonDownPrefix + joyStoreAll))
                 {
                     StoreTakeAllModule.DoStoreAllWithKeybind(player);
+                    return;
                 }
 
                 if (ControllerConfig.ControllerDPadUsageInInventoryGrid.Value == DPadUsage.InventorySlotMovement)
@@ -152,32 +158,39 @@ namespace QuickStackStore
                 if (ZInput.GetButtonDown(joyGetButtonDownPrefix + joyQuickStack))
                 {
                     QuickStackModule.DoQuickStack(player);
+                    return;
                 }
                 else if (ZInput.GetButtonDown(joyGetButtonDownPrefix + joyRestock))
                 {
                     RestockModule.DoRestock(player);
+                    return;
                 }
                 else if (ZInput.GetButtonDown(joyGetButtonDownPrefix + joyFavoriteToggling))
                 {
                     FavoritingMode.ToggleFavoriteToggling();
+                    return;
                 }
-                else
+
+                if (CompatibilitySupport.DisallowAllTrashCanFeatures())
                 {
-                    if (ZInput.GetButtonDown(joyGetButtonDownPrefix + joyTrash)
-                        && !CompatibilitySupport.DisallowAllTrashCanFeatures())
-                    {
-                        TrashModule.TrashOrTrashFlagItem();
-                    }
+                    return;
+                }
+
+                if (ZInput.GetButtonDown(joyGetButtonDownPrefix + joyTrash))
+                {
+                    TrashModule.TrashOrTrashFlagItem();
                 }
             }
         }
 
         internal const string joyTranslationPrefix = "KEY_";
         internal const string joyGetButtonDownPrefix = "Joy";
-        internal const string joyQuickStack = "DPadDown";
-        internal const string joyRestock = "DPadUp";
+
         internal const string joySort = "Back";
         internal const string joyStoreAll = "RStick";
+
+        internal const string joyQuickStack = "DPadDown";
+        internal const string joyRestock = "DPadUp";
         internal const string joyFavoriteToggling = "DPadLeft";
         internal const string joyTrash = "DPadRight";
     }

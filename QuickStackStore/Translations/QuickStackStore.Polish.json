@@ -28,10 +28,10 @@
   "TrashConfirmationOkayButton": "Zniszcz",
   "QuickTrashConfirmation": "Zniszczyć przedmiot(y)?",
   "CantTrashFavoritedItemWarning": "Nie można zniszczyć ulubionego przedmiotu!",
-  "CantTrashFlagFavoritedItemWarning": "Nie można zniszczyć oznaczonego przedmiotu!",
+  "CantTrashFlagFavoritedItemWarning": "Nie można zniszczyć oznaczonego jako ulubiony przedmiotu!",
   "CantTrashHotkeyBarItemWarning": "Ustawienia blokują niszczenie przedmiotów z paska szybkiego dostępu!",
   "CantFavoriteTrashFlaggedItemWarning": "Nie można dodać do ulubionych przedmiotu oznaczonego do zniszczenia!",
 
-  "FavoritedItemTooltip": "Nie będzie deponowany, sortowany,\nprzenoszony lub niszczony",
+  "FavoritedItemTooltip": "Ulubione - nie będzie przenoszone, sortowane,\nlub niszczone",
   "TrashFlaggedItemTooltip": "Może być szybko usunięty"
 }

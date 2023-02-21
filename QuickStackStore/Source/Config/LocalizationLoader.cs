@@ -17,7 +17,7 @@ namespace QuickStackStore
         private const string embeddedLanguagePathFormat = "QuickStackStore.Translations.QuickStackStore.{0}.json";
 
         private const string loadingLog = "Loading {0} translation file for language: {1}";
-        private const string failedLoadLog = "Loading {0} translation file for language: {1}";
+        private const string failedLoadLog = "Failed loading {0} translation file for language: {1}";
         private const string external = "external";
         private const string embedded = "embedded";
 

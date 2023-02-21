@@ -17,7 +17,17 @@ namespace QuickStackStore
 
             foreach (Container container in AllContainers)
             {
-                if (container != null && container.transform != null && Vector3.Distance(point, container.transform.position) < range)
+                if (!container || !container.transform || !container.m_nview)
+                {
+                    continue;
+                }
+
+                if (!container.m_nview.HasOwner())
+                {
+                    continue;
+                }
+
+                if (Vector3.Distance(point, container.transform.position) < range)
                 {
                     list.Add(container);
                 }
