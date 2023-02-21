@@ -32,7 +32,6 @@
   "CantTrashHotkeyBarItemWarning": "Inställningarna tillåter inte skrotande av saker i snabbåtkomstraden!",
   "CantFavoriteTrashFlaggedItemWarning": "Kan inte favoritmarkera en skräpflaggad sak!",
 
-  "FavoritedItemTooltip": "Will not be quick stacked, sorted,\nstore all'd or trashed",
-  "FavoritedItemTooltip": "Kommer inte att snabbsamlas, sorteras, \nlagras eller skrotas",
+  "FavoritedItemTooltip": "Kommer inte att snabbsamlas, sorteras,\nlagras eller skrotas",
   "TrashFlaggedItemTooltip": "Kan snabbskrotas"
 }

@@ -131,6 +131,7 @@ The Chinese translation was provided by [Tiomer](https://www.nexusmods.com/users
 The Russian translation was provided by [Opik7](https://www.nexusmods.com/users/82796113).\
 The French translation was provided by [cyouinlan](https://www.nexusmods.com/users/45502817).\
 The Brazilian Portuguese translation was provided by [kaiqueknup](https://www.nexusmods.com/users/37243480) and updated by the YggBrasil team.\
-The Polish translation was provided by [ViRooz](https://www.nexusmods.com/users/174267204).
+The Polish translation was provided by [ViRooz](https://www.nexusmods.com/users/174267204).\
+The Swedish translation was provided by [DeathDaisy](https://github.com/DeathDaisy).
 
 Source code available on github: https://github.com/Goldenrevolver/QuickStackStore
