@@ -15,7 +15,7 @@
 
   "QuickStackLabel": "Estocar",
   "StoreAllLabel": "Pôr Tudo",
-  "SortLabel": "Ordenar",
+  "SortLabel": "Organizar",
   "RestockLabel": "Reestocar",
   "TrashLabel": "Lixo",
 
@@ -32,6 +32,6 @@
   "CantTrashHotkeyBarItemWarning": "As configurações não permitem o descarte de itens na barra de teclas de atalho!",
   "CantFavoriteTrashFlaggedItemWarning": "Não é possível favoritar um item sinalizado como lixo!",
 
-  "FavoritedItemTooltip": "Não será estocado, ordenado, posto com tudo ou descartado",
+  "FavoritedItemTooltip": "Não será estocado, organizado,\nposto com tudo ou descartado",
   "TrashFlaggedItemTooltip": "Pode sofrer descarte rápido"
 }

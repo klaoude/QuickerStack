@@ -35,7 +35,7 @@ namespace QuickStackStore
                 yield break;
             }
 
-            ControllerButtonHintHelper.SetupControllerHint(uiGamePad, KeybindChecker.joyTrash);
+            SetupControllerHint(uiGamePad, KeybindChecker.joyTrash);
         }
 
         internal static void FixTakeAllButtonControllerHint(InventoryGui instance)
@@ -56,10 +56,17 @@ namespace QuickStackStore
             {
                 toMoveUp.SetActive(true);
 
-                //toMoveUp.GetComponentInChildren<Text>().text = Localization.instance.Translate(KeybindChecker.keyPrefix + "LStick");
+                var canvas = toMoveUp.GetComponent<Canvas>();
 
-                var canvas = toMoveUp.AddComponent<Canvas>();
-                toMoveUp.AddComponent<GraphicRaycaster>();
+                if (canvas == null)
+                {
+                    canvas = toMoveUp.AddComponent<Canvas>();
+                }
+
+                if (!toMoveUp.GetComponent<GraphicRaycaster>())
+                {
+                    toMoveUp.AddComponent<GraphicRaycaster>();
+                }
 
                 instance.StartCoroutine(DelayedOverrideSorting(canvas));
             }

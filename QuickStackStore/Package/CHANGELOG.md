@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.3.6
+- Fixed repeated log messages about adding a canvas component multiple times
 ## 1.3.5
 - Fixed area quick stacking potentially causing issues when affecting a container at the edge of the loading range due to a very high range setting
 - Added Swedish translation
