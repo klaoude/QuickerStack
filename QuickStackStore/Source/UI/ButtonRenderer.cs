@@ -64,7 +64,11 @@ namespace QuickStackStore
                     }
                 }
 
-                var takeAllButtonRect = __instance.m_takeAllButton.GetComponent<RectTransform>();
+                // if AUGA is installed, the 'take all' button might not exist
+                if (!__instance.m_takeAllButton || !__instance.m_takeAllButton.TryGetComponent(out RectTransform takeAllButtonRect))
+                {
+                    return;
+                }
 
                 FixTakeAllButtonControllerHint(__instance);
 

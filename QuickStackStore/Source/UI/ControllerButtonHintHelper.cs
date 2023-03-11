@@ -42,6 +42,11 @@ namespace QuickStackStore
         {
             var uiGamePad = instance.m_takeAllButton.GetComponent<UIGamePad>();
 
+            if (!uiGamePad)
+            {
+                return;
+            }
+
             bool shouldShowHint = !ControllerConfig.RemoveControllerButtonHintFromTakeAllButton.Value;
 
             uiGamePad.enabled = shouldShowHint;

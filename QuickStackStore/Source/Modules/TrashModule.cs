@@ -122,6 +122,11 @@ namespace QuickStackStore
                     return;
                 }
 
+                if (CompatibilitySupport.HasPlugin(CompatibilitySupport.auga))
+                {
+                    return;
+                }
+
                 if (GeneralConfig.OverrideButtonDisplay.Value == OverrideButtonDisplay.DisableAllNewButtons)
                 {
                     return;

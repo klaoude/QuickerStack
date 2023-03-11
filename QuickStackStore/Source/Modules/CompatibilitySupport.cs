@@ -23,6 +23,7 @@ namespace QuickStackStore
         public const string odinExInv = "odinplusqol.OdinsExtendedInventory";
         public const string randy = "randyknapp.mods.equipmentandquickslots";
         public const string azuEPI = "Azumatt.AzuExtendedPlayerInventory";
+        public const string auga = "randyknapp.mods.auga";
 
         // intentionally up here so, we don't forget to update it
         public static bool HasAedenLikeEquipOrQuickSlotPlugin()

@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.3.7
+- Fixed an error and a warning when using Auga (still only supported using keybinds)
 ## 1.3.6
 - Fixed repeated log messages about adding a canvas component multiple times
 ## 1.3.5
