@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.3.8
+- Rebuilt for 0.214.2, adapted to new controller key hints
 ## 1.3.7
 - Fixed an error and a warning when using Auga (still only supported using keybinds)
 ## 1.3.6

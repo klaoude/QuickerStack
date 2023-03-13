@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using static QuickStackStore.QSSConfig;
@@ -122,33 +123,24 @@ namespace QuickStackStore
         internal static void SetupControllerHint(UIGamePad uiGamePad, string joyHint)
         {
             var hint = uiGamePad.m_hint;
+
+            if (!uiGamePad.m_hint)
+            {
+                return;
+            }
+
             uiGamePad.m_zinputKey = null;
 
             if (ControllerConfig.UseHardcodedControllerSupport.Value)
             {
-                if (joyHint != KeybindChecker.joyStoreAll)
-                {
-                    var image = hint.GetComponent<Image>();
-                    var rect = hint.GetComponent<RectTransform>();
-
-                    if (joyHint == KeybindChecker.joySort)
-                    {
-                        var height = rect.sizeDelta.y + 4;
-                        rect.sizeDelta = new Vector2(height, height);
-                        image.sprite = circleButtonSprite;
-                    }
-                    else
-                    {
-                        image.sprite = rectButtonSprite;
-                    }
-
-                    float grey = 150f / 255f;
-                    image.color = new Color(grey, grey, grey, 1f);
-                    hint.transform.GetChild(0).GetComponent<Image>().enabled = false;
-                }
-
                 hint.gameObject.SetActive(true);
-                hint.GetComponentInChildren<Text>().text = Localization.instance.Translate(KeybindChecker.joyTranslationPrefix + joyHint);
+
+                var text = hint.GetComponentInChildren<TextMeshProUGUI>();
+
+                if (text)
+                {
+                    text.text = Localization.instance.Translate(KeybindChecker.joyTranslationPrefix + joyHint);
+                }
             }
             else
             {

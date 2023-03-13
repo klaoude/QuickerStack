@@ -63,7 +63,7 @@ namespace QuickStackStore
                 return;
             }
 
-            if (!__instance.m_uiGroup.IsActive())
+            if (!__instance.m_uiGroup.IsActive)
             {
                 return;
             }
@@ -89,7 +89,7 @@ namespace QuickStackStore
                 // afterwards the actual player grid can check for the key in postfix and handle it
                 var playerGrid = InventoryGui.instance.m_playerGrid;
 
-                if (!playerGrid.m_uiGroup.IsActive())
+                if (!playerGrid.m_uiGroup.IsActive)
                 {
                     return pressed;
                 }
