@@ -103,7 +103,7 @@ namespace QuickStackStore
                 container.SetInUse(isInUse);
             }
 
-            ZDOMan.instance.ForceSendZDO(ZNet.instance.GetUID(), container.m_nview.GetZDO().m_uid);
+            ZDOMan.instance.ForceSendZDO(ZNet.GetUID(), container.m_nview.GetZDO().m_uid);
         }
     }
 }
