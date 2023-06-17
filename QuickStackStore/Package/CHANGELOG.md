@@ -1,6 +1,7 @@
 # Changelog
 
 ## 1.4.0
+- Update for current public release 0.216.9 (thank you to Mistermycelium for the pull request on github)
 - Added config option to exclude non player built containers (like dungeon chests) from area quick stacking/ restocking (enabled by default)
 - Added config option to exclude containers without a physical build piece (like backpacks) from area quick stacking/ restocking (disabled by default)
 - Edited the display config option for every inventory + container button pair (quick stack, restock, sort) to allow disabling both of them (I thought I added this already)
