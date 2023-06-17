@@ -74,6 +74,8 @@ namespace QuickStackStore
         {
             public static ConfigSync AreaStackRestockServerSync;
             public static ConfigEntry<bool> AllowAreaStackingInMultiplayerWithoutMUC;
+            public static ConfigEntry<bool> AllowAreaStackingToNonPhysicalContainers;
+            public static ConfigEntry<bool> AllowAreaStackingToPhysicalNonPlayerBuiltContainers;
             public static ConfigEntry<bool> SuppressContainerSoundAndVisuals;
             public static ConfigEntry<bool> ToggleAreaStackRestockConfigServerSync;
         }
@@ -227,7 +229,8 @@ namespace QuickStackStore
             ControllerDPadUsageInInventoryGrid = Config.Bind(sectionName, nameof(ControllerDPadUsageInInventoryGrid), DPadUsage.Keybinds, "In the base game the DPad and the left stick are both used for slot movement inside the inventory grid. This allows you to exclude the DPad from this to get more keys for keybinds.");
             ControllerDPadUsageModifierKeybind = Config.Bind(sectionName, nameof(ControllerDPadUsageModifierKeybind), new KeyboardShortcut(KeyCode.None), $"When {nameof(ControllerDPadUsageInInventoryGrid)} is set to {DPadUsage.KeybindsWhileHoldingModifierKey}, then holding this prevents slot movement in the inventory grid with the DPad.");
 
-            RemoveControllerButtonHintFromTakeAllButton = Config.Bind(sectionName, nameof(RemoveControllerButtonHintFromTakeAllButton), false, $"Remove the button hint from the 'Take All' button while using a controller for consistency. Especially useful when using the new keybind {nameof(TakeAllKeybind)}.");
+            // TODO change default once controller hints are fixed again
+            RemoveControllerButtonHintFromTakeAllButton = Config.Bind(sectionName, nameof(RemoveControllerButtonHintFromTakeAllButton), true, $"Remove the button hint from the 'Take All' button while using a controller for consistency. Especially useful when using the new keybind {nameof(TakeAllKeybind)}.");
             RemoveControllerButtonHintFromTakeAllButton.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
             UseHardcodedControllerSupport = Config.Bind(sectionName, nameof(UseHardcodedControllerSupport), true, "Whether to enable the hardcoded controller bindings including UI hints while a controller is used. This disables custom hotkeys.");
@@ -275,6 +278,9 @@ namespace QuickStackStore
 
             AllowAreaStackingInMultiplayerWithoutMUC = Config.BindSynced(AreaStackRestockServerSync, sectionName, nameof(AllowAreaStackingInMultiplayerWithoutMUC), false, MUCSettingDisplay("AllowAreaStackingInMultiplayer", areaStackSectionDisplayName, "Whether you can use area quick stacking and area restocking in multiplayer while 'Multi User Chest' is not installed. While this is almost always safe, it can fail because no actual network requests are getting sent. Ship containers are inherently especially vulnerable and are therefore excluded."));
             AllowAreaStackingInMultiplayerWithoutMUC.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+
+            AllowAreaStackingToNonPhysicalContainers = Config.BindSynced(AreaStackRestockServerSync, sectionName, nameof(AllowAreaStackingToNonPhysicalContainers), true, CustomCategoryWithDescription(areaStackSectionDisplayName, "Allow stacking to or restocking from containers without a physical piece object in the world, like backpacks."));
+            AllowAreaStackingToPhysicalNonPlayerBuiltContainers = Config.BindSynced(AreaStackRestockServerSync, sectionName, nameof(AllowAreaStackingToPhysicalNonPlayerBuiltContainers), false, CustomCategoryWithDescription(areaStackSectionDisplayName, "Allow stacking to or restocking from containers like dungeon chests or probably some modded containers."));
 
             SuppressContainerSoundAndVisuals = Config.BindSynced(AreaStackRestockServerSync, sectionName, nameof(SuppressContainerSoundAndVisuals), true, CustomCategoryWithDescription(areaStackSectionDisplayName, "Whether when a feature checks multiple containers in an area, they actually play opening sounds and visuals. Disable if the suppression causes incompatibilities."));
 
@@ -476,7 +482,6 @@ namespace QuickStackStore
             GeneralConfig.ConfigTemplate.SettingChanged += ConfigTemplate_SettingChanged;
         }
 
-
         internal static void ApplyTemplate(ConfigTemplate template)
         {
             if (GeneralConfig.ConfigTemplate.Value == ConfigTemplate.NotCurrentlyLoadingTemplate)
@@ -635,6 +640,7 @@ namespace QuickStackStore
             OnlyInventoryButton,
             OnlyContainerButton,
             BothButDependingOnContext,
+            Disabled
         }
 
         public enum QuickStackBehavior

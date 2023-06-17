@@ -20,6 +20,19 @@ namespace QuickStackStore
             return container.CheckAccess(playerID);
         }
 
+        private static bool CheckPieceConfigs(Container container)
+        {
+            if (container.m_piece)
+            {
+                return container.m_piece.GetCreator() != 0L ||
+                    QuickStackRestockConfig.AllowAreaStackingToPhysicalNonPlayerBuiltContainers.Value;
+            }
+            else
+            {
+                return QuickStackRestockConfig.AllowAreaStackingToNonPhysicalContainers.Value;
+            }
+        }
+
         private static bool IsInUseClientSide(Container container)
         {
             return container.IsInUse() || (container.m_wagon && container.m_wagon.InUse());
@@ -60,7 +73,7 @@ namespace QuickStackStore
         // based on Container.Interact
         internal static bool ShouldAffectNonOwnerContainer(Container container, long playerID, bool isSinglePlayer)
         {
-            bool basicCheck = !IsExcludedContainer(container) && CheckContainerPrivacy(container, playerID) && CheckWard(container);
+            bool basicCheck = !IsExcludedContainer(container) && CheckContainerPrivacy(container, playerID) && CheckWard(container) && CheckPieceConfigs(container);
 
             if (CompatibilitySupport.HasPlugin(CompatibilitySupport.multiUserChest))
             {

@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using static QuickStackStore.QSSConfig;
@@ -13,13 +12,15 @@ namespace QuickStackStore
 
         internal static void AddControllerTooltipToTrashCan(Button button, Transform parent)
         {
-            var uiGamePad = InventoryGui.instance.m_takeAllButton.GetComponent<UIGamePad>();
+            //TODO temporarily disabled, due new base game UIGamePad bugs (visual glitches and lag)
 
-            var controllerHint = Object.Instantiate(uiGamePad.m_hint, parent);
-            var uiGamePadNew = button.gameObject.AddComponent<UIGamePad>();
-            uiGamePadNew.m_hint = controllerHint;
+            //var uiGamePad = InventoryGui.instance.m_takeAllButton.GetComponent<UIGamePad>();
 
-            InventoryGui.instance.StartCoroutine(WaitAFrameToSetupControllerHint(uiGamePadNew));
+            //var controllerHint = Object.Instantiate(uiGamePad.m_hint, parent);
+            //var uiGamePadNew = button.gameObject.AddComponent<UIGamePad>();
+            //uiGamePadNew.m_hint = controllerHint;
+
+            //InventoryGui.instance.StartCoroutine(WaitAFrameToSetupControllerHint(uiGamePadNew));
         }
 
         private static IEnumerator WaitAFrameToSetupControllerHint(UIGamePad uiGamePad)
@@ -62,19 +63,21 @@ namespace QuickStackStore
             {
                 toMoveUp.SetActive(true);
 
-                var canvas = toMoveUp.GetComponent<Canvas>();
+                //TODO temporarily disabled, because it's not needed while all the other things are disabled
 
-                if (canvas == null)
-                {
-                    canvas = toMoveUp.AddComponent<Canvas>();
-                }
+                //var canvas = toMoveUp.GetComponent<Canvas>();
 
-                if (!toMoveUp.GetComponent<GraphicRaycaster>())
-                {
-                    toMoveUp.AddComponent<GraphicRaycaster>();
-                }
+                //if (canvas == null)
+                //{
+                //    canvas = toMoveUp.AddComponent<Canvas>();
+                //}
 
-                instance.StartCoroutine(DelayedOverrideSorting(canvas));
+                //if (!toMoveUp.GetComponent<GraphicRaycaster>())
+                //{
+                //    toMoveUp.AddComponent<GraphicRaycaster>();
+                //}
+
+                //instance.StartCoroutine(DelayedOverrideSorting(canvas));
             }
         }
 
@@ -112,12 +115,21 @@ namespace QuickStackStore
                 yield break;
             }
 
-            if (!uiGamePad.m_hint)
+            if (uiGamePad.m_hint)
             {
-                yield break;
+                Object.Destroy(uiGamePad.m_hint);
             }
 
-            SetupControllerHint(uiGamePad, joyHint);
+            Object.Destroy(uiGamePad);
+
+            //TODO temporarily disabled, due new base game UIGamePad bugs (visual glitches and lag)
+
+            //if (!uiGamePad.m_hint)
+            //{
+            //    yield break;
+            //}
+
+            //SetupControllerHint(uiGamePad, joyHint);
         }
 
         internal static void SetupControllerHint(UIGamePad uiGamePad, string joyHint)
@@ -131,18 +143,20 @@ namespace QuickStackStore
 
             uiGamePad.m_zinputKey = null;
 
-            if (ControllerConfig.UseHardcodedControllerSupport.Value)
-            {
-                hint.gameObject.SetActive(true);
+            //TODO temporarily disabled, due new base game UIGamePad bugs (visual glitches and lag)
 
-                var text = hint.GetComponentInChildren<TextMeshProUGUI>();
+            //if (ControllerConfig.UseHardcodedControllerSupport.Value)
+            //{
+            //    hint.gameObject.SetActive(true);
 
-                if (text)
-                {
-                    text.text = Localization.instance.Translate(KeybindChecker.joyTranslationPrefix + joyHint);
-                }
-            }
-            else
+            //    var text = hint.GetComponentInChildren<TextMeshProUGUI>();
+
+            //    if (text)
+            //    {
+            //        text.text = Localization.instance.Translate(KeybindChecker.joyTranslationPrefix + joyHint);
+            //    }
+            //}
+            //else
             {
                 uiGamePad.enabled = false;
                 hint.gameObject.SetActive(false);

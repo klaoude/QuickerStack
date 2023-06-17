@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.4.0
+- Added config option to exclude non player built containers (like dungeon chests) from area quick stacking/ restocking (enabled by default)
+- Added config option to exclude containers without a physical build piece (like backpacks) from area quick stacking/ restocking (disabled by default)
+- Edited the display config option for every inventory + container button pair (quick stack, restock, sort) to allow disabling both of them (I thought I added this already)
+- Fixed the sort inventory button not respecting the BothButDependingOnContext config setting
+- Updated simplified chinese translation, provided by taotao
+- Made sure controller key hints don't even get spawned, instead of immediately getting disabled, to not trigger another base game visual bug (which affects other mods that spawn buttons too)
+## 1.3.10
+- Fixed controller key hints for the trash button not being completely disabled, causing a small visual bug (independent of whether you used a controller or not)
+## 1.3.9
+- Recompiled for newest version of BepInEx. Temporarily disabled the new controller key hints completely, as they caused a significant fps drop when opening the inventory
 ## 1.3.8
 - Rebuilt for 0.214.2, adapted to new controller key hints
 ## 1.3.7

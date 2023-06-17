@@ -71,7 +71,7 @@
       <HintPath>$(GameDir)\unstripped_corlib\UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>$(GameDir)\valheim_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+      <HintPath>$(GameDir)\unstripped_corlib\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -110,6 +110,7 @@
     <Compile Include="Source\Modules\TrashModule.cs" />
     <Compile Include="Source\Config\UserConfig.cs" />
     <Compile Include="Source\UI\ButtonUIPatches.cs" />
+    <Compile Include="Source\UI\TwoButtonExtension.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="GameDir.targets" />
