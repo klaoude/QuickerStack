@@ -1,5 +1,13 @@
 This mod attempts to be the one stop inventory management mod, combining various features into one cohesive package, while adding UI elements in addition to hotkeys as well as compatibility for Equipment and Quick Slot mods and localization.
 
+---
+
+Hello, folks. You might have noticed that I hardly updated my mods in the past few months. I'd love to return to supporting my mods with more than just maintenance updates, too. I usually avoid this topic, but I've been quite busy due to the rising cost of living, so if anyone can spare a small donation, I'd greatly appreciate it, but if you can't then don't worry about it: https://ko-fi.com/goldenrevolver
+
+This is a maintenance update for the newest Valheim update 0.217.14 'Hildir's Request'. It just fixes declarations to make the mod compile again and does not integrate the new vanilla quick stacking feature with the mod.
+
+---
+
 This mod allows you to
 - quickly stack your items into the current or nearby chests
 - quickly restock the items you want (like food and ammo) from the current or nearby chests

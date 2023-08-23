@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.4.1
+- Fixed compatibility with public release 0.217.14 (thank you to JuniorAndria for the pull request on github)
 ## 1.4.0
 - Update for current public release 0.216.9 (thank you to Mistermycelium for the pull request on github)
 - Added config option to exclude non player built containers (like dungeon chests) from area quick stacking/ restocking (enabled by default)
