@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -265,8 +266,8 @@ namespace QuickStackStore
                     return;
                 }
 
-                tText.GetComponent<Text>().text = LocalizationConfig.GetRelevantTranslation(LocalizationConfig.TrashLabel, nameof(LocalizationConfig.TrashLabel));
-                tText.GetComponent<Text>().color = TrashConfig.TrashLabelColor.Value;
+                tText.GetComponent<TextMeshProUGUI>().text = LocalizationConfig.GetRelevantTranslation(LocalizationConfig.TrashLabel, nameof(LocalizationConfig.TrashLabel));
+                tText.GetComponent<TextMeshProUGUI>().color = TrashConfig.TrashLabelColor.Value;
 
                 // this fixes that the left most letter wants to go below the inventory wood panel if the label text is too long
                 tText.GetComponent<RectTransform>().sizeDelta -= new Vector2(9, 0);
@@ -347,8 +348,8 @@ namespace QuickStackStore
             okButton.onClick.RemoveAllListeners();
             okButton.onClick.AddListener(new UnityAction(OnChoice));
             okButton.onClick.AddListener(onConfirm);
-            okButton.GetComponentInChildren<Text>().text = LocalizationConfig.GetRelevantTranslation(LocalizationConfig.TrashConfirmationOkayButton, nameof(LocalizationConfig.TrashConfirmationOkayButton));
-            okButton.GetComponentInChildren<Text>().color = new Color(1, 0.2f, 0.1f);
+            okButton.GetComponentInChildren<TextMeshProUGUI>().text = LocalizationConfig.GetRelevantTranslation(LocalizationConfig.TrashConfirmationOkayButton, nameof(LocalizationConfig.TrashConfirmationOkayButton));
+            okButton.GetComponentInChildren<TextMeshProUGUI>().color = new Color(1, 0.2f, 0.1f);
 
             var cancelButton = dialog.transform.Find("win_bkg/Button_cancel").GetComponent<Button>();
             cancelButton.onClick.RemoveAllListeners();
@@ -356,7 +357,7 @@ namespace QuickStackStore
 
             dialog.transform.Find("win_bkg/Slider").gameObject.SetActive(false);
 
-            var text = dialog.transform.Find("win_bkg/Text").GetComponent<Text>();
+            var text = dialog.transform.Find("win_bkg/Text").GetComponent<TextMeshProUGUI>();
             text.text = name;
 
             var iconComp = dialog.transform.Find("win_bkg/Icon_bkg/Icon").GetComponent<Image>();
@@ -370,7 +371,7 @@ namespace QuickStackStore
                 iconComp.sprite = trashSprite;
             }
 
-            var amountComp = dialog.transform.Find("win_bkg/amount").GetComponent<Text>();
+            var amountComp = dialog.transform.Find("win_bkg/amount").GetComponent<TextMeshProUGUI>();
 
             amountComp.text = amountText;
 

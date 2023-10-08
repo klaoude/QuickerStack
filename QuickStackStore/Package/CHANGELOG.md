@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.2
+- Update for current public release 0.217.24
+- Added option to hide the base game 'Place Stacks' button (enabled by default)
+- Added option to override the behavior of quick stacking by holding the open button on a chest to use the modded quick stacking logic (enabled by default)
+- Fixed layouting problems with the base game 'Place Stacks' button, if it's not disabled
 ## 1.4.1
 - Fixed compatibility with public release 0.217.14 (thank you to JuniorAndria for the pull request on github)
 ## 1.4.0

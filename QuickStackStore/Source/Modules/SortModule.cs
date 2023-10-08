@@ -6,36 +6,6 @@ using static QuickStackStore.QSSConfig;
 
 namespace QuickStackStore
 {
-    [HarmonyPatch(typeof(Container))]
-    public static class ContainerPatch
-    {
-        internal const string rpc_requestSort = "QuickStackStore_RequestSort";
-
-        [HarmonyPatch(nameof(Container.Awake)), HarmonyPostfix]
-        public static void ContainerAwakePatch(Container __instance)
-        {
-            if (!__instance.m_nview)
-            {
-                __instance.m_nview = __instance.m_rootObjectOverride ? __instance.m_rootObjectOverride.GetComponent<ZNetView>() : __instance.GetComponent<ZNetView>();
-            }
-
-            if (!__instance.m_nview)
-            {
-                return;
-            }
-
-            __instance.m_nview.Register(rpc_requestSort, (l) => RPC_RequestSort(l, __instance));
-        }
-
-        public static void RPC_RequestSort(long _, Container container)
-        {
-            if (container.m_nview.IsOwner())
-            {
-                SortModule.SortInternal(container.m_inventory, null);
-            }
-        }
-    }
-
     public static class SortModule
     {
         /* Categories:
@@ -315,6 +285,38 @@ namespace QuickStackStore
                         remainingItemCount -= item.m_stack;
                     }
                 }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Container))]
+    public static class ContainerPatch
+    {
+        internal const string rpc_requestSort = "QuickStackStore_RequestSort";
+
+        [HarmonyPatch(nameof(Container.Awake)), HarmonyPostfix]
+        public static void ContainerAwakePatch(Container __instance)
+        {
+            if (!__instance.m_nview)
+            {
+                __instance.m_nview = __instance.m_rootObjectOverride ? __instance.m_rootObjectOverride.GetComponent<ZNetView>() : __instance.GetComponent<ZNetView>();
+            }
+
+            if (!__instance.m_nview)
+            {
+                return;
+            }
+
+            // in case multiple chests use the same netview, like in OdinShipsPlus, fails silently if not registered
+            __instance.m_nview.Unregister(rpc_requestSort);
+            __instance.m_nview.Register(rpc_requestSort, (l) => RPC_RequestSort(l, __instance));
+        }
+
+        public static void RPC_RequestSort(long _, Container container)
+        {
+            if (container.m_nview.IsOwner())
+            {
+                SortModule.SortInternal(container.m_inventory, null);
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using HarmonyLib;
+using System.Collections.Generic;
 using System.Linq;
 using static ItemDrop;
 using static QuickStackStore.QSSConfig;
@@ -22,7 +23,7 @@ namespace QuickStackStore
                 && CompatibilitySupport.AllowAreaStackingRestocking();
         }
 
-        internal static void DoQuickStack(Player player, bool QuickStackOnlyToCurrentContainerOverride = false)
+        internal static void DoQuickStack(Player player, bool onlyQuickStackToCurrentContainer = false, Container currentContainerOverride = null)
         {
             if (player.IsTeleporting() || !InventoryGui.instance.m_container)
             {
@@ -66,14 +67,14 @@ namespace QuickStackStore
             }
 
             int movedCount = 0;
-            Container currentContainer = InventoryGui.instance.m_currentContainer;
+            Container currentContainer = currentContainerOverride ? currentContainerOverride : InventoryGui.instance.m_currentContainer;
 
             if (currentContainer != null)
             {
                 movedCount = QuickStackIntoThisContainer(trophies, quickStackables, player.m_inventory, currentContainer.m_inventory);
             }
 
-            if (QuickStackOnlyToCurrentContainerOverride || !ShouldAreaQuickStack(currentContainer))
+            if (onlyQuickStackToCurrentContainer || !ShouldAreaQuickStack(currentContainer))
             {
                 ReportQuickStackResult(player, movedCount);
                 return;
@@ -221,6 +222,36 @@ namespace QuickStackStore
             }
 
             player.Message(MessageHud.MessageType.Center, message, 0, null);
+        }
+    }
+
+    [HarmonyPatch(typeof(Container))]
+    public static class StackAllPatch
+    {
+        [HarmonyPatch(nameof(Container.RPC_StackResponse)), HarmonyPrefix]
+        public static bool ContainerStackAllPatch(Container __instance, bool granted)
+        {
+            if (!QuickStackConfig.ChangeHoldToStackFeatureToUseModdedQuickStackingLogic.Value)
+            {
+                // call original method
+                return true;
+            }
+
+            if (!Player.m_localPlayer)
+            {
+                return false;
+            }
+
+            if (granted)
+            {
+                QuickStackModule.DoQuickStack(Player.m_localPlayer, true, __instance);
+            }
+            else
+            {
+                Player.m_localPlayer.Message(MessageHud.MessageType.Center, "$msg_inuse", 0, null);
+            }
+
+            return false;
         }
     }
 }

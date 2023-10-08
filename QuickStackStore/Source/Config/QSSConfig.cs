@@ -82,7 +82,9 @@ namespace QuickStackStore
 
         internal class QuickStackConfig
         {
+            public static ConfigEntry<bool> ChangeHoldToStackFeatureToUseModdedQuickStackingLogic;
             public static ConfigEntry<ShowTwoButtons> DisplayQuickStackButtons;
+            public static ConfigEntry<bool> HideBaseGamePlaceStacksButton;
             public static ConfigEntry<QuickStackBehavior> QuickStackHotkeyBehaviorWhenContainerOpen;
             public static ConfigEntry<bool> QuickStackIncludesHotkeyBar;
             public static ConfigEntry<KeyboardShortcut> QuickStackKeybind;
@@ -288,8 +290,14 @@ namespace QuickStackStore
 
             sectionName = "2.1 - Quick Stacking";
 
+            ChangeHoldToStackFeatureToUseModdedQuickStackingLogic = Config.Bind(sectionName, nameof(ChangeHoldToStackFeatureToUseModdedQuickStackingLogic), true, "Whether to override the behavior when holding open on a container that you are hovering on with the modded quick stacking behavior. Does not override the behavior of the default 'Place Stacks' button, if it's still enabled.");
+
             DisplayQuickStackButtons = Config.Bind(sectionName, nameof(DisplayQuickStackButtons), ShowTwoButtons.BothButDependingOnContext, twoButtons);
             DisplayQuickStackButtons.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
+
+            // TODO force enabled when using randy equip and quickslots with quickslots enabled, and enabled quickstack button
+            HideBaseGamePlaceStacksButton = Config.Bind(sectionName, nameof(HideBaseGamePlaceStacksButton), true, "Whether to hide the 'Place Stacks' button that uses the base game quick stacking logic. Modded buttons are moved automatically based on this setting. Force enabled when using Randy's Equipment and Quick Slot mod.");
+            HideBaseGamePlaceStacksButton.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
             QuickStackHotkeyBehaviorWhenContainerOpen = Config.Bind(sectionName, nameof(QuickStackHotkeyBehaviorWhenContainerOpen), QuickStackBehavior.QuickStackOnlyToCurrentContainer, hotkey);
             QuickStackIncludesHotkeyBar = Config.Bind(sectionName, nameof(QuickStackIncludesHotkeyBar), true, $"Whether to also quick stack items from the hotkey bar ({overrideHotkeyBar}).");

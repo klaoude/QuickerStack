@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -16,7 +17,7 @@ namespace QuickStackStore
         internal static float origButtonLength = -1;
         internal static Vector3 origButtonPosition;
 
-        internal static Text favoritingTogglingButtonText;
+        internal static TextMeshProUGUI favoritingTogglingButtonText;
 
         internal static Button favoritingTogglingButton;
         internal static Button quickStackAreaButton;
@@ -257,7 +258,7 @@ namespace QuickStackStore
                         favoritingTogglingButton = CreateMiniButton(__instance, nameof(favoritingTogglingButton), KeybindChecker.joyFavoriteToggling);
                         favoritingTogglingButton.gameObject.SetActive(true);
 
-                        favoritingTogglingButtonText = favoritingTogglingButton.transform.Find("Text").GetComponent<Text>();
+                        favoritingTogglingButtonText = favoritingTogglingButton.transform.Find("Text").GetComponent<TextMeshProUGUI>();
 
                         // trigger text reset without changing value
                         FavoritingMode.RefreshDisplay();
@@ -280,10 +281,11 @@ namespace QuickStackStore
                     {
                         quickStackToContainerButton = CreateBigButton(__instance, nameof(quickStackToContainerButton), KeybindChecker.joyQuickStack);
 
+                        // TODO maybe collapse first and third case without affecting second
                         if (randyStatus == RandyStatus.EnabledWithQuickSlots)
                         {
                             // jump to the opposite side of the default 'take all' button position, because we are out of space due to randy's quickslots
-                            MoveButtonToIndex(ref quickStackToContainerButton, startOffset, -vOffset, 1, 1);
+                            MoveButtonToIndex(ref quickStackToContainerButton, startOffset, -vOffset, extraContainerButtons, 1, true);
                         }
                         else if (ShouldBlockChangesToTakeAllButton())
                         {
@@ -345,13 +347,20 @@ namespace QuickStackStore
                     takeAllButtonRect.gameObject.SetActive(__instance.m_currentContainer != null);
                 }
 
+                if (__instance.m_stackAllButton && __instance.m_stackAllButton.TryGetComponent(out RectTransform stackAllButtonRect))
+                {
+                    bool shouldShow = randyStatus != RandyStatus.EnabledWithQuickSlots && !QuickStackConfig.HideBaseGamePlaceStacksButton.Value;
+
+                    stackAllButtonRect.gameObject.SetActive(shouldShow);
+                }
+
                 OnButtonTextTranslationSettingChanged(false);
             }
         }
 
-        private static void MoveButtonToIndex(ref Button buttonToMove, Vector3 startVector, float vOffset, int visibleExtraButtons, int buttonsBelowTakeAll)
+        private static void MoveButtonToIndex(ref Button buttonToMove, Vector3 startVector, float vOffset, int visibleExtraButtons, int buttonsBelowTakeAll, bool forcePutAtOppositeOfTakeAll = false)
         {
-            if (visibleExtraButtons == 1)
+            if (visibleExtraButtons == 1 || forcePutAtOppositeOfTakeAll)
             {
                 buttonToMove.transform.localPosition = OppositePositionOfTakeAllButton();
             }
@@ -428,9 +437,6 @@ namespace QuickStackStore
             var rect = (RectTransform)button.transform;
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, miniButtonSize);
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, miniButtonSize);
-
-            Text text = rect.Find("Text").GetComponent<Text>();
-            text.resizeTextForBestFit = true;
 
             return button;
         }
@@ -536,7 +542,7 @@ namespace QuickStackStore
         {
             if (button != null)
             {
-                var text = button.GetComponentInChildren<Text>();
+                var text = button.GetComponentInChildren<TextMeshProUGUI>();
 
                 if (text != null)
                 {
@@ -555,7 +561,7 @@ namespace QuickStackStore
 
                 if (takeAllButton != null)
                 {
-                    var text = takeAllButton.GetComponentInChildren<Text>();
+                    var text = takeAllButton.GetComponentInChildren<TextMeshProUGUI>();
 
                     if (text != null)
                     {
@@ -573,7 +579,7 @@ namespace QuickStackStore
 
             if (sortContainerButton != null)
             {
-                var text = sortContainerButton.GetComponentInChildren<Text>();
+                var text = sortContainerButton.GetComponentInChildren<TextMeshProUGUI>();
 
                 if (text != null)
                 {
@@ -590,7 +596,7 @@ namespace QuickStackStore
 
             if (includeTrashButton && TrashModule.trashButton != null)
             {
-                var text = TrashModule.trashButton.GetComponentInChildren<Text>();
+                var text = TrashModule.trashButton.GetComponentInChildren<TextMeshProUGUI>();
 
                 if (text != null)
                 {
