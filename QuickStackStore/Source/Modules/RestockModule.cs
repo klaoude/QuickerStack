@@ -22,7 +22,7 @@ namespace QuickStackStore
 
     internal class RestockModule
     {
-        private static bool ShouldRestockItem(ItemData item, UserConfig playerConfig, int inventoryHeight, bool includeHotbar)
+        private static bool ShouldRestockItem(ItemData item, UserConfig playerConfig, int inventoryHeight, int inventoryWidth, bool includeHotbar)
         {
             var maxStack = GetConfigBasedMaxStackSize(item.m_shared);
             var type = item.m_shared.m_itemType;
@@ -32,7 +32,7 @@ namespace QuickStackStore
                 && (item.m_gridPos.y > 0 || includeHotbar)
                 && (!RestockConfig.RestockOnlyAmmoAndConsumables.Value || type == ItemData.ItemType.Ammo || type == ItemData.ItemType.Consumable)
                 && (!RestockConfig.RestockOnlyFavoritedItems.Value || playerConfig.IsItemNameOrSlotFavorited(item))
-                && !CompatibilitySupport.IsEquipOrQuickSlot(inventoryHeight, item.m_gridPos, false);
+                && !CompatibilitySupport.IsEquipSlot(inventoryHeight, inventoryWidth, item.m_gridPos);
         }
 
         private static int GetConfigBasedMaxStackSize(ItemData.SharedData shared)
@@ -84,7 +84,7 @@ namespace QuickStackStore
             var includeHotbar = GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && RestockConfig.RestockIncludesHotkeyBar.Value;
 
             List<RestockData> restockables = player.m_inventory.m_inventory
-                .Where((itemData) => ShouldRestockItem(itemData, playerConfig, player.m_inventory.GetHeight(), includeHotbar))
+                .Where((itemData) => ShouldRestockItem(itemData, playerConfig, player.m_inventory.GetHeight(), player.m_inventory.GetWidth(), includeHotbar))
                 .Select((itemData) => new RestockData(itemData, itemData.m_stack, GetConfigBasedMaxStackSize(itemData.m_shared)))
                 .ToList();
 

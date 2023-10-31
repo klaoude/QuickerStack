@@ -25,10 +25,13 @@ namespace QuickStackStore
         public const string azuEPI = "Azumatt.AzuExtendedPlayerInventory";
         public const string auga = "randyknapp.mods.auga";
 
+        public static bool isUsingAzuEPIWithAPI = false;
+        public static bool isUsingAzuEPIWithQuickslotCompatibleAPI = false;
+
         // intentionally up here so, we don't forget to update it
         public static bool HasAedenLikeEquipOrQuickSlotPlugin()
         {
-            return HasPlugin(aeden) || HasPlugin(odinExInv) || HasPlugin(odinPlus) || HasPlugin(azuEPI);
+            return HasPlugin(aeden) || HasPlugin(odinExInv) || HasPlugin(odinPlus) || (HasPlugin(azuEPI) && !isUsingAzuEPIWithAPI);
         }
 
         public const string betterArchery = "ishid4.mods.betterarchery";
@@ -39,6 +42,8 @@ namespace QuickStackStore
         public const string recyclePlus = "TastyChickenLegs.RecyclePlus";
 
         public static System.Version mucUpdateVersion = new System.Version(0, 4, 0);
+        public static System.Version azuEPIOnOffUpdate = new System.Version(1, 2, 0);
+        public static System.Version azuEPIQuickSlotAPIUpdate = new System.Version(1, 3, 2);
 
         public static bool AllowAreaStackingRestocking()
         {
@@ -67,6 +72,20 @@ namespace QuickStackStore
                 var info = Chainloader.PluginInfos[multiUserChest];
 
                 return info.Metadata.Version < mucUpdateVersion;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public static bool HasAzuEPIWithQuickslotCompatibleAPI()
+        {
+            if (Chainloader.PluginInfos.ContainsKey(azuEPI))
+            {
+                var info = Chainloader.PluginInfos[azuEPI];
+
+                return info.Metadata.Version >= azuEPIQuickSlotAPIUpdate;
             }
             else
             {
@@ -117,42 +136,57 @@ namespace QuickStackStore
 
         public static bool HasPluginThatRequiresMiniButtonVMove()
         {
-            return HasAedenLikeEquipOrQuickSlotPlugin();
+            return HasAedenLikeEquipOrQuickSlotPlugin() || (HasPlugin(azuEPI) && isUsingAzuEPIWithAPI);
         }
 
-        public static bool IsEquipOrQuickSlot(int inventoryHeight, Vector2i itemPos, bool checkForRestockableSlots = true)
+        public static bool IsEquipSlot(int inventoryHeight, int inventoryWidth, Vector2i itemPos)
+        {
+            return InternalIsEquipOrQuickSlot(inventoryHeight, inventoryWidth, itemPos, false);
+        }
+
+        public static bool IsEquipOrQuickSlot(int inventoryHeight, int inventoryWidth, Vector2i itemPos)
+        {
+            return InternalIsEquipOrQuickSlot(inventoryHeight, inventoryWidth, itemPos, true);
+        }
+
+        private static bool InternalIsEquipOrQuickSlot(int inventoryHeight, int inventoryWidth, Vector2i itemPos, bool includeRestockableSlots)
         {
             //if (HasPlugin(randy))
             //{
             //    // randyknapps mod ignores everything this mod does anyway, so no need for specific compatibility
             //}
 
-            if (HasPlugin(aeden) && IsAedenLikeEquipOrQuickSlot(ref AedenAddEquipmentRow, "ExtendedPlayerInventory", "BepInExPlugin", "addEquipmentRow", inventoryHeight, itemPos, checkForRestockableSlots))
+            if (HasPlugin(aeden) && IsAedenLikeEquipOrQuickSlot(ref AedenAddEquipmentRow, "ExtendedPlayerInventory", "BepInExPlugin", "addEquipmentRow", inventoryHeight, itemPos, includeRestockableSlots))
             {
                 return true;
             }
 
-            if (HasPlugin(odinExInv) && IsAedenLikeEquipOrQuickSlot(ref OdinExAddEquipmentRow, "OdinsExtendedInventory", "OdinsExtendedInventoryPlugin", "addEquipmentRow", inventoryHeight, itemPos, checkForRestockableSlots))
+            if (HasPlugin(odinExInv) && IsAedenLikeEquipOrQuickSlot(ref OdinExAddEquipmentRow, "OdinsExtendedInventory", "OdinsExtendedInventoryPlugin", "addEquipmentRow", inventoryHeight, itemPos, includeRestockableSlots))
             {
                 return true;
             }
 
-            if (HasPlugin(odinPlus) && IsAedenLikeEquipOrQuickSlot(ref OdinQOLAddEquipmentRow, "OdinQOL", "QuickAccessBar", "AddEquipmentRow", inventoryHeight, itemPos, checkForRestockableSlots))
+            if (HasPlugin(odinPlus) && IsAedenLikeEquipOrQuickSlot(ref OdinQOLAddEquipmentRow, "OdinQOL", "QuickAccessBar", "AddEquipmentRow", inventoryHeight, itemPos, includeRestockableSlots))
             {
                 return true;
             }
 
-            if (HasPlugin(azuEPI) && IsAedenLikeEquipOrQuickSlot(ref AzuEPIAddEquipmentRow, "AzuExtendedPlayerInventory", "AzuExtendedPlayerInventoryPlugin", "AddEquipmentRow", inventoryHeight, itemPos, checkForRestockableSlots))
+            if (HasPlugin(azuEPI) && !isUsingAzuEPIWithAPI && IsAedenLikeEquipOrQuickSlot(ref AzuEPIAddEquipmentRow, "AzuExtendedPlayerInventory", "AzuExtendedPlayerInventoryPlugin", "AddEquipmentRow", inventoryHeight, itemPos, includeRestockableSlots))
             {
                 return true;
             }
 
-            if (HasPlugin(comfy) && IsComfyEquipOrQuickSlot(inventoryHeight, itemPos, checkForRestockableSlots))
+            if (HasPlugin(azuEPI) && isUsingAzuEPIWithAPI && IsNewAzuEPIEquipOrQuickSlot(inventoryHeight, inventoryWidth, itemPos, includeRestockableSlots))
             {
                 return true;
             }
 
-            if (HasPlugin(betterArchery) && IsBetterArcheryQuiverSlot(itemPos, checkForRestockableSlots))
+            if (HasPlugin(comfy) && IsComfyEquipOrQuickSlot(inventoryHeight, itemPos, includeRestockableSlots))
+            {
+                return true;
+            }
+
+            if (HasPlugin(betterArchery) && IsBetterArcheryQuiverSlot(itemPos, includeRestockableSlots))
             {
                 return true;
             }
@@ -160,7 +194,7 @@ namespace QuickStackStore
             return false;
         }
 
-        private static bool IsAedenLikeEquipOrQuickSlot(ref FieldInfo fieldInfo, string assemblyName, string className, string fieldName, int inventoryHeight, Vector2i itemPos, bool checkForRestockableSlots)
+        private static bool HasAedenLikeEquipmentRow(ref FieldInfo fieldInfo, string assemblyName, string className, string fieldName)
         {
             if (fieldInfo == null)
             {
@@ -174,11 +208,40 @@ namespace QuickStackStore
                 }
             }
 
-            if (fieldInfo?.GetValue(null) is ConfigEntry<bool> config && config.Value)
+            if (fieldInfo == AzuEPIAddEquipmentRow && Chainloader.PluginInfos[azuEPI].Metadata.Version >= azuEPIOnOffUpdate)
             {
-                bool isEquipmentRow = itemPos.y == inventoryHeight - 1;
+                // here it's actually of type ConfigEntry<Toggle>, which the usual config enum
+                return fieldInfo?.GetValue(null) is ConfigEntryBase config && (int)config.BoxedValue != 0;
+            }
+            else
+            {
+                return fieldInfo?.GetValue(null) is ConfigEntry<bool> config && config.Value;
+            }
+        }
 
-                if (isEquipmentRow && (checkForRestockableSlots || itemPos.x < 5 || itemPos.x > 7))
+        private static bool IsNewAzuEPIEquipOrQuickSlot(int inventoryHeight, int inventoryWidth, Vector2i itemPos, bool includeRestockableSlots)
+        {
+            if (!HasAedenLikeEquipmentRow(ref AzuEPIAddEquipmentRow, "AzuExtendedPlayerInventory", "AzuExtendedPlayerInventoryPlugin", "AddEquipmentRow"))
+            {
+                return false;
+            }
+
+            if (!includeRestockableSlots && isUsingAzuEPIWithQuickslotCompatibleAPI)
+            {
+                foreach (var item in AzuExtendedPlayerInventory.API.GetQuickSlotsItems())
+                {
+                    if (item.m_gridPos == itemPos)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            int customSlotAddedRows = AzuExtendedPlayerInventory.API.GetAddedRows(inventoryWidth);
+
+            for (int i = 1; i <= customSlotAddedRows; i++)
+            {
+                if (itemPos.y == inventoryHeight - i)
                 {
                     return true;
                 }
@@ -187,7 +250,19 @@ namespace QuickStackStore
             return false;
         }
 
-        private static bool IsComfyEquipOrQuickSlot(int inventoryHeight, Vector2i itemPos, bool checkForRestockableSlots)
+        private static bool IsAedenLikeEquipOrQuickSlot(ref FieldInfo fieldInfo, string assemblyName, string className, string fieldName, int inventoryHeight, Vector2i itemPos, bool checkForRestockableSlots)
+        {
+            if (!HasAedenLikeEquipmentRow(ref fieldInfo, assemblyName, className, fieldName))
+            {
+                return false;
+            }
+
+            bool isEquipmentRow = itemPos.y == inventoryHeight - 1;
+
+            return isEquipmentRow && (checkForRestockableSlots || itemPos.x < 5 || itemPos.x > 7);
+        }
+
+        private static bool IsComfyEquipOrQuickSlot(int inventoryHeight, Vector2i itemPos, bool includeRestockableSlots)
         {
             if (IsComfyArmorSlot == null)
             {
@@ -206,7 +281,7 @@ namespace QuickStackStore
                 return true;
             }
 
-            if (checkForRestockableSlots)
+            if (includeRestockableSlots)
             {
                 // check for quickslot (could also be armor slot)
                 if (IsComfyArmorSlot?.Invoke(null, new object[] { new Vector2i(itemPos.x - 3, itemPos.y) }) is bool isArmorOrQuickSlot && isArmorOrQuickSlot)
@@ -218,7 +293,7 @@ namespace QuickStackStore
             return false;
         }
 
-        private static bool IsBetterArcheryQuiverSlot(Vector2i itemPos, bool checkForRestockableSlots)
+        private static bool IsBetterArcheryQuiverSlot(Vector2i itemPos, bool includeRestockableSlots)
         {
             if (IsQuiverEnabled == null || QuiverRowIndex == null)
             {
@@ -247,7 +322,7 @@ namespace QuickStackStore
                     return false;
                 }
 
-                if (itemPos.y == rowIndex && (checkForRestockableSlots || itemPos.x < 0 || itemPos.x > 2))
+                if (itemPos.y == rowIndex && (includeRestockableSlots || itemPos.x < 0 || itemPos.x > 2))
                 {
                     return true;
                 }

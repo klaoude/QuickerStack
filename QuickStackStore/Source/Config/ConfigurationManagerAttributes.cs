@@ -92,12 +92,12 @@ namespace QuickStackStore
 
         internal static ConfigDescription ForceEnabledDisplay(Func<bool> condition, string description, AcceptableValueBase acceptableValues = null)
         {
-            return SeeOnlyDisplay(condition, description, "Force enabled for better compatibility with one of your installed mods", "Force enabled for compatibility reasons", acceptableValues);
+            return SeeOnlyDisplay(condition, description, "Force enabled for better compatibility with one of your installed mods. " + description, "Force enabled for compatibility reasons", acceptableValues);
         }
 
         internal static ConfigDescription ForceDisabledDisplay(Func<bool> condition, string description, AcceptableValueBase acceptableValues = null)
         {
-            return SeeOnlyDisplay(condition, description, "Force disabled for better compatibility with one of your installed mods", "Force disabled for compatibility reasons", acceptableValues);
+            return SeeOnlyDisplay(condition, description, "Force disabled for better compatibility with one of your installed mods. " + description, "Force disabled for compatibility reasons", acceptableValues);
         }
 
         internal static ConfigDescription SeeOnlyDisplay(Func<bool> condition, string description, string overwriteDescription, string overwriteLabel, AcceptableValueBase acceptableValues = null)

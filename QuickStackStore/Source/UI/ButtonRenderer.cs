@@ -281,20 +281,17 @@ namespace QuickStackStore
                     {
                         quickStackToContainerButton = CreateBigButton(__instance, nameof(quickStackToContainerButton), KeybindChecker.joyQuickStack);
 
-                        // TODO maybe collapse first and third case without affecting second
-                        if (randyStatus == RandyStatus.EnabledWithQuickSlots)
-                        {
-                            // jump to the opposite side of the default 'take all' button position, because we are out of space due to randy's quickslots
-                            MoveButtonToIndex(ref quickStackToContainerButton, startOffset, -vOffset, extraContainerButtons, 1, true);
-                        }
-                        else if (ShouldBlockChangesToTakeAllButton())
+                        if (ShouldBlockChangesToTakeAllButton() && randyStatus != RandyStatus.EnabledWithQuickSlots)
                         {
                             MoveButtonToIndex(ref quickStackToContainerButton, startOffset, 0, extraContainerButtons, 1);
                         }
                         else
                         {
+                            // jump to the opposite side of the default 'take all' button position, because we are out of space due to randy's quickslots
+                            bool forcePutAtOppositeOfTakeAll = randyStatus == RandyStatus.EnabledWithQuickSlots;
+
                             // revert the vertical movement from the 'take all' button
-                            MoveButtonToIndex(ref quickStackToContainerButton, startOffset, -vOffset, extraContainerButtons, 1);
+                            MoveButtonToIndex(ref quickStackToContainerButton, startOffset, -vOffset, extraContainerButtons, 1, forcePutAtOppositeOfTakeAll);
                         }
 
                         quickStackToContainerButton.onClick.AddListener(new UnityAction(() => QuickStackModule.DoQuickStack(Player.m_localPlayer, true)));
@@ -457,7 +454,9 @@ namespace QuickStackStore
             }
             else
             {
-                var shouldMoveLower = randyStatus == RandyStatus.EnabledWithoutQuickSlots || (HasPluginThatRequiresMiniButtonVMove() && instance.m_player.Find("EquipmentBkg") != null);
+                bool shouldMoveLower = HasPluginThatRequiresMiniButtonVMove() && (instance.m_player.Find("EquipmentBkg") != null || instance.m_player.Find("AzuEquipmentBkg") != null);
+                shouldMoveLower |= randyStatus == RandyStatus.EnabledWithoutQuickSlots;
+
                 float vPos = shouldMoveLower ? lowerMiniButtonVOffset : normalMiniButtonVOffset;
 
                 button.localPosition = weight.localPosition + new Vector3(hAlign + distanceToMove, vPos);

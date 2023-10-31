@@ -25,18 +25,18 @@ namespace QuickStackStore
         // convert the type enum to custom categories
         public static int[] TypeToCategory = new int[] { 0, 2, 4, 7, 7, 8, 10, 10, 0, 6, 0, 10, 10, 1, 7, 7, 0, 10, 9, 7, 7, 3, 7, 5 };
 
-        private static bool ShouldSortItem(ItemDrop.ItemData item, UserConfig playerConfig, int inventoryHeight, bool includeHotbar)
+        private static bool ShouldSortItem(ItemDrop.ItemData item, UserConfig playerConfig, int inventoryHeight, int inventoryWidth, bool includeHotbar)
         {
             return !playerConfig.IsItemNameFavorited(item.m_shared)
-                && ShouldSortSlot(item.m_gridPos, playerConfig, inventoryHeight, includeHotbar);
+                && ShouldSortSlot(item.m_gridPos, playerConfig, inventoryHeight, inventoryWidth, includeHotbar);
         }
 
         // when changing this, also change SortModule.GetAllowedSlots
-        private static bool ShouldSortSlot(Vector2i slot, UserConfig playerConfig, int playerInventoryHeight, bool includeHotbar)
+        private static bool ShouldSortSlot(Vector2i slot, UserConfig playerConfig, int playerInventoryHeight, int playerInventoryWidth, bool includeHotbar)
         {
             return (slot.y > 0 || includeHotbar)
                 && !playerConfig.IsSlotFavorited(slot)
-                && !CompatibilitySupport.IsEquipOrQuickSlot(playerInventoryHeight, slot);
+                && !CompatibilitySupport.IsEquipOrQuickSlot(playerInventoryHeight, playerInventoryWidth, slot);
         }
 
         public static void DoSort(Player player)
@@ -158,7 +158,7 @@ namespace QuickStackStore
             }
             else
             {
-                toSort = inventory.m_inventory.Where(item => ShouldSortItem(item, playerConfig, inventory.GetHeight(), includeHotbar)).ToList();
+                toSort = inventory.m_inventory.Where(item => ShouldSortItem(item, playerConfig, inventory.GetHeight(), inventory.GetWidth(), includeHotbar)).ToList();
             }
 
             if (SortConfig.SortMergesStacks.Value)
@@ -232,7 +232,7 @@ namespace QuickStackStore
                             continue;
                         }
 
-                        if (CompatibilitySupport.IsEquipOrQuickSlot(inventory.GetHeight(), pos))
+                        if (CompatibilitySupport.IsEquipOrQuickSlot(inventory.GetHeight(), inventory.GetWidth(), pos))
                         {
                             continue;
                         }

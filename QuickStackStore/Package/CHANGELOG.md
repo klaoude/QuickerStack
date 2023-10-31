@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.3
+- Added full compatibility for AzuEPI 1.3 using its API (thank you, Azu!)
+- Fixed backwards compatibility for AzuEPI 1.2 due to config type change
 ## 1.4.2
 - Update for current public release 0.217.24
 - Added option to hide the base game 'Place Stacks' button (enabled by default)

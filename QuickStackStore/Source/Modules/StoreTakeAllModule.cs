@@ -59,12 +59,12 @@ namespace QuickStackStore
             StoreAllItemsInOrder(player);
         }
 
-        private static bool ShouldStoreItem(ItemData item, UserConfig playerConfig, int inventoryHeight, bool includeHotbar)
+        private static bool ShouldStoreItem(ItemData item, UserConfig playerConfig, int inventoryHeight, int inventoryWidth, bool includeHotbar)
         {
             return (item.m_gridPos.y > 0 || includeHotbar)
                 && (StoreTakeAllConfig.StoreAllIncludesEquippedItems.Value || !item.m_equipped)
                 && !playerConfig.IsItemNameOrSlotFavorited(item)
-                && !CompatibilitySupport.IsEquipOrQuickSlot(inventoryHeight, item.m_gridPos);
+                && !CompatibilitySupport.IsEquipOrQuickSlot(inventoryHeight, inventoryWidth, item.m_gridPos);
         }
 
         internal static void TakeAllItemsInOrder(Player player)
@@ -113,7 +113,7 @@ namespace QuickStackStore
                 UserConfig playerConfig = UserConfig.GetPlayerConfig(player.GetPlayerID());
                 var includeHotbar = GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && StoreTakeAllConfig.StoreAllIncludesHotkeyBar.Value;
 
-                list = fromInventory.m_inventory.Where((item) => ShouldStoreItem(item, playerConfig, fromInventory.GetHeight(), includeHotbar)).ToList();
+                list = fromInventory.m_inventory.Where((item) => ShouldStoreItem(item, playerConfig, fromInventory.GetHeight(), fromInventory.GetWidth(), includeHotbar)).ToList();
             }
 
             list.Sort((ItemData a, ItemData b) => Helper.CompareSlotOrder(a.m_gridPos, b.m_gridPos));

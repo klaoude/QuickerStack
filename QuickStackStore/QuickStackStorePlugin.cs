@@ -6,13 +6,14 @@ using UnityEngine;
 namespace QuickStackStore
 {
     [BepInIncompatibility("virtuacode.valheim.trashitems")]
+    [BepInDependency(CompatibilitySupport.azuEPI, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(CompatibilitySupport.multiUserChest, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(GUID, NAME, VERSION)]
     public class QuickStackStorePlugin : BaseUnityPlugin
     {
         public const string GUID = "goldenrevolver.quick_stack_store";
         public const string NAME = "Quick Stack - Store - Sort - Trash - Restock";
-        public const string VERSION = "1.4.2";
+        public const string VERSION = "1.4.3";
 
         // intentionally not Awake, so the chainloader is done (for compatibility checks, mostly in the config)
         protected void Start()
@@ -21,6 +22,16 @@ namespace QuickStackStore
             {
                 Helper.LogO("This mod is not compatible with versions of Multi User Chest earlier than 0.4.0, aborting start", QSSConfig.DebugLevel.Warning);
                 return;
+            }
+
+            if (AzuExtendedPlayerInventory.API.IsLoaded())
+            {
+                CompatibilitySupport.isUsingAzuEPIWithAPI = true;
+
+                if (CompatibilitySupport.HasAzuEPIWithQuickslotCompatibleAPI())
+                {
+                    CompatibilitySupport.isUsingAzuEPIWithQuickslotCompatibleAPI = true;
+                }
             }
 
             var path = "QuickStackStore.Resources";

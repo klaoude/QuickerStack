@@ -295,8 +295,7 @@ namespace QuickStackStore
             DisplayQuickStackButtons = Config.Bind(sectionName, nameof(DisplayQuickStackButtons), ShowTwoButtons.BothButDependingOnContext, twoButtons);
             DisplayQuickStackButtons.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
-            // TODO force enabled when using randy equip and quickslots with quickslots enabled, and enabled quickstack button
-            HideBaseGamePlaceStacksButton = Config.Bind(sectionName, nameof(HideBaseGamePlaceStacksButton), true, "Whether to hide the 'Place Stacks' button that uses the base game quick stacking logic. Modded buttons are moved automatically based on this setting. Force enabled when using Randy's Equipment and Quick Slot mod.");
+            HideBaseGamePlaceStacksButton = Config.Bind(sectionName, nameof(HideBaseGamePlaceStacksButton), true, ForceEnabledDisplay(() => CompatibilitySupport.HasRandyPlugin() == CompatibilitySupport.RandyStatus.EnabledWithQuickSlots, "Whether to hide the 'Place Stacks' button that uses the base game quick stacking logic. Modded buttons are moved automatically based on this setting. Force enabled when using 'Randy's Equipment and Quick Slot' mod."));
             HideBaseGamePlaceStacksButton.SettingChanged += (a, b) => ButtonRenderer.OnButtonRelevantSettingChanged(plugin);
 
             QuickStackHotkeyBehaviorWhenContainerOpen = Config.Bind(sectionName, nameof(QuickStackHotkeyBehaviorWhenContainerOpen), QuickStackBehavior.QuickStackOnlyToCurrentContainer, hotkey);

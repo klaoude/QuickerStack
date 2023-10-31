@@ -8,12 +8,12 @@ namespace QuickStackStore
 {
     internal class QuickStackModule
     {
-        private static bool ShouldQuickStackItem(ItemData item, UserConfig playerConfig, int inventoryHeight, bool includeHotbar)
+        private static bool ShouldQuickStackItem(ItemData item, UserConfig playerConfig, int inventoryHeight, int inventoryWidth, bool includeHotbar)
         {
             return item.m_shared.m_maxStackSize > 1
                 && (item.m_gridPos.y > 0 || includeHotbar)
                 && !playerConfig.IsItemNameOrSlotFavorited(item)
-                && !CompatibilitySupport.IsEquipOrQuickSlot(inventoryHeight, item.m_gridPos);
+                && !CompatibilitySupport.IsEquipOrQuickSlot(inventoryHeight, inventoryWidth, item.m_gridPos);
         }
 
         private static bool ShouldAreaQuickStack(Container currentContainer)
@@ -36,7 +36,7 @@ namespace QuickStackStore
 
             var includeHotbar = GeneralConfig.OverrideHotkeyBarBehavior.Value != OverrideHotkeyBarBehavior.NeverAffectHotkeyBar && QuickStackConfig.QuickStackIncludesHotkeyBar.Value;
 
-            List<ItemData> quickStackables = player.m_inventory.m_inventory.Where((itm) => ShouldQuickStackItem(itm, playerConfig, player.m_inventory.GetHeight(), includeHotbar)).ToList();
+            List<ItemData> quickStackables = player.m_inventory.m_inventory.Where((itm) => ShouldQuickStackItem(itm, playerConfig, player.m_inventory.GetHeight(), player.m_inventory.GetWidth(), includeHotbar)).ToList();
 
             if (quickStackables.Count == 0 && QuickStackConfig.ShowQuickStackResultMessage.Value)
             {
